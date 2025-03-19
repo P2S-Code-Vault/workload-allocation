@@ -1,0 +1,235 @@
+.collapsible-group,
+.collapsible-studio {
+  margin: 1rem 0;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+}
+
+.collapsible-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--background-gray);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.collapsible-header:hover {
+  background-color: var(--primary-light);
+}
+
+.collapsible-header h3,
+.collapsible-header h4 {
+  margin: 0;
+}
+
+.collapsible-content {
+  padding: 1rem;
+}
+
+.collapsible-studio {
+  margin: 0.5rem 0;
+}
+
+.expand-details-btn {
+  background: none;
+  border: none;
+  padding: 4px;
+  cursor: pointer;
+  color: var(--primary-color);
+}
+
+.expand-details-btn:hover {
+  color: var(--primary-dark);
+}
+
+.member-details {
+  background-color: var(--background-gray);
+}
+
+.no-entries {
+  padding: 0.5rem;
+  color: var(--temp-text);
+  font-style: italic;
+  text-align: center;
+}
+
+.time-entries {
+  padding: 1rem;
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: var(--white);
+}
+
+.time-entry {
+  display: grid;
+  grid-template-columns: 300px minmax(100px, 1fr) 100px;
+  gap: 1rem;
+  padding: 0.5rem;
+  border-bottom: 1px solid var(--border-color);
+  align-items: center;
+}
+
+.time-entry .project-number,
+.time-entry .project-name {
+  text-align: left;
+}
+
+.time-entry:last-child {
+  border-bottom: none;
+}
+
+.time-entry .project-number {
+  font-family: var(--font-primary);
+  color: var(--primary-color);
+}
+
+.time-entry .project-name {
+  color: var(--temp-text);
+}
+
+.time-entry .number-cell {
+  text-align: center;
+  font-family: var(--font-primary);
+}
+
+.time-entry .hours {
+  text-align: right;
+}
+
+.hours-warning {
+  background-color: #ffebee;
+  color: var(--error-color);
+}
+
+.time-entries h5 {
+  margin: 0 0 0.5rem 0;
+  color: var(--primary-color);
+}
+
+/* Add studio grouping table column widths */
+.summary-table th:nth-child(1) { /* Studio/Team Member */
+  width: 20%;
+}
+
+.summary-table th:nth-child(2) { /* Labor Category/Team Members */
+  width: 15%;
+}
+
+.summary-table th:nth-child(3), /* Scheduled Hours */
+.summary-table th:nth-child(4), /* Direct Hours */
+.summary-table th:nth-child(5), /* PTO/HOL */
+.summary-table th:nth-child(6), /* Indirect Hours */
+.summary-table th:nth-child(7) { /* Total Hours */
+  width: 11%;
+}
+
+.summary-table th:nth-child(8) { /* Ratio B */
+  width: 10%;
+}
+
+.summary-table th:nth-child(9) { /* Details button */
+  width: 5%;
+}
+
+/* Apply same widths to table cells */
+.summary-table td {
+  width: inherit;
+}
+
+.view-toggle {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.view-toggle .toggle-button {
+  padding: 8px 16px;
+  border: 1px solid var(--border-color);
+  background: var(--white);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.view-toggle .toggle-button.active {
+  background: var(--primary-color);
+  color: var(--white);
+}
+
+/* All Staff table specific column widths */
+.project-summary .summary-table th:nth-child(1), /* Group Manager */
+.project-summary .summary-table td:nth-child(1) {
+  width: 15%;
+  text-align: center;
+  padding-left: 12px;
+}
+
+.project-summary .summary-table th:nth-child(2), /* Studio */
+.project-summary .summary-table td:nth-child(2) {
+  width: 5%; 
+  text-align: center;
+  padding-left: 12px;
+}
+
+.project-summary .summary-table th:nth-child(3), /* Team Member */
+.project-summary .summary-table td:nth-child(3) {
+  width: 15%;  
+  text-align: center;
+  padding-left: 12px;
+}
+
+.project-summary .summary-table th:nth-child(4), /* Labor Category */
+.project-summary .summary-table td:nth-child(4) {
+  width: 20%;  
+  text-align: center;
+  padding-left: 12px;
+}
+
+.project-summary .summary-table th:nth-child(5), /* Scheduled Hours */
+.project-summary .summary-table th:nth-child(6), /* Direct Hours */
+.project-summary .summary-table th:nth-child(7), /* PTO/HOL */
+.project-summary .summary-table th:nth-child(8), /* Indirect Hours */
+.project-summary .summary-table th:nth-child(9), /* Total Hours */
+.project-summary .summary-table td:nth-child(5),
+.project-summary .summary-table td:nth-child(6),
+.project-summary .summary-table td:nth-child(7),
+.project-summary .summary-table td:nth-child(8),
+.project-summary .summary-table td:nth-child(9) {
+  width: 10%;
+  text-align: center;
+}
+
+.project-summary .summary-table th:nth-child(10), /* Ratio B */
+.project-summary .summary-table td:nth-child(10) {
+  width: 10%;
+  text-align: center;
+}
+
+.project-summary .summary-table td {
+  padding: 8px 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Override any previous styles by making them more specific */
+.group-summary .project-summary .summary-table th:nth-child(1), /* Group Manager */
+.group-summary .project-summary .summary-table td:nth-child(1) {
+  width: 16%;
+  text-align: center;
+  padding-left: 12px;
+}
+
+.group-summary .project-summary .summary-table th:nth-child(2), /* Studio */
+.group-summary .project-summary .summary-table td:nth-child(2) {
+  width: 15% !important;
+  text-align: center;
+}
+
+.group-summary .project-summary .summary-table th:nth-child(3), /* Team Member */
+.group-summary .project-summary .summary-table td:nth-child(3) {
+  width: 15%;
+  text-align: center;
+  padding-left: 12px;
+}

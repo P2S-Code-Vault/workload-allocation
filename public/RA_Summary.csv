@@ -1,0 +1,14 @@
+Date Range,Resource,Number,Name,Milestone,PM,Contract Total Labor,% Labor Used,Actual Multiplier Rate,Hours,Group,Schedule Hours,Studio,Labor Grade
+"Nov 3, 2024 - Nov 9, 2024",User A,2024-0484-0000-1000,LBCC Stadium Upgrades_MEP,MEP-HVAC Plumbing Elec Ltg-50% Schematic Desi,Aravind Batra,124,100,3.34,6,11,40,SL Grp 11-01,DESIGNER GRADE 01
+"Nov 3, 2024 - Nov 9, 2024",User A,2023-0296-0000-1300,LBUSD Washington MS,Energy Modeling,Kirk Anglin,29500,96.39,3.4,6,11,40,SL Grp 11-01,DESIGNER GRADE 01
+"Nov 3, 2024 - Nov 9, 2024",User A,2022-0140-0000-5000,UCLA Reed B Level Lab Remodel Cx,LEED Fundamental Cx,Aravind Batra,15040,107.36,3.4,12,11,40,SL Grp 11-01,DESIGNER GRADE 01
+"Nov 3, 2024 - Nov 9, 2024",User A,2022-0672-0000-3000,UCSD CMME/CMMW Generator Replacement,Construction Documents,Wes Mckean,11500,41.69,3.4,4,11,40,SL Grp 11-01,DESIGNER GRADE 01
+"Nov 3, 2024 - Nov 9, 2024",User A,0000-0000-NONP,Non Production,,,,,,4,11,40,SL Grp 11-01,DESIGNER GRADE 01
+"Nov 3, 2024 - Nov 9, 2024",User A,0000-0000-0PTO,Paid Time Off,,,,,,8,43,40,SL Grp 11-01,DESIGNER GRADE 01
+"Nov 3, 2024 - Nov 9, 2024",User B,2023-0296-0000-1300,LBUSD Washington MS,Energy Modeling,Kirk Anglin,29500,96.39,3.4,9,43,30,SL Grp 11-01,DESIGNER GRADE 04
+"Nov 3, 2024 - Nov 9, 2024",User B,2022-0140-0000-5000,UCLA Reed B Level Lab Remodel Cx,LEED Fundamental Cx,Aravind Batra,15040,107.36,3.4,11,43,30,SL Grp 11-01,DESIGNER GRADE 04
+"Nov 3, 2024 - Nov 9, 2024",User B,2022-0672-0000-3000,UCSD CMME/CMMW Generator Replacement,Construction Documents,Wes Mckean,11500,41.69,3.4,9,43,30,SL Grp 11-01,DESIGNER GRADE 04
+"Nov 3, 2024 - Nov 9, 2024",User B,0000-0000-NONP,Non Production,,,,,,3,43,30,SL Grp 11-01,DESIGNER GRADE 04
+"Nov 3, 2024 - Nov 9, 2024",User C,2023-0296-0000-1300,LBUSD Washington MS,Energy Modeling,Kirk Anglin,29500,96.39,3.4,7,22,40,SL Grp 13-01,ENGINEER GRADE 02
+"Nov 3, 2024 - Nov 9, 2024",User C,0000-0000-0HOL,Holiday,,,,,,14,22,40,SL Grp 13-01,ENGINEER GRADE 02
+"Nov 3, 2024 - Nov 9, 2024",User C,0000-0000-NONP,Non Production,,,,,,9,22,40,SL Grp 13-01,ENGINEER GRADE 02

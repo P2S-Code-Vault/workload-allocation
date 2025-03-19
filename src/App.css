@@ -1,0 +1,1393 @@
+/* CSS Variables */
+:root {
+  /* Primary Colors */
+  --primary-color: #366a86;
+  --primary-light: rgba(52, 106, 134, 0.1);
+  --primary-dark: #231F20;
+
+  /* Secondary Colors */
+  --success-color: #4CAF50;
+  --warning-color: #ffe600;
+  --error-color: #f44336;
+
+  /* Neutral Colors */
+  --white: #ffffff;
+  --background-gray: #f8f9fa;
+  --background-color: #e5e7e6; 
+  --border-color: #ddd;
+  --temp-text: #666;
+
+  /* Font Families */
+  --font-primary: 'GT Walsheim';
+  --font-secondary: sans-serif;
+
+  /* Spacing */
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 10px;
+  --spacing-lg: 16px;
+  --spacing-xl: 20px;
+
+  /* Shadows */
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 2px 8px rgba(0, 0, 0, 0.2);
+
+  /* Border Radius */
+  --border-radius: 4px;
+
+  /* Font Sizes */
+  --font-sm: 0.9rem;
+  --font-lg: 1.1rem;
+}
+
+/* Global Styles */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  font-family: var(--font-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Layout Components */
+.page-layout {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: var(--background-gray);
+}
+
+.header {
+  display: flex;
+  align-items: center;
+  background-color: var(--primary-color);
+  color: var(--white);
+  padding: var(--spacing-xl) var(--spacing-xl); 
+  width: 100%;
+}
+
+.header-logo {
+  width: 75px;
+  margin-right: 20px;
+}
+
+.header-title {
+  font-size: 1.5rem;
+  margin: 0;
+}
+
+.main-content {
+  flex: 1;
+  padding: 20px;
+  background-color: var(--background-color);
+  overflow-y: auto; 
+}
+
+.content-wrapper {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+}
+
+.header,
+.footer {
+  width: 100%;
+}
+
+.project-number-cell {
+  position: relative;
+}
+
+.dropdown-container {
+  position: relative;
+  width: 100%;
+}
+
+.suggestions-dropdown {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  max-height: 200px;
+  overflow-y: auto;
+  z-index: 1000;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.error-message {
+  color: var(--error-color);
+  font-size: 0.8rem;
+  margin-top: 4px;
+  position: absolute;
+  width: 100%;
+}
+
+.suggestion-item {
+  padding: 8px 12px;
+  cursor: pointer;
+}
+
+.suggestion-item:hover {
+  background-color: var(--background-color);
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  background-color: var(--primary-color);
+  color: var(--white);
+  padding: var(--spacing-md);
+  font-family: var(--font-primary);
+  font-size: 0.9rem;
+  width: 100%;
+}
+
+.footer-left, .footer-right {
+  display: flex;
+  align-items: center;
+}
+
+.footer-left .tooltip-container {
+  margin-right: 4px;
+}
+
+.footer-right a {
+  margin-right: 6px;
+  color: var(--white);
+  text-decoration: underline;
+}
+
+.footer-right span {
+  color: var(--white);
+}
+
+.tooltip-container {
+  position: relative;
+}
+
+.tooltip {
+  position: absolute;
+  bottom: 110%;
+  left: 0;
+  padding: 6px;
+  border-radius: 4px;
+  white-space: nowrap;
+  font-size: 0.9rem;
+  z-index: 10;
+  text-align: left;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.03);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  background-color: rgba(0, 0, 0, 0.9);
+  border-width: 1px;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.85) transparent transparent transparent;
+  font-family: var(--font-secondary);
+}
+
+.tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 2%;
+  transform: translateX(-50%);
+  border-width: 8px;
+  border-style: solid;
+  border-color: rgba(0, 0, 0, 0.85) transparent transparent transparent;
+}
+
+.tooltip-container:hover .tooltip {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Table Components */
+.table-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+}
+
+.resource-table {
+  flex: 1;
+  /* width: 100%; */
+  border-collapse: collapse;
+  background-color: var(--white);
+  box-shadow: var(--shadow-sm);
+  table-layout: fixed !important; /* Add this to enforce column widths */
+}
+
+.resource-table th,
+.resource-table td {
+  padding: 8px;
+  text-align: left;
+  border: 1px solid var(--border-color);
+}
+
+.resource-table th {
+  background-color: var(--primary-color);
+  color: var(--white);
+  text-align: center; 
+  padding: var(--spacing-md);
+}
+
+.resource-table input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+}
+
+.resource-table td:nth-child(5) input {
+  text-align: right;
+}
+
+.resource-table td:nth-child(5) input.centered-input {
+  text-align: center;
+}
+
+.resource-table td:nth-child(6) input,
+.resource-table td:nth-child(7) input, 
+.resource-table td:nth-child(8) input {
+  text-align: center;
+}
+
+.resource-table td:last-child {
+  text-align: center;
+  width: 60px; 
+}
+
+.resource-table td:last-child .delete-btn {
+  margin: 0 auto; 
+}
+
+/* Update Column width adjustments to use percentages */
+.resource-table td:nth-child(1) {  /* Project No. */
+  width: 15%;
+}
+
+.resource-table td:nth-child(2) {  /* Name */
+  width: 20%;
+}
+
+.resource-table td:nth-child(3) {  /* Milestone */
+  width: 10%;
+}
+
+.resource-table td:nth-child(4) {  /* MS PM */
+  width: 10%;
+}
+
+.resource-table td:nth-child(5) {  /* Contract Total Labor */
+  width: 12%;
+}
+
+.resource-table td:nth-child(6) {  /* % EAC Labor Used */
+  width: 10%;
+}
+
+.resource-table td:nth-child(7) {  /* Planned Hours */
+  width: 4% !important; /* Reduce from 5% */
+}
+
+.resource-table td:nth-child(8) {  /* Remarks */
+  width: 25% !important; /* Increase from 20% */
+}
+
+.resource-table td:nth-child(9) {  /* Delete button column */
+  width: 3%;
+}
+
+/* Ensure consistent widths between headers and cells */
+.resource-table th:nth-child(1),
+.resource-table th:nth-child(2),
+.resource-table th:nth-child(3),
+.resource-table th:nth-child(4),
+.resource-table th:nth-child(5),
+.resource-table th:nth-child(6),
+.resource-table th:nth-child(7),
+.resource-table th:nth-child(8),
+.resource-table th:nth-child(9) {
+  width: inherit;
+}
+
+.resource-table th:nth-child(5),
+.resource-table td:nth-child(5) {
+  width: 100px;
+}
+
+.resource-table th:nth-child(6),
+.resource-table td:nth-child(6) {
+  width: 100px;
+}
+
+/* Adjust these specific widths */
+.resource-table th:nth-child(7),
+.resource-table td:nth-child(7) {
+  width: 80px !important; /* Force this width */
+}
+
+.resource-table th:nth-child(8),
+.resource-table td:nth-child(8) {
+  width: 250px !important; /* Force this width - increase from 200px to 250px */
+}
+
+.resource-table th:nth-child(10),
+.resource-table td:nth-child(10) {
+  width: 50px;
+}
+
+.table-actions {
+  margin-top: 20px;
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+/* Button Styles */
+.add-btn, .save-btn, .delete-btn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: none;
+  border-radius: var(--border-radius);
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.add-btn {
+  background-color: var(--success-color);
+  color: var(--white);
+}
+
+.save-btn {
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+.delete-btn {
+  background-color: var(--error-color);
+  color: var(--white);
+  width: 32px;
+  height: 32px;
+  padding: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+}
+
+.delete-btn svg {
+  width: 14px;
+  height: 14px;
+}
+
+.add-btn:hover, .save-btn:hover, .delete-btn:hover {
+  opacity: 0.9;
+}
+
+/* Add Row Button Styles */
+.add-row-btn {
+  margin-left: auto;
+  padding: 4px 12px;
+  background-color: var(--success-color);
+  color: var(--white);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+}
+
+.add-row-btn:hover {
+  opacity: 0.9;
+}
+
+/* Summary Components */
+.hours-summary {
+  margin-top: 20px;
+  padding: 12px;
+  background-color: var(--primary-color);
+  color: var(--white);
+  border-radius: 4px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 10px;
+}
+
+.ratio-separator {
+  width: 2px;
+  height: 20px;
+  background-color: var(--border-color);
+  margin: 0 10px;
+}
+
+.ratio-label {
+  font-weight: 500;
+}
+
+.ratio-value {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+/* Dashboard Components */
+.pm-dashboard {
+  background-color: var(--white);
+  padding: var(--spacing-xl);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.pm-dashboard h2 {
+  color: var(--primary-color);
+  margin-bottom: 20px;
+}
+
+.resource-summary {
+  margin-bottom: 30px;
+}
+
+.resource-summary h3 {
+  color: var(--primary-color);
+  margin-bottom: 15px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid var(--primary-color);
+}
+
+.summary-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+  background-color: var(--white);
+  box-shadow: var(--shadow-sm);
+}
+
+.summary-table th,
+.summary-table td {
+  padding: 10px 20px;
+  text-align: center;
+  border: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.summary-table th {
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+.summary-table .total-row {
+  background-color: var(--background-gray);
+  border-top: 2px solid var(--border-color);
+}
+
+.summary-table .total-row td {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.summary-table .total-row td[colspan] {
+  text-align: right !important;
+  padding-right: var(--spacing-lg);
+}
+
+.summary-table .total-row .total-label {
+  text-align: right;
+  padding-right: var(--spacing-lg);
+}
+
+.summary-table .total-row .number-cell {
+  text-align: center;
+}
+
+.warning-cell {
+  background-color: #ffebee;
+  color: var(--error-color);
+  font-weight: 600;
+}
+
+.caution-cell {
+  background-color: #ffe6003f;
+}
+
+.loading {
+  padding: 20px;
+  text-align: center;
+  color: var(--temp-text);
+}
+
+.project-summary {
+  background-color: var(--white);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.project-summary h3 {
+  color: var(--primary-color);
+  margin-bottom: 15px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid var(--primary-color);
+  font-size: var(--font-lg);
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.project-summary h3 {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.project-name {
+  font-weight: normal;
+  color: var(--temp-text);
+  margin-left: 10px;
+  font-size: 0.9em;
+}
+
+.group-separator {
+  background-color: var(--background-gray);
+  font-weight: bold;
+}
+
+.group-separator td {
+  padding: 8px;
+  text-align: left;
+  border-bottom: 2px solid var(--border-color);
+}
+
+.overhead-total {
+  background-color: var(--background-gray);
+  font-weight: bold;
+}
+
+.overhead-total-label {
+  text-align: right;
+  padding-right: 16px;
+}
+
+.overhead-total-hours {
+  text-align: center;
+  font-weight: bold;
+}
+
+.scheduled-hours-container {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  background-color: var(--white);
+  border-radius: 4px;
+  margin-bottom: 20px;
+  box-shadow: 0 1px 3px var(--shadow-lg);
+}
+
+.scheduled-hours-container label {
+  font-weight: 500;
+  color: var(--primary-color);
+}
+
+.scheduled-hours-container input {
+  width: 80px;
+  padding: 8px;
+  border: 0px;
+  border-radius: 4px;
+  text-align: left;
+}
+
+.direct-total {
+  background-color: var(--background-gray);
+  font-weight: bold;
+}
+
+.direct-total-label {
+  text-align: right;
+  padding-right: 16px;
+}
+
+.direct-total-hours {
+  text-align: center;
+  font-weight: bold;
+}
+
+.pto-section {
+  background-color: var(--background-gray);
+}
+
+.pto-total {
+  background-color: var(--background-gray);
+  font-weight: bold;
+}
+
+.pto-total-label {
+  text-align: right;
+  padding-right: 16px;
+}
+
+.pto-total-hours {
+  text-align: center;
+  font-weight: bold;
+}
+
+.lwop-section {
+  background-color: var(--background-gray);
+}
+
+.lwop-total {
+  background-color: var(--background-gray);
+  font-weight: bold;
+}
+
+.lwop-total-label {
+  text-align: right;
+  padding-right: 16px;
+}
+
+.lwop-total-hours {
+  text-align: center;
+  font-weight: bold;
+}
+
+.nav-buttons {
+  margin-left: auto;
+  display: flex;
+  gap: 10px;
+}
+
+.gl-dashboard {
+  padding: 20px;
+  background-color: var(--background-color);
+  flex: 1;
+  overflow-y: auto;
+}
+
+.gl-dashboard h2 {
+  color: var(--primary-color);
+  margin-bottom: 20px;
+}
+
+.discipline-summary {
+  background-color: var(--white);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-lg);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.discipline-summary h3 {
+  color: var(--primary-color);
+  margin-bottom: 15px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid var(--primary-color);
+  font-size: var(--font-lg);
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.group-summary {
+  background-color: var(--white);
+  padding: var(--spacing-xl);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.group-summary h2 {
+  color: var(--primary-color);
+  margin-bottom: 20px;
+}
+
+.summary-section {
+  background-color: var(--white);
+  padding: var(--spacing-xl);
+  margin-bottom: var(--spacing-xl);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.summary-section h3 {
+  color: var(--primary-color);
+  margin-bottom: 15px;
+  padding-bottom: 5px;
+  border-bottom: 2px solid var(--primary-color);
+  font-size: var(--font-lg);
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.summary-section .summary-table {
+  width: auto;
+  min-width: 300px;
+  margin: 0 auto;
+}
+
+.summary-section .summary-table th {
+  background-color: var(--primary-color);
+  color: var(--white);
+  text-align: center;
+  padding: 12px 24px;
+}
+
+.summary-section .summary-table td {
+  padding: 12px 24px;
+  text-align: center;
+}
+
+.discipline-summary .summary-table td:nth-child(1), /* Project Number */
+.discipline-summary .summary-table td:nth-child(2), /* Project Name */
+.discipline-summary .summary-table td:nth-child(3) /* PM Name */ {
+  text-align: left;
+}
+
+.discipline-summary .summary-table td:nth-child(4) /* Contract Total Labor */ {
+  text-align: center;
+}
+
+.discipline-summary .summary-table .total-row td {
+  text-align: center;
+  font-weight: bold;
+}
+
+.discipline-summary .summary-table td:nth-child(3) /* Contract Total Labor */ {
+  text-align: center;
+}
+
+/* Project Metrics Table Styles */
+.project-metrics td,
+.project-metrics th {
+  width: 25%; /* Evenly distribute the four columns */
+  text-align: center;
+  padding: var(--spacing-md) var(--spacing-xl); /* Add consistent padding */
+}
+
+.project-metrics {
+  background-color: var(--white);
+}
+
+/* Resource Details Table Styles */
+.resource-details {
+  margin-top: 10px;
+}
+
+.resource-details th,
+.resource-details td {
+  width: 50%;
+}
+
+.resource-details th:last-child,
+.resource-details td:last-child {
+  text-align: center;
+}
+
+/* View Toggle Styles */
+.view-toggle {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+  margin-bottom: 20px;
+}
+
+.toggle-button {
+  padding: 8px 16px;
+  border: 1px solid var(--primary-color);
+  background-color: var(--white);
+  color: var(--primary-color);
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.toggle-button.active {
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+/* PM View Styles */
+.pm-summary {
+  background-color: var(--white);
+  padding: 20px;
+  border-radius: 4px;
+  box-shadow: 0 1px 3px var(--shadow-lg);
+}
+
+.pm-section {
+  margin-bottom: 30px;
+}
+
+.pm-section h3 {
+  color: var(--primary-color);
+  border-bottom: 2px solid var(--primary-color);
+  padding-bottom: 5px;
+  margin-bottom: 15px;
+}
+
+.pm-stats {
+  background-color: var(--background-gray);
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+}
+
+.project-details {
+  margin: 20px 0;
+  padding: 15px;
+  background-color: var(--background-gray);
+  border-radius: 4px;
+}
+
+.project-details h4 {
+  color: var(--primary-color);
+  margin-bottom: 10px;
+}
+
+/* PM View Table Styles */
+.resource-total {
+  background-color: var(--background-gray);
+}
+
+.resource-total-label {
+  text-align: right;
+  padding-right: 16px;
+}
+
+.pm-total {
+  background-color: var(--background-gray);
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+.pm-total-label {
+  text-align: right;
+  padding-right: var(--spacing-lg);
+  color: var(--primary-color);
+}
+
+.pm-total td {
+  color: var(--primary-color);
+}
+
+.pm-total strong {
+  color: var(--primary-color);
+}
+
+/* PM View Table Styles */
+.project-total {
+  background-color: var(--background-gray);
+}
+
+.project-total-label {
+  text-align: right;
+  padding-right: 16px;
+}
+
+.pm-total {
+  background-color: var(--background-gray);
+  font-weight: bold;
+}
+
+.pm-total-label {
+  text-align: right;
+  padding-right: 16px;
+}
+
+/* PM Dashboard Project Summary Styles */
+.project-metrics th,
+.project-metrics td {
+  width: 25%; /* Evenly distribute the four columns */
+  text-align: center;
+  padding: 10px;
+}
+
+.total-row {
+  background-color: var(--background-gray);
+  border-top: 2px solid var(--border-color);
+}
+
+.total-row td {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.total-row strong {
+  color: var(--primary-color);
+}
+
+.total-label {
+  text-align: right;
+  padding-right: var(--spacing-lg);
+}
+
+.total-row td[colspan] {
+  text-align: right !important;
+  padding-right: var(--spacing-lg);
+}
+
+.total-row .total-label {
+  text-align: right;
+  padding-right: var(--spacing-lg);
+}
+
+.total-row .number-cell {
+  text-align: center;
+}
+
+.discipline-summary .summary-table th,
+.discipline-summary .summary-table td {
+  padding: var(--spacing-md) var(--spacing-lg);
+}
+
+.discipline-summary .summary-table th:nth-child(1), /* Project Number */
+.discipline-summary .summary-table td:nth-child(1) {
+  width: 20%;
+  text-align: left;
+}
+
+.discipline-summary .summary-table th:nth-child(2), /* Project Name */
+.discipline-summary .summary-table td:nth-child(2) {
+  width: 40%;
+  text-align: left;
+}
+
+.discipline-summary .summary-table th:nth-child(3), /* Contract Total Labor */
+.discipline-summary .summary-table td:nth-child(3) {
+  width: 15%;
+  text-align: center;
+}
+
+.discipline-summary .summary-table th:nth-child(4), /* % Labor Used */
+.discipline-summary .summary-table td:nth-child(4) {
+  width: 15%;
+  text-align: center;
+}
+
+.discipline-summary .summary-table th:nth-child(5), /* Actual Multiplier Rate */
+.discipline-summary .summary-table td:nth-child(5) {
+  width: 15%;
+  text-align: center;
+}
+
+.discipline-summary .summary-table th:nth-child(6), /* Hours */
+.discipline-summary .summary-table td:nth-child(6) {
+  width: 10%;  /* Increase from 5% to 15% */
+  text-align: center;
+  padding: 4px 8px;
+}
+
+/* Update discipline-summary table header styling */
+.discipline-summary .summary-table th {
+  background-color: var(--primary-color);
+  color: var(--white);
+  text-align: center;
+  padding: 12px 24px;
+}
+
+/* Update SL Page table styles to match PM page */
+.discipline-summary .summary-table,
+.summary-section .summary-table {
+  margin-bottom: 20px;
+  background-color: var(--white);
+  box-shadow: 0 1px 3px var(--shadow-lg);
+  width: 100%;
+}
+
+.discipline-summary .summary-table th,
+.summary-section .summary-table th {
+  background-color: var(--primary-color);
+  color: var(--white);
+  text-align: center;
+  padding: 12px 24px;
+  border: 1px solid var(--border-color);
+}
+
+.discipline-summary .summary-table td,
+.summary-section .summary-table td {
+  border: 1px solid var(--border-color);
+  vertical-align: middle;
+}
+
+.discipline-summary .summary-table .total-row,
+.summary-section .summary-table .total-row {
+  background-color: var(--background-gray);
+  border-top: 2px solid var(--border-color);
+}
+
+.discipline-summary .summary-table .total-row td,
+.summary-section .summary-table .total-row td {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+/* Utility Classes */
+.error-banner {
+  background-color: var(--background-color);
+  color: var(--error-color);
+  padding: 12px;
+  margin-bottom: 16px;
+  border-radius: 4px;
+  border: 1px solid var(--error-color);
+}
+
+.nav-button {
+  margin-left: auto;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  background-color: var(--white);
+  color: var(--primary-color);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: background-color 0.3s ease;
+}
+
+.nav-button:hover {
+  background-color: var(--background-color);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .drag-drop-area, .announcements-form {
+    min-width: 100%;
+  }
+  
+  .content-wrapper {
+    flex-direction: column;
+    gap: 15px;
+  }
+}
+
+/* Center align input values */
+.resource-table input[type="text"] {
+  text-align: center;
+}
+
+/* Specific centering for Contract Total Labor and % EAC Labor Used columns */
+.resource-table td:nth-child(5) input,
+.resource-table td:nth-child(6) input {
+  text-align: center !important;
+}
+
+.direct-total td,
+.pto-total td,
+.overhead-total td {
+  text-align: center;
+  padding: var(--spacing-md);
+  vertical-align: middle;
+}
+
+.direct-total-label,
+.pto-total-label,
+.overhead-total-label {
+  text-align: right !important;
+}
+
+.direct-total-hours,
+.pto-total-hours,
+.overhead-total-hours {
+  text-align: center !important;
+  font-weight: bold;
+}
+
+/* Read-only input styles */
+.resource-table input[readonly] {
+  border: none;
+  background-color: transparent;
+  /* padding: 2px; */
+  width: 100%;
+}
+
+/* Hours Input Styles */
+.hours-input {
+  width: 100%;
+  padding: 4px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  text-align: center;
+  background-color: var(--white);
+}
+
+.hours-input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+/* Update discipline summary table styles */
+.discipline-summary {
+  padding: 4px 8px;
+}
+
+/* Hours Input Styles */
+.hours-input {
+  position: absolute;
+  opacity: 0;
+  pointer-events: none;
+}
+
+.number-cell {
+  position: relative;
+}
+
+.formatted-hours {
+  padding: 4px;
+  text-align: center;
+  cursor: pointer;
+}
+
+.number-cell:hover .hours-input {
+  position: static;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.number-cell:hover .formatted-hours {
+  display: none;
+}
+
+/* Update Project Number Input Styles */
+.project-number-cell input {
+  width: 100%;
+  padding: 8px;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-family: var(--font-primary);
+  font-size: var(--font-sm);
+}
+
+.project-number-cell input:focus {
+  outline: none;
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px var(--primary-light);
+}
+
+.project-number-cell input::placeholder {
+  color: var(--temp-text);
+  font-size: 0.9em;
+}
+
+.no-data {
+  padding: 20px;
+  text-align: center;
+  color: var(--temp-text);
+  background: var(--white);
+  border-radius: var(--border-radius);
+  margin: 20px 0;
+}
+
+.pm-dashboard .user-selector {
+  margin-bottom: 20px;
+}
+
+/* Project Metrics Table Styles - Update column widths for GL page tables */
+.gl-dashboard .project-summary .summary-table th:nth-child(1), /* Project Number */
+.gl-dashboard .project-summary .summary-table td:nth-child(1) {
+  width: 20%;
+}
+
+.gl-dashboard .project-summary .summary-table th:nth-child(2), /* Project Name */
+.gl-dashboard .project-summary .summary-table td:nth-child(2) {
+  width: 35%;
+}
+
+.gl-dashboard .project-summary .summary-table th:nth-child(3), /* Contract Total Labor */
+.gl-dashboard .project-summary .summary-table td:nth-child(3) {
+  width: 15%;
+}
+
+.gl-dashboard .project-summary .summary-table th:nth-child(4), /* % EAC Labor Used */
+.gl-dashboard .project-summary .summary-table td:nth-child(4) {
+  width: 15%;
+}
+
+.gl-dashboard .project-summary .summary-table th:nth-child(5), /* Planned Hours */
+.gl-dashboard .project-summary .summary-table td:nth-child(5) {
+  width: 15%;
+}
+
+/* Ensure GL page tables fill width and have fixed layout */
+.gl-dashboard .project-summary .summary-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+/* Update GL page table styles */
+.gl-dashboard .project-summary .total-row td {
+  border-top: 2px solid var(--border-color);
+}
+
+.gl-dashboard .project-summary .total-row td[colspan] {
+  text-align: right;
+  padding-right: var(--spacing-lg);
+}
+
+.gl-dashboard .project-summary .total-row .number-cell {
+  text-align: center;
+  font-weight: bold;
+  color: var(--primary-color);
+}
+
+/* User info container and team controls */
+.user-info-container {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: 15px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  margin-right: 20px;
+}
+
+.user-label {
+  font-weight: bold;
+  margin-right: 5px;
+}
+
+.user-name {
+  font-weight: normal;
+}
+
+/* Team controls styling */
+.team-controls {
+  display: flex;
+  align-items: center;
+}
+
+.team-dropdown {
+  position: relative;
+}
+
+.team-dropdown-btn {
+  background-color: #2c5282;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 8px 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.team-dropdown-btn:hover {
+  background-color: #1e3a5f;
+}
+
+.team-dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  z-index: 100;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  min-width: 250px;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 5px;
+}
+
+.team-member-option {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #eee;
+  transition: background-color 0.2s;
+}
+
+.team-member-option:hover {
+  background-color: #f5f5f5;
+}
+
+.member-name {
+  font-weight: 500;
+  font-size: 0.95rem;
+}
+
+.member-details {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 2px;
+}
+
+.no-team-members {
+  padding: 10px 12px;
+  color: #666;
+  font-style: italic;
+}
+
+/* Managing indicator */
+.managing-indicator {
+  display: flex;
+  align-items: center;
+  background-color: #ebf8ff;
+  border: 1px solid #bee3f8;
+  border-radius: 4px;
+  padding: 6px 12px;
+}
+
+.managing-indicator span {
+  margin-right: 5px;
+  font-size: 0.9rem;
+  color: #2c5282;
+}
+
+.managing-indicator strong {
+  margin-right: 10px;
+  color: #2b6cb0;
+}
+
+.reset-view-btn {
+  background-color: #e53e3e;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  padding: 4px 8px;
+  font-size: 0.8rem;
+  margin-left: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.reset-view-btn:hover {
+  background-color: #c53030;
+}
+
+/* Scheduled hours container adjustments */
+.scheduled-hours-container {
+  display: flex;
+  align-items: center;
+  margin-left: auto;
+}
+
+.scheduled-hours-container label {
+  margin-right: 8px;
+  font-weight: 500;
+}
+
+.scheduled-hours-container input[readOnly] {
+  background-color: var(--white);
+  color: var(--primary-dark);
+  cursor: default;
+  border: 1px solid var(--border-color);
+}

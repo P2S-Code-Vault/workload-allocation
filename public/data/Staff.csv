@@ -1,0 +1,262 @@
+﻿Name,Email,Labor_Category__c,Resource_Studio_Leader__c,Studio Leader,Group_Manager__c,Is_Group_Manager__c
+Joseph Palomarez,joseph.palomarez@p2sinc.com,CAD/BIM Designer Grade 01,SL Grp 11-00,"Herrera, Jonathan","Herrera, Jonathan",false
+Nilay Nagar,nilay.nagar@p2sinc.com,CAD/BIM Designer Grade 01,SL Grp 11-00,"Herrera, Jonathan","Herrera, Jonathan",false
+Daniel Santos,daniel.santos@p2sinc.com,CAD/BIM Designer Grade 02,SL Grp 11-00,"Herrera, Jonathan","Herrera, Jonathan",false
+Claudia Naranjo Martinez,claudia.naranjo@p2sinc.com,CAD/BIM Designer Grade 03,SL Grp 11-00,"Herrera, Jonathan","Herrera, Jonathan",false
+Alfred Ortiz,fred.ortiz@p2sinc.com,CAD/BIM Designer Grade 04,SL Grp 11-00,"Herrera, Jonathan","Herrera, Jonathan",false
+Brian Rouze,brian.rouze@p2sinc.com,CAD/BIM Designer Grade 04,SL Grp 11-00,"Herrera, Jonathan","Herrera, Jonathan",false
+John Voso,john.voso@p2sinc.com,CAD/BIM Designer Grade 04,SL Grp 11-00,"Herrera, Jonathan","Herrera, Jonathan",false
+Jonathan Herrera,jonathan.herrera@p2sinc.com,CAD/BIM Designer Grade 04,SL Grp 11-00,"Herrera, Jonathan","Herrera, Jonathan",true
+Selene Ramirez,selene.ramirez@p2sinc.com,CAD/BIM Designer Grade 04,SL Grp 11-00,"Herrera, Jonathan","Herrera, Jonathan",false
+Theresa Siri,theresa.siri@p2sinc.com,Design Engineer Grade 01,SL Grp 12-00,"Jimenez, Andres","Jimenez, Andres",false
+Marco Garay,marco.garay@p2sinc.com,Design Engineer Grade 02,SL Grp 12-00,"Jimenez, Andres","Jimenez, Andres",false
+Haydee Diaz,haydee.diaz@p2sinc.com,Design Engineer Grade 03,SL Grp 12-00,"Jimenez, Andres","Jimenez, Andres",false
+Jessica Lutz,jessica.lutz@p2sinc.com,Design Engineer Grade 04,SL Grp 12-00,"Jimenez, Andres","Jimenez, Andres",false
+Hector Ramirez,hector.ramirez@p2sinc.com,Engineer Grade 01,SL Grp 12-00,"Jimenez, Andres","Jimenez, Andres",false
+Alexander Hoeft,alex.hoeft@p2sinc.com,Engineer Grade 03,SL Grp 12-00,"Jimenez, Andres","Jimenez, Andres",false
+Andres Jimenez,andres.jimenez@p2sinc.com,Engineer Grade 03,SL Grp 12-00,"Jimenez, Andres","Jimenez, Andres",false
+Archanaa Pradhapan,archanaa.pradhapan@p2sinc.com,Design Engineer Grade 02,SL Grp 13-00,"Jewell, Gary","Jewell, Gary",false
+Toranj Noroozi,toranj.naroozi@p2sinc.com,Design Engineer Grade 03,SL Grp 13-00,"Jewell, Gary","Jewell, Gary",false
+Elham Motevalian,elham.motevalian@p2sinc.com,Design Engineer Grade 04,SL Grp 13-00,"Jewell, Gary","Jewell, Gary",false
+Jose Obusan,jose.obusan@p2sinc.com,Engineer Grade 01,SL Grp 13-00,"Jewell, Gary","Jewell, Gary",false
+Gary Jewell,gary.jewell@p2sinc.com,Engineer Grade 04,SL Grp 13-00,"Jewell, Gary","Jewell, Gary",true
+Cynthia Callaway,cindy.callaway@p2sinc.com,Engineer Grade 05,SL Grp 21-00,"Alexander, Greg","Alexander, Greg",false
+Greg Alexander,greg.alexander@p2sinc.com,Engineer Grade 05,SL Grp 21-00,"Alexander, Greg","Alexander, Greg",true
+Amir Radmanesh,amir.radmanesh@p2sinc.com,Design Engineer Grade 01,SL Grp 21-01,"Barillas, Jaime","Alexander, Greg",false
+James Williams,james.williams@p2sinc.com,Design Engineer Grade 01,SL Grp 21-01,"Barillas, Jaime","Alexander, Greg",false
+Akshay Dhanapal Kumar,akshay.kumar@p2sinc.com,Design Engineer Grade 03,SL Grp 21-01,"Barillas, Jaime","Alexander, Greg",false
+Matthew Tatsumi,matthew.tatsumi@p2sinc.com,Design Engineer Grade 03,SL Grp 21-01,"Barillas, Jaime","Alexander, Greg",false
+Anny Du,anny.du@p2sinc.com,Engineer Grade 02,SL Grp 21-01,"Barillas, Jaime","Alexander, Greg",false
+Anthony Te,anthony.te@p2sinc.com,Engineer Grade 02,SL Grp 21-01,"Barillas, Jaime","Alexander, Greg",false
+Jaime Barillas,jaime.barillas@p2sinc.com,Engineer Grade 02,SL Grp 21-01,"Barillas, Jaime","Alexander, Greg",false
+Johnny Lai,johnny.lai@p2sinc.com,Engineer Grade 03,SL Grp 21-01,"Barillas, Jaime","Alexander, Greg",false
+Christian Canedo,christian.canedo@p2sinc.com,Design Engineer Grade 01,SL Grp 21-02,"Andrade Navarro, Joab","Alexander, Greg",false
+Diego Causarano,diego.causarano@p2sinc.com,Design Engineer Grade 01,SL Grp 21-02,"Andrade Navarro, Joab","Alexander, Greg",false
+Praroop Joshi,praroop.joshi@p2sinc.com,Design Engineer Grade 02,SL Grp 21-02,"Andrade Navarro, Joab","Alexander, Greg",false
+Renz Lane,renz.lane@p2sinc.com,Design Engineer Grade 02,SL Grp 21-02,"Andrade Navarro, Joab","Alexander, Greg",false
+Joab Andrade Navarro,joab.andrade@p2sinc.com,Engineer Grade 02,SL Grp 21-02,"Andrade Navarro, Joab","Alexander, Greg",false
+Daniel Rascol,daniel.rascol@p2sinc.com,Design Engineer Grade 01,SL Grp 21-03,"Fernando, Mevan","Alexander, Greg",false
+Jose Toledo,jose.toledo@p2sinc.com,Design Engineer Grade 01,SL Grp 21-03,"Fernando, Mevan","Alexander, Greg",false
+Mevan Fernando,mevan.fernando@p2sinc.com,Engineer Grade 02,SL Grp 21-03,"Fernando, Mevan","Alexander, Greg",false
+Peniamin Chavdarian,ben.chavdarian@p2sinc.com,Engineer Grade 05,SL Grp 21-03,"Fernando, Mevan","Alexander, Greg",false
+Phan Truong,phan.truong@p2sinc.com,Design Engineer Grade 04,SL Grp 21-04,"Sayler, Kent","Alexander, Greg",false
+Maggie Gunawan,maggie.gunawan@p2sinc.com,Engineer Grade 01,SL Grp 21-04,"Sayler, Kent","Alexander, Greg",false
+Steven Peterson,steven.peterson@p2sinc.com,Engineer Grade 04,SL Grp 22-00,"Peterson, Steven","Peterson, Steven",true
+Doug Effenberger,doug.effenberger@p2sinc.com,Principal Engineer,SL Grp 22-00,"Peterson, Steven","Peterson, Steven",false
+Amina Mubarak,amina.mubarak@p2sinc.com,Design Engineer Grade 01,SL Grp 22-01,"Ihlenfeldt, Daniel","Peterson, Steven",false
+Demyana Gouda,demyana.gouda@p2sinc.com,Design Engineer Grade 02,SL Grp 22-01,"Ihlenfeldt, Daniel","Peterson, Steven",false
+Mark Paton,mark.paton@p2sinc.com,Design Engineer Grade 03,SL Grp 22-01,"Ihlenfeldt, Daniel","Peterson, Steven",false
+Daniel Ihlenfeldt,daniel.ihlenfeldt@p2sinc.com,Engineer Grade 03,SL Grp 22-01,"Ihlenfeldt, Daniel","Peterson, Steven",false
+Richard Bono,richard.bono@p2sinc.com,Engineer Grade 05,SL Grp 22-01,"Ihlenfeldt, Daniel","Peterson, Steven",false
+Ernest Kim,ernest.kim@p2sinc.com,Design Engineer Grade 01,SL Grp 22-03,"Tram, Bryant","Peterson, Steven",false
+Jose Rea,jose.rea@p2sinc.com,Design Engineer Grade 01,SL Grp 22-03,"Tram, Bryant","Peterson, Steven",false
+Deni Lee,deni.lee@p2sinc.com,Design Engineer Grade 02,SL Grp 22-03,"Tram, Bryant","Peterson, Steven",false
+Jeffrey Flitman,jeffrey.flitman@p2sinc.com,Design Engineer Grade 05,SL Grp 22-03,"Tram, Bryant","Peterson, Steven",false
+Bryant Tram,bryant.tram@p2sinc.com,Engineer Grade 03,SL Grp 22-03,"Tram, Bryant","Peterson, Steven",false
+Mateusz Szlachetka,matt.szlachetka@p2sinc.com,Engineer Grade 05,SL Grp 31-00,"Thomas, Ivan","Thomas, Ivan",false
+Ivan Thomas,ivan.thomas@p2sinc.com,Principal Engineer,SL Grp 31-00,"Thomas, Ivan","Thomas, Ivan",true
+Jerred Hermogino,jerred.hermogino@p2sinc.com,Design Engineer Grade 01,SL Grp 31-01,"Singh, Jagjit","Thomas, Ivan",false
+Roderick De Castro,rod.decastro@p2sinc.com,Design Engineer Grade 04,SL Grp 31-01,"Singh, Jagjit","Thomas, Ivan",false
+Roohan Gooneratne,roohan.gooneratne@p2sinc.com,Design Engineer Grade 04,SL Grp 31-01,"Singh, Jagjit","Thomas, Ivan",false
+Sunila Eapen,sunila.eapen@p2sinc.com,Design Engineer Grade 04,SL Grp 31-01,"Singh, Jagjit","Thomas, Ivan",false
+Timothy Kampen,tim.kampen@p2sinc.com,Engineer Grade 02,SL Grp 31-01,"Singh, Jagjit","Thomas, Ivan",false
+Jagjit Singh,jagjit.singh@p2sinc.com,Principal Engineer,SL Grp 31-01,"Singh, Jagjit","Thomas, Ivan",false
+Anthony Hernandez,tony.hernandez@p2sinc.com,Designer Grade 04,SL Grp 31-02,"Domingo, Rolando","Thomas, Ivan",false
+Chad Peterson,chad.peterson@p2sinc.com,Designer Grade 04,SL Grp 31-02,"Domingo, Rolando","Thomas, Ivan",false
+Sabino Padilla,sabino.padilla@p2sinc.com,Engineer Grade 02,SL Grp 31-02,"Domingo, Rolando","Thomas, Ivan",false
+Rolando Domingo,rolando.domingo@p2sinc.com,Engineer Grade 04,SL Grp 31-02,"Domingo, Rolando","Thomas, Ivan",false
+Amir Jones,amir.jones@p2sinc.com,Design Engineer Grade 01,SL Grp 31-03,"Sassoon, Alexander","Thomas, Ivan",false
+Anthony Nhem,anthony.nhem@p2sinc.com,Design Engineer Grade 01,SL Grp 31-03,"Sassoon, Alexander","Thomas, Ivan",false
+Abigail Balisi,nicole.balisi@p2sinc.com,Design Engineer Grade 02,SL Grp 31-03,"Sassoon, Alexander","Thomas, Ivan",false
+Alexander Sassoon,alex.sassoon@p2sinc.com,Engineer Grade 04,SL Grp 31-03,"Sassoon, Alexander","Thomas, Ivan",false
+Christopher Tanakaya,chris.tanakaya@p2sinc.com,Design Engineer Grade 02,SL Grp 31-04,"Zeller, Kellen","Thomas, Ivan",false
+Peter D'Onofrio,peter.donofrio@p2sinc.com,Engineer Grade 01,SL Grp 31-04,"Zeller, Kellen","Thomas, Ivan",false
+Michael Nguyen,michael.nguyen@p2sinc.com,Engineer Grade 04,SL Grp 31-04,"Zeller, Kellen","Thomas, Ivan",false
+Kellen Zeller,kellen.zeller@p2sinc.com,Engineer Grade 05,SL Grp 31-04,"Zeller, Kellen","Thomas, Ivan",false
+Wesley Mckean,wes.mckean@p2sinc.com,Design Engineer Grade 05,SL Grp 43-00,"Mckean, Wesley","McKean, Wesley",true
+Kirk Anglin,kirk.anglin@p2sinc.com,Engineer Grade 05,SL Grp 43-00,"Mckean, Wesley","McKean, Wesley",false
+Marco Cabibbo,marco.cabibbo@p2sinc.com,Engineer Grade 05,SL Grp 43-00,"Mckean, Wesley","McKean, Wesley",false
+Mike Shen,mike.shen@p2sinc.com,Engineer Grade 05,SL Grp 43-00,"Mckean, Wesley","McKean, Wesley",true
+Amanda Miranda,amanda.lagasca@p2sinc.com,Design Engineer Grade 03,SL Grp 43-01,"Gomez, Eric","McKean, Wesley",false
+Octavio Gonzalez,octavio.gonzalez@p2sinc.com,Design Engineer Grade 03,SL Grp 43-01,"Gomez, Eric","McKean, Wesley",false
+Sagar Shah,sagar.shah@p2sinc.com,Design Engineer Grade 03,SL Grp 43-01,"Gomez, Eric","McKean, Wesley",false
+Eric Gomez,eric.gomez@p2sinc.com,Design Engineer Grade 05,SL Grp 43-01,"Gomez, Eric","McKean, Wesley",false
+Christian Goodhue,christian.goodhue@p2sinc.com,Engineer Grade 01,SL Grp 43-01,"Gomez, Eric","McKean, Wesley",false
+Scott Repenning,scott.repenning@p2sinc.com,Engineer Grade 02,SL Grp 43-01,"Gomez, Eric","McKean, Wesley",false
+Keval Radadiya,keval.radadiya@p2sinc.com,Design Engineer Grade 01,SL Grp 43-02,"Patne, Shishir","McKean, Wesley",false
+Rhonar Ramos,rhonar.ramos@p2sinc.com,Design Engineer Grade 02,SL Grp 43-02,"Patne, Shishir","McKean, Wesley",false
+Shishir Patne,shishir.patne@p2sinc.com,Design Engineer Grade 02,SL Grp 43-02,"Patne, Shishir","McKean, Wesley",false
+Lars Henderson,lars.henderson@p2sinc.com,Engineer Grade 04,SL Grp 43-02,"Patne, Shishir","McKean, Wesley",false
+Euan Tandiono,euan.tandiono@p2sinc.com,Design Engineer Grade 01,SL Grp 43-03,"Martinez, Rudy","McKean, Wesley",false
+Shannon Hormozian,shannon.hormozian@p2sinc.com,Design Engineer Grade 02,SL Grp 43-03,"Martinez, Rudy","McKean, Wesley",false
+Rudy Martinez,rudy.martinez@p2sinc.com,Design Engineer Grade 03,SL Grp 43-03,"Martinez, Rudy","McKean, Wesley",false
+Cristian Arranaga,cristian.arranaga@p2sinc.com,Engineer Grade 02,SL Grp 43-03,"Martinez, Rudy","McKean, Wesley",false
+Daniel Rizo,daniel.rizo@p2sinc.com,Engineer Grade 02,SL Grp 43-03,"Martinez, Rudy","McKean, Wesley",false
+Bridge Robinson,bridge.robinson@p2sinc.com,Design Engineer Grade 01,SL Grp 43-04,"Newman, Scott","McKean, Wesley",false
+Lucas Pruett,lucas.pruett@p2sinc.com,Design Engineer Grade 01,SL Grp 43-04,"Newman, Scott","McKean, Wesley",false
+Manoj P,manoj.p@p2sinc.com,Design Engineer Grade 01,SL Grp 43-04,"Newman, Scott","McKean, Wesley",false
+Andrew Smith,andrew.smith@p2sinc.com,Design Engineer Grade 03,SL Grp 43-04,"Newman, Scott","McKean, Wesley",false
+Zachery Kell,zach.kell@p2sinc.com,Design Engineer Grade 03,SL Grp 43-04,"Newman, Scott","McKean, Wesley",false
+Alex Rozo,alex.rozo@p2sinc.com,Design Engineer Grade 04,SL Grp 43-04,"Newman, Scott","McKean, Wesley",false
+Jessica Clark,jessica.ghareebo@p2sinc.com,Engineer Grade 01,SL Grp 43-04,"Newman, Scott","McKean, Wesley",false
+Kris Schaffer,kris.schaffer@p2sinc.com,Engineer Grade 01,SL Grp 43-04,"Newman, Scott","McKean, Wesley",false
+Dalton Guidry,dalton.guidry@p2sinc.com,Engineer Grade 02,SL Grp 43-04,"Newman, Scott","McKean, Wesley",false
+Shahpoor Khosravi Taft Yazd,shahpoor.khosravi@p2sinc.com,Engineer Grade 02,SL Grp 43-04,"Newman, Scott","McKean, Wesley",false
+Michael Grace,michael.grace@p2sinc.com,Engineer Grade 03,SL Grp 43-04,"Newman, Scott","McKean, Wesley",false
+Nathaniel Behning,nate.behning@p2sinc.com,Engineer Grade 03,SL Grp 43-04,"Newman, Scott","McKean, Wesley",false
+Scott Newman,scott.newman@p2sinc.com,Engineer Grade 04,SL Grp 43-04,"Newman, Scott","McKean, Wesley",false
+Kaya Ables,kaya.ables@p2sinc.com,Design Engineer Grade 01,SL Grp 52-00,"Von Der Linden, Karl","von der Linden, Karl",false
+Julian Duran,julian.duran@p2sinc.com,Design Engineer Grade 02,SL Grp 52-00,"Von Der Linden, Karl","von der Linden, Karl",false
+Antonio Acosta,antonio.acosta@p2sinc.com,Designer Grade 04,SL Grp 52-00,"Von Der Linden, Karl","von der Linden, Karl",false
+Cole Bailey,cole.bailey@p2sinc.com,Engineer Grade 01,SL Grp 52-00,"Von Der Linden, Karl","von der Linden, Karl",false
+John Kacperski,john.kacperski@p2sinc.com,Engineer Grade 04,SL Grp 52-00,"Von Der Linden, Karl","von der Linden, Karl",false
+Michael Dannenberg,michael.dannenberg@p2sinc.com,Engineer Grade 04,SL Grp 52-00,"Von Der Linden, Karl","von der Linden, Karl",false
+Karl Von Der Linden,karl.vonderlinden@p2sinc.com,Engineer Grade 05,SL Grp 52-00,"Von Der Linden, Karl","von der Linden, Karl",true
+Samuel Paano,sam.paano@p2sinc.com,Design Engineer Grade 03,SL Grp 52-01,"Burman, Steven","von der Linden, Karl",false
+Robert Demshki,robert.demshki@p2sinc.com,Designer Grade 01,SL Grp 52-01,"Burman, Steven","von der Linden, Karl",false
+Steven Burman,steve.burman@p2sinc.com,Engineer Grade 04,SL Grp 52-01,"Burman, Steven","von der Linden, Karl",false
+Andrew Morrison,andrew.morrison@p2sinc.com,Design Engineer Grade 02,SL Grp 52-02,"Wong, Benjamin","von der Linden, Karl",false
+Wil Acosta,wil.acosta@p2sinc.com,Design Engineer Grade 03,SL Grp 52-02,"Wong, Benjamin","von der Linden, Karl",false
+Mynor Perez,mynor.perez@p2sinc.com,Design Engineer Grade 04,SL Grp 52-02,"Wong, Benjamin","von der Linden, Karl",false
+Tom Gifford,tom.gifford@p2sinc.com,Design Engineer Grade 04,SL Grp 52-02,"Wong, Benjamin","von der Linden, Karl",false
+Benjamin Wong,benjamin.wong@p2sinc.com,Design Engineer Grade 05,SL Grp 52-02,"Wong, Benjamin","von der Linden, Karl",false
+Maria Morris,maria.morris@p2sinc.com,Designer Grade 03,SL Grp 52-02,"Wong, Benjamin","von der Linden, Karl",false
+Bob Winter,robert.winter@p2sinc.com,Design Engineer Grade 04,SL Grp 61-00,"Sloane, Peter","Sloane, Peter",false
+Peter Sloane,peter.sloane@p2sinc.com,Engineer Grade 04,SL Grp 61-00,"Sloane, Peter","Sloane, Peter",true
+Larry Swartz,larry.swartz@p2sinc.com,Engineer Grade 05,SL Grp 61-00,"Sloane, Peter","Sloane, Peter",false
+Kaitlen Tanaka,kaitlen.tanaka@p2sinc.com,Design Engineer Grade 02,SL Grp 61-01,"Lauderdale, Robert","Sloane, Peter",false
+Zak Diaczok,zak.diaczok@p2sinc.com,Design Engineer Grade 02,SL Grp 61-01,"Lauderdale, Robert","Sloane, Peter",false
+Neil Kiernan,neil.kiernan@p2sinc.com,Design Engineer Grade 04,SL Grp 61-01,"Lauderdale, Robert","Sloane, Peter",false
+Robert Lauderdale,robert.lauderdale@p2sinc.com,Design Engineer Grade 05,SL Grp 61-01,"Lauderdale, Robert","Sloane, Peter",false
+Aziz Abdulla,aziz.abdulla@p2sinc.com,Design Engineer Grade 02,SL Grp 61-02,"Jackson, Travis","Sloane, Peter",false
+Katie Koeman,katie.koeman@p2sinc.com,Engineer Grade 01,SL Grp 61-02,"Jackson, Travis","Sloane, Peter",false
+Alex Muirhead,alexander.muirhead@p2sinc.com,Engineer Grade 02,SL Grp 61-02,"Jackson, Travis","Sloane, Peter",false
+Travis Jackson,travis.jackson@p2sinc.com,Engineer Grade 03,SL Grp 61-02,"Jackson, Travis","Sloane, Peter",false
+Alessio Andolina,alessio.andolina@p2sinc.com,Design Engineer Grade 01,SL Grp 61-03,"Long, Matthew","Sloane, Peter",false
+Tony Campagnola,tony.campagnola@p2sinc.com,Design Engineer Grade 01,SL Grp 61-03,"Long, Matthew","Sloane, Peter",false
+Bennie Woo,bennie.woo@p2sinc.com,Design Engineer Grade 02,SL Grp 61-03,"Long, Matthew","Sloane, Peter",false
+Igor Rozanski,igor.rozanski@p2sinc.com,Designer Grade 04,SL Grp 61-03,"Long, Matthew","Sloane, Peter",false
+Nicholas Weishaar,nick.weishaar@p2sinc.com,Engineer Grade 03,SL Grp 61-03,"Long, Matthew","Sloane, Peter",false
+Matthew Long,matt.long@p2sinc.com,Engineer Grade 04,SL Grp 61-03,"Long, Matthew","Sloane, Peter",false
+Jeffrey Hansen,jeff.hansen@p2sinc.com,Engineer Grade 05,SL Grp 61-03,"Long, Matthew","Sloane, Peter",false
+Bryanna Palmer,bryanna.palmer@p2sinc.com,Design Engineer Grade 01,SL Grp 61-05,"Garras, Elizabeth","Sloane, Peter",false
+Steven Collet,steven.collet@p2sinc.com,Design Engineer Grade 01,SL Grp 61-05,"Garras, Elizabeth","Sloane, Peter",false
+Pramudita Bybee,dita.bybee@p2sinc.com,Engineer Grade 02,SL Grp 61-05,"Garras, Elizabeth","Sloane, Peter",false
+Elizabeth Garras,elizabeth.garras@p2sinc.com,Engineer Grade 03,SL Grp 61-05,"Garras, Elizabeth","Sloane, Peter",false
+William Turnipseed,bill.turnipseed@p2sinc.com,Engineer Grade 04,SL Grp 61-05,"Garras, Elizabeth","Sloane, Peter",false
+John Kosteroski,john.kosteroski@p2sinc.com,Engineer Grade 04,SL Grp 62-00,"Spitulski, Sierra","Spitulski, Sierra",false
+Sierra Spitulski,sierra.spitulski@p2sinc.com,Engineer Grade 04,SL Grp 62-00,"Spitulski, Sierra","Spitulski, Sierra",true
+Darren Schwend,darren.schwend@p2sinc.com,Engineer Grade 05,SL Grp 62-00,"Spitulski, Sierra","Spitulski, Sierra",false
+Lee Swanson,lee.swanson@p2sinc.com,Engineer Grade 05,SL Grp 62-00,"Spitulski, Sierra","Spitulski, Sierra",false
+Alex Riggs,alex.riggs@p2sinc.com,Design Engineer Grade 01,SL Grp 62-01,"Jones, Peregrin","Spitulski, Sierra",false
+Vivian Lu,vivian.lu@p2sinc.com,Design Engineer Grade 01,SL Grp 62-01,"Jones, Peregrin","Spitulski, Sierra",false
+Megan Larson,megan.larson@p2sinc.com,Design Engineer Grade 02,SL Grp 62-01,"Jones, Peregrin","Spitulski, Sierra",false
+Peregrin Jones,peregrin.jones@p2sinc.com,Design Engineer Grade 05,SL Grp 62-01,"Jones, Peregrin","Spitulski, Sierra",false
+Spenser Petherick,spenser.petherick@p2sinc.com,Engineer Grade 02,SL Grp 62-01,"Jones, Peregrin","Spitulski, Sierra",false
+Brian Robinett,brian.robinett@p2sinc.com,Engineer Grade 03,SL Grp 62-01,"Jones, Peregrin","Spitulski, Sierra",false
+Carl Bellows,carl.bellows@p2sinc.com,Engineer Grade 04,SL Grp 62-01,"Jones, Peregrin","Spitulski, Sierra",false
+Alec Walter,alec.walter@p2sinc.com,Design Engineer Grade 02,SL Grp 62-02,"Boss, Emily","Spitulski, Sierra",false
+Delyla Vue,delyla.vue@p2sinc.com,Design Engineer Grade 02,SL Grp 62-02,"Boss, Emily","Spitulski, Sierra",false
+James Rogers,james.rogers@p2sinc.com,Designer Grade 02,SL Grp 62-02,"Boss, Emily","Spitulski, Sierra",false
+Emily Boss,emily.boss@p2sinc.com,Engineer Grade 03,SL Grp 62-02,"Boss, Emily","Spitulski, Sierra",false
+Kristin Yao,kristin.yao@p2sinc.com,Commissioning Grade 03,SL Grp 62-03,"Sidun, Alexandra","Spitulski, Sierra",false
+Alexandra Sidun,alexandra.sidun@p2sinc.com,Commissioning Grade 04,SL Grp 62-03,"Sidun, Alexandra","Spitulski, Sierra",false
+Jake Huang,jake.huang@p2sinc.com,Commissioning Grade 04,SL Grp 62-03,"Sidun, Alexandra","Spitulski, Sierra",false
+Akshay Prabhu,akshay.prabhu@p2sinc.com,Engineer Grade 04,SL Grp 63-00,"Prabhu, Akshay","Prabhu, Akshay",false
+Mele Penttila,mel.penttila@p2sinc.com,Design Engineer Grade 01,SL Grp 63-01,"Thomson, Mike","Prabhu, Akshay",false
+John Feiler,john.feiler@p2sinc.com,Engineer Grade 01,SL Grp 63-01,"Thomson, Mike","Prabhu, Akshay",false
+Samuel Fong,samuel.fong@p2sinc.com,Engineer Grade 01,SL Grp 63-01,"Thomson, Mike","Prabhu, Akshay",false
+Nitin Rathod,nitin.rathod@p2sinc.com,Engineer Grade 02,SL Grp 63-01,"Thomson, Mike","Prabhu, Akshay",false
+Peter Eberle,peter.eberle@p2sinc.com,Engineer Grade 03,SL Grp 63-01,"Thomson, Mike","Prabhu, Akshay",false
+Mike Thomson,mike.thomson@p2sinc.com,Engineer Grade 05,SL Grp 63-01,"Thomson, Mike","Prabhu, Akshay",false
+Israel Olugbemi,israel.olugbemi@p2sinc.com,Design Engineer Grade 01,SL Grp 63-02,"Prasad, Vaibhav","Prabhu, Akshay",false
+Ivan Fishchuk,ivan.fishchuk@p2sinc.com,Design Engineer Grade 02,SL Grp 63-02,"Prasad, Vaibhav","Prabhu, Akshay",false
+Luke Johnson,luke.johnson@p2sinc.com,Design Engineer Grade 02,SL Grp 63-02,"Prasad, Vaibhav","Prabhu, Akshay",false
+Ravikiran Kaur,ravikiran.kaur@p2sinc.com,Design Engineer Grade 02,SL Grp 63-02,"Prasad, Vaibhav","Prabhu, Akshay",false
+Sean Prendergast,sean.prendergast@p2sinc.com,Design Engineer Grade 03,SL Grp 63-02,"Prasad, Vaibhav","Prabhu, Akshay",false
+Vaibhav Prasad,vaibhav.prasad@p2sinc.com,Engineer Grade 03,SL Grp 63-02,"Prasad, Vaibhav","Prabhu, Akshay",false
+Brian Oh,brian.oh@p2sinc.com,Design Engineer Grade 02,SL Grp 63-03,"Kenshalo, Leon","Prabhu, Akshay",false
+Leon Kenshalo,leon.kenshalo@p2sinc.com,Design Engineer Grade 04,SL Grp 63-03,"Kenshalo, Leon","Prabhu, Akshay",false
+Mohammad Wasif,mohammad.wasif@p2sinc.com,Engineer Grade 04,SL Grp 71-00,"Wasif, Mohammad","Wasif, Mohammad",true
+James Del Monaco,james.delmonaco@p2sinc.com,Engineer Grade 05,SL Grp 71-00,"Wasif, Mohammad","Wasif, Mohammad",false
+Kaylana Nickels,kaylana.nickels@p2sinc.com,Design Engineer Grade 01,SL Grp 71-01,"Mohammed, Zulfikar","Wasif, Mohammad",false
+Michael Lindarto,michael.lindarto@p2sinc.com,Design Engineer Grade 02,SL Grp 71-01,"Mohammed, Zulfikar","Wasif, Mohammad",false
+Zulfikar Mohammed,mohammed.zulfikar@p2sinc.com,Design Engineer Grade 03,SL Grp 71-01,"Mohammed, Zulfikar","Wasif, Mohammad",false
+Samuel Romo,samuel.romo@p2sinc.com,CAD/BIM Designer Grade 04,SL Grp 71-02,"Clements, Nicholas","Wasif, Mohammad",false
+Claire McGuire,claire.mcguire@p2sinc.com,Design Engineer Grade 02,SL Grp 71-02,"Clements, Nicholas","Wasif, Mohammad",false
+Ladan Chamlou,ladan.chamlou@p2sinc.com,Design Engineer Grade 02,SL Grp 71-02,"Clements, Nicholas","Wasif, Mohammad",false
+Mackenzie Cottle,mackenzie.cottle@p2sinc.com,Engineer Grade 01,SL Grp 71-02,"Clements, Nicholas","Wasif, Mohammad",false
+Jonathan Butbul,yoni.butbul@p2sinc.com,Engineer Grade 03,SL Grp 71-02,"Clements, Nicholas","Wasif, Mohammad",false
+Nicholas Clements,nicholas.clements@p2sinc.com,Engineer Grade 03,SL Grp 71-02,"Clements, Nicholas","Wasif, Mohammad",false
+Emma Faircloth,emma.faircloth@p2sinc.com,Design Engineer Grade 01,SL Grp 71-03,"Rodriguez, Cesar","Wasif, Mohammad",false
+German Loza,german.loza@p2sinc.com,Design Engineer Grade 03,SL Grp 71-03,"Rodriguez, Cesar","Wasif, Mohammad",false
+James Lafond,james.lafond@p2sinc.com,Engineer Grade 01,SL Grp 71-03,"Rodriguez, Cesar","Wasif, Mohammad",false
+Cesar Rodriguez,cesar.rodriguez@p2sinc.com,Engineer Grade 05,SL Grp 71-03,"Rodriguez, Cesar","Wasif, Mohammad",false
+Mark Richards,mark.richards@p2sinc.com,Engineer Grade 05,SL Grp 71-03,"Rodriguez, Cesar","Wasif, Mohammad",false
+Gerardo Sandoval,gerardo.sandoval@p2sinc.com,Design Engineer Grade 01,SL Grp 75-00,"Mezei, Zoltan","Mezei, Zoltan",false
+John Pheneger,john.pheneger@p2sinc.com,Design Engineer Grade 02,SL Grp 75-00,"Mezei, Zoltan","Mezei, Zoltan",false
+Nicholas Odegard,nicholas.odegard@p2sinc.com,Design Engineer Grade 02,SL Grp 75-00,"Mezei, Zoltan","Mezei, Zoltan",false
+Sanjay Pillai,sanjay.pillai@p2sinc.com,Design Engineer Grade 02,SL Grp 75-00,"Mezei, Zoltan","Mezei, Zoltan",false
+Chet Dik,chet.dik@p2sinc.com,Design Engineer Grade 03,SL Grp 75-00,"Mezei, Zoltan","Mezei, Zoltan",false
+Michael Tan,michael.tan@p2sinc.com,Design Engineer Grade 03,SL Grp 75-00,"Mezei, Zoltan","Mezei, Zoltan",false
+Kelly Scott,kelly.scott@p2sinc.com,Design Engineer Grade 04,SL Grp 75-00,"Mezei, Zoltan","Mezei, Zoltan",false
+Zoltan Mezei,zoltan.mezei@p2sinc.com,Design Engineer Grade 05,SL Grp 75-00,"Mezei, Zoltan","Mezei, Zoltan",true
+Kunj Bhagat,kunj.bhagat@p2sinc.com,Engineer Grade 01,SL Grp 75-00,"Mezei, Zoltan","Mezei, Zoltan",false
+Kris Xu,kris.xu@p2sinc.com,Engineer Grade 02,SL Grp 75-00,"Mezei, Zoltan","Mezei, Zoltan",false
+Christopher Miller,chris.miller@p2sinc.com,Engineer Grade 04,SL Grp 75-00,"Mezei, Zoltan","Mezei, Zoltan",false
+Daniel Burgos,daniel.burgos@p2sinc.com,Engineer Grade 05,SL Grp 75-00,"Mezei, Zoltan","Mezei, Zoltan",false
+Namratha Narne,namratha.narne@p2sinc.com,Design Engineer Grade 01,SL Grp 75-01,"Cvetkovic, Vuk","Mezei, Zoltan",false
+Laura Cruz,laura.cruz@p2sinc.com,Design Engineer Grade 02,SL Grp 75-01,"Cvetkovic, Vuk","Mezei, Zoltan",false
+Jacob Velasco,jacob.velasco@p2sinc.com,Design Engineer Grade 04,SL Grp 75-01,"Cvetkovic, Vuk","Mezei, Zoltan",false
+Vuk Cvetkovic,vuk.cvetkovic@p2sinc.com,Engineer Grade 05,SL Grp 75-01,"Cvetkovic, Vuk","Mezei, Zoltan",false
+Makenna Sanders,makenna.sanders@p2sinc.com,Design Engineer Grade 01,SL Grp 75-04,"Khan, Maher","Mezei, Zoltan",false
+Dominic Kemp,dominic.kemp@p2sinc.com,Design Engineer Grade 02,SL Grp 75-04,"Khan, Maher","Mezei, Zoltan",false
+Dylan Chao,dylan.chao@p2sinc.com,Design Engineer Grade 02,SL Grp 75-04,"Khan, Maher","Mezei, Zoltan",false
+Jacob Cato,jacob.cato@p2sinc.com,Design Engineer Grade 02,SL Grp 75-04,"Khan, Maher","Mezei, Zoltan",false
+Jamie O'Bard,jamie.obard@p2sinc.com,Design Engineer Grade 05,SL Grp 78-00,"Chee, Aaron","Chee, Aaron",false
+Aaron Chee,aaron.chee@p2sinc.com,Engineer Grade 05,SL Grp 78-00,"Chee, Aaron","Chee, Aaron",true
+Hitoshi Kumarawadu,hitoshi.kumarawadu@p2sinc.com,Design Engineer Grade 03,SL Grp 78-01,"Kaiser, Kurt","Chee, Aaron",false
+Elder Teo,elder.teo@p2sinc.com,Design Engineer Grade 04,SL Grp 78-01,"Kaiser, Kurt","Chee, Aaron",false
+Gary Allan Cercena,gary.cercena@p2sinc.com,Design Engineer Grade 04,SL Grp 78-01,"Kaiser, Kurt","Chee, Aaron",false
+Roland Andres,roland.andres@p2sinc.com,Design Engineer Grade 04,SL Grp 78-01,"Kaiser, Kurt","Chee, Aaron",false
+Patrick Waldenfels,patrick.waldenfels@p2sinc.com,Engineer Grade 04,SL Grp 78-01,"Kaiser, Kurt","Chee, Aaron",false
+Wesley Smith,wes.smith@p2sinc.com,Engineer Grade 04,SL Grp 78-01,"Kaiser, Kurt","Chee, Aaron",false
+Kurt Kaiser,kurt.kaiser@p2sinc.com,Engineer Grade 05,SL Grp 78-01,"Kaiser, Kurt","Chee, Aaron",true
+Mackeely Weaver,mackeely.weaver@p2sinc.com,Design Engineer Grade 01,SL Grp 78-02,"Shah, Virag","Chee, Aaron",false
+Virag Shah,virag.shah@p2sinc.com,Design Engineer Grade 04,SL Grp 78-02,"Shah, Virag","Chee, Aaron",false
+Dhruvin Bhadani,dhruvin.bhadani@p2sinc.com,Engineer Grade 01,SL Grp 78-02,"Shah, Virag","Chee, Aaron",false
+Xiaoxin Lin,xiaoxin.lin@p2sinc.com,Engineer Grade 02,SL Grp 78-02,"Shah, Virag","Chee, Aaron",false
+Cynthia Do,cynthia.do@p2sinc.com,Design Engineer Grade 01,SL Grp 78-03,"Zeller, Trevor","Chee, Aaron",false
+Jarvis Hudnall,jarvis.hudnall@p2sinc.com,Design Engineer Grade 01,SL Grp 78-03,"Zeller, Trevor","Chee, Aaron",false
+Devin Mendoza,devin.mendoza@p2sinc.com,Design Engineer Grade 02,SL Grp 78-03,"Zeller, Trevor","Chee, Aaron",false
+Maxwell Rooney,maxwell.rooney@p2sinc.com,Design Engineer Grade 03,SL Grp 78-03,"Zeller, Trevor","Chee, Aaron",false
+Chris Dang,chris.dang@p2sinc.com,Design Engineer Grade 04,SL Grp 78-03,"Zeller, Trevor","Chee, Aaron",false
+Leluo Zhang,leluo.zhang@p2sinc.com,Engineer Grade 02,SL Grp 78-03,"Zeller, Trevor","Chee, Aaron",false
+Shuni Mao,shuni.mao@p2sinc.com,Engineer Grade 02,SL Grp 78-03,"Zeller, Trevor","Chee, Aaron",false
+Thomas Pierce,thomas.pierce@p2sinc.com,Engineer Grade 02,SL Grp 78-03,"Zeller, Trevor","Chee, Aaron",false
+Trevor Zeller,trevor.zeller@p2sinc.com,Engineer Grade 05,SL Grp 78-03,"Zeller, Trevor","Chee, Aaron",false
+Jeff Lenz,jeff.lenz@p2sinc.com,Design Engineer Grade 02,SL Grp 78-04,"Otis, Woodrow","Chee, Aaron",false
+Ricky Cheung,ricky.cheung@p2sinc.com,Design Engineer Grade 02,SL Grp 78-04,"Otis, Woodrow","Chee, Aaron",false
+Tim Soriano,tim.soriano@p2sinc.com,Design Engineer Grade 02,SL Grp 78-04,"Otis, Woodrow","Chee, Aaron",false
+Zachary Peterson,zach.peterson@p2sinc.com,Design Engineer Grade 03,SL Grp 78-04,"Otis, Woodrow","Chee, Aaron",false
+Luis Molina,luis.molina@p2sinc.com,Design Engineer Grade 04,SL Grp 78-04,"Otis, Woodrow","Chee, Aaron",false
+Robert Koba,robert.koba@p2sinc.com,Design Engineer Grade 05,SL Grp 78-04,"Otis, Woodrow","Chee, Aaron",false
+Woodrow Otis,woodrow.otis@p2sinc.com,Design Engineer Grade 05,SL Grp 78-04,"Otis, Woodrow","Chee, Aaron",false
+Rodrigo Gonzalez-Bishop,rodrigo.gonzalezbishop@p2sinc.com,Engineer Grade 02,SL Grp 78-04,"Otis, Woodrow","Chee, Aaron",false
+Hye Kim,hyejin.kim@p2sinc.com,Engineer Grade 04,SL Grp 78-04,"Otis, Woodrow","Chee, Aaron",false
+Lizette Nguyen,lizette.nguyen@p2sinc.com,Commissioning Grade 01,SL Grp 81-01,"Guo, Mia","Mercado, Bryant",false
+Mia Guo,mia.guo@p2sinc.com,Commissioning Grade 05,SL Grp 81-01,"Guo, Mia","Mercado, Bryant",false
+Manuela Ramirez,manuela.ramirez@p2sinc.com,Commissioning Grade 03,SL Grp 81-02,"Mercado, Bryant","Mercado, Bryant",false
+Dexin Kong,dexin.kong@p2sinc.com,Commissioning Grade 04,SL Grp 81-02,"Mercado, Bryant","Mercado, Bryant",false
+Yuzhe Liu,yuzhe.liu@p2sinc.com,Commissioning Grade 04,SL Grp 81-02,"Mercado, Bryant","Mercado, Bryant",false
+Bryant Mercado,bryant.mercado@p2sinc.com,Commissioning Grade 05,SL Grp 81-02,"Mercado, Bryant","Mercado, Bryant",false
+Geraldine Massey,gerry.massey@p2sinc.com,Commissioning Grade 05,SL Grp 81-02,"Mercado, Bryant","Mercado, Bryant",false
+Ghazal Chizarian,ghazal.chizarian@p2sinc.com,Production Assistant,SL Grp 81-02,"Mercado, Bryant","Mercado, Bryant",false
+Jamal Nurdin,jamal.nurdin@p2sinc.com,Commissioning Grade 02,SL Grp 81-03,"Nguyen, Thaovan","Mercado, Bryant",false
+Karli Wagner,karli.wagner@p2sinc.com,Commissioning Grade 02,SL Grp 81-03,"Nguyen, Thaovan","Mercado, Bryant",false
+Thaovan Nguyen,vina.nguyen@p2sinc.com,Commissioning Grade 04,SL Grp 81-03,"Nguyen, Thaovan","Mercado, Bryant",false
+Benjamin Wilson,ben.wilson@p2sinc.com,Construction Management Grade 01,SL Grp 98-00,"Peterson, Christopher","Peterson, Christopher",false
+Christopher Peterson,chris.peterson@p2sinc.com,Construction Management Grade 01,SL Grp 98-00,"Peterson, Christopher","Peterson, Christopher",false
+Satish Sadhu,satish.sadhu@p2sinc.com,Construction Management Grade 03,SL Grp 98-00,"Peterson, Christopher","Peterson, Christopher",false
+Vivek Ghimire,vivek.ghimire@p2sinc.com,Construction Management Grade 03,SL Grp 98-00,"Peterson, Christopher","Peterson, Christopher",false
+Edgar Herrera,edgar.herrera@p2sinc.com,Project Engineer Grade 02,SL Grp 98-00,"Peterson, Christopher","Peterson, Christopher",false
