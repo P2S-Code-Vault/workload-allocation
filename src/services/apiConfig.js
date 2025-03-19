@@ -1,6 +1,6 @@
 const API_CONFIG = {
     // base url
-    BASE_URL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000',
+    BASE_URL: process.env.REACT_APP_API_BASE_URL || 'https://p2s-ra-api.azurewebsites.net',
     
     // API endpoints
     ENDPOINTS: {
