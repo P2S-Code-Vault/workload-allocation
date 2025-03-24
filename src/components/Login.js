@@ -81,7 +81,7 @@ const Login = ({ onLogin }) => {
           <div className="tooltip-container">
             <span className="footer-text">About</span>
             <div className="tooltip">
-              Our P2S AI Assistant was developed by Nilay Nagar, Chad Peterson, and Jonathan Herrera.
+              Our P2S Resource Allocation was developed by Nilay Nagar, Chad Peterson, and Jonathan Herrera.
             </div>
           </div>
         </div>

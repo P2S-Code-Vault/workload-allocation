@@ -1,0 +1,77 @@
+/* Container Styles */
+.week-picker-container {
+    position: relative;
+    width: fit-content;
+    margin: auto;
+  }
+  
+  .week-picker {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: var(--spacing-lg);
+    padding: var(--spacing-md);
+    background-color: var(--white);
+    border-radius: var(--border-radius);
+    margin-bottom: var(--spacing-xl);
+    box-shadow: var(--shadow-sm);
+  }
+  
+  /* Date Display */
+  .date-display {
+    cursor: pointer;
+    position: relative;
+    display: inline-block;
+  }
+  
+  .date-display span {
+    padding: var(--spacing-sm);
+    border-radius: var(--border-radius);
+    font-size: var(--font-lg);
+    font-weight: 500;
+    min-width: 240px;
+    text-align: center;
+    display: inline-block;
+  }
+  
+  .date-display span:hover {
+    background-color: var(--primary-light);
+  }
+  
+  /* DatePicker Styling */
+  .datepicker-container {
+    margin-top: -15px;
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 9999;
+  }
+  
+  .react-datepicker {
+    margin: auto;
+    display: inline-block !important;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow-lg);
+    background-color: var(--white);
+  }
+  
+  .react-datepicker__month-container {
+    float: none !important;
+  }
+  
+  /* Navigation Buttons */
+  .week-picker button {
+    background-color: var(--primary-color);
+    color: var(--white);
+    border: none;
+    border-radius: var(--border-radius);
+    padding: var(--spacing-sm) var(--spacing-lg);
+    cursor: pointer;
+    font-weight: 500;
+    transition: opacity 0.2s ease;
+  }
+  
+  .week-picker button:hover {
+    opacity: 0.9;
+  }

@@ -1391,3 +1391,57 @@ body {
   cursor: default;
   border: 1px solid var(--border-color);
 }
+/* Support Button Styles */
+.support-button {
+  position: static;
+  bottom: 60px;
+  right: 20px;
+  padding: 12px 24px;
+  background-color: var(--primary-color);
+  color: var(--white);
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: opacity 0.2s ease;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--shadow-md);
+}
+
+.support-button:hover {
+  opacity: 0.9;
+}
+
+.logout-button {
+  background-color: #f44336 !important;
+  color: white !important;
+}
+
+/* Specific styles for the resource view week picker */
+.resource-week-picker {
+  margin-bottom: 20px;
+}
+
+/* Override to fix calendar display in resource view */
+.resource-week-picker .datepicker-container {
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  margin-top: 5px;
+}
+
+/* Fix for date display in resource view */
+.resource-week-picker .date-display button {
+  background: none;
+  border: none;
+  font-size: 14px;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-weight: 500;
+  min-width: 240px;
+}

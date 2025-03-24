@@ -1,4 +1,3 @@
-// Updated PMDashboardService.js
 import API_CONFIG from './apiConfig';
 
 export class PMDashboardService {
@@ -18,14 +17,20 @@ export class PMDashboardService {
       }
       
       if (pmName) {
-        params.append('pm_name', encodeURIComponent(pmName));
+        console.log(`Request filtering by PM: "${pmName}"`);
+        params.append('pm_name',pmName);
       }
       
       // Log the full URL for debugging
       const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.PM_DASHBOARD}?${params.toString()}`;
       console.log("Fetching PM dashboard data from URL:", url);
       
+      // Add request timing
+      console.time('PM Dashboard API Request');
       const response = await fetch(url);
+      console.timeEnd('PM Dashboard API Request');
+
+      console.log('PM Dashboard API Response Status:', response.status);
       
       // Add detailed error handling
       if (!response.ok) {
@@ -40,9 +45,46 @@ export class PMDashboardService {
         
         throw new Error(`Failed to fetch PM dashboard data: ${response.status} ${errorText}`);
       }
+
+      // Clone the response for debugging
+    const responseClone = response.clone();
+    
+    try {
+      // Try to get the response as text first
+      const responseText = await responseClone.text();
+      console.log("Raw API response text:", responseText);
+      
+      // Now parse it to check if it's valid JSON
+      try {
+        JSON.parse(responseText);
+        console.log("Response is valid JSON");
+      } catch (jsonError) {
+        console.error("Response is not valid JSON:", jsonError);
+      }
+    } catch (e) {
+      console.error("Could not clone and check response:", e);
+    }
       
       const data = await response.json();
       console.log("Received PM dashboard data:", data);
+      
+       // Check if data has expected structure
+    if (!data.projects) {
+      console.error("API response missing 'projects' array:", data);
+      return this._getFallbackData();
+    }
+    
+    console.log(`Received ${data.projects.length} projects for ${pmName || 'all PMs'}`);
+    
+    // Log summary information
+    if (data.summary) {
+      console.log("Summary data:", {
+        totalProjects: data.summary.totalProjects || 0,
+        totalResources: data.summary.totalResources || 0,
+        totalHours: data.summary.totalHours || 0,
+        totalCost: data.summary.totalCost || 0,
+      });
+    }
       
       return data;
     } catch (error) {
@@ -92,3 +134,4 @@ export class PMDashboardService {
 }
 
 export default PMDashboardService;
+

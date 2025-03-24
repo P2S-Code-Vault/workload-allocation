@@ -1,6 +1,6 @@
 const API_CONFIG = {
     // base url
-    BASE_URL: process.env.REACT_APP_API_BASE_URL || 'https://p2s-ra-api.azurewebsites.net',
+    BASE_URL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000',   //https://p2s-ra-api.azurewebsites.net
     
     // API endpoints
     ENDPOINTS: {
@@ -13,7 +13,11 @@ const API_CONFIG = {
       PM_DASHBOARD: '/pm/dashboard',
       GL_TEAM_MEMBERS: '/gl/team-members',
       GL_TEAM_ALLOCATIONS: '/gl/team-allocations',
-      GL_BATCH_UPDATE: '/gl/batch-update'
+      GL_BATCH_UPDATE: '/gl/batch-update',
+      GL_ALL_STAFF: '/gl/all-staff',
+      USER_GROUP_INFO: '/users/group-info',
+      USERS_BY_GROUP_MANAGER: '/users/by-group-manager',
+      CONTACTS_SEARCH: '/contacts/search'
     },
     
     // HTTP status codes

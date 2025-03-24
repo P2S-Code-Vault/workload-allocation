@@ -3,7 +3,6 @@ import WeekPicker from './WeekPicker';
 import { format } from 'date-fns';
 import PMDashboardService from '../services/PMDashboardService';
 
-// PMSelector Component
 const PMSelector = ({ onPMChange, selectedPM, projectManagers = [] }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
@@ -19,10 +18,52 @@ const PMSelector = ({ onPMChange, selectedPM, projectManagers = [] }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
+  // Log available PMs for debugging
+  useEffect(() => {
+    if (projectManagers && projectManagers.length > 0) {
+      console.log('Available Project Managers:', projectManagers);
+      
+      // Check for any PMs with leading/trailing spaces
+      const pmsWithSpaces = projectManagers.filter(pm => pm !== pm.trim());
+      if (pmsWithSpaces.length > 0) {
+        console.warn('PMs with leading/trailing spaces:', pmsWithSpaces);
+      }
+    }
+    
+    if (selectedPM) {
+      console.log('Currently selected PM:', selectedPM);
+    }
+  }, [projectManagers, selectedPM]);
+
   const filteredPMs = searchTerm 
     ? projectManagers.filter(pm => 
         pm.toLowerCase().includes(searchTerm.toLowerCase()))
     : projectManagers;
+
+  const handlePMSelection = (pm) => {
+    // Always trim the PM name to ensure consistent API requests
+    const trimmedPM = pm.trim();
+    console.log(`PM selected: "${pm}"`);
+    console.log(`Trimmed PM name: "${trimmedPM}"`);
+    
+    // Log character codes for debugging
+    const charCodes = [];
+    for (let i = 0; i < trimmedPM.length; i++) {
+      charCodes.push(`${i}: '${trimmedPM[i]}' = ${trimmedPM.charCodeAt(i)}`);
+    }
+    console.log('PM name character codes:');
+    console.log(charCodes.join('\n'));
+    
+    // Use the trimmed PM name
+    onPMChange(trimmedPM);
+    setShowDropdown(false);
+  };
+
+  const handleClearSelection = () => {
+    console.log("Clearing PM selection");
+    onPMChange('');
+    setShowDropdown(false);
+  };
 
   return (
     <div className="user-selector">
@@ -51,10 +92,7 @@ const PMSelector = ({ onPMChange, selectedPM, projectManagers = [] }) => {
             
             <ul className="user-list">
               <li 
-                onClick={() => {
-                  onPMChange('');
-                  setShowDropdown(false);
-                }}
+                onClick={handleClearSelection}
                 className="user-list-item"
               >
                 <div className="user-name">Show All Projects</div>
@@ -62,11 +100,8 @@ const PMSelector = ({ onPMChange, selectedPM, projectManagers = [] }) => {
               {filteredPMs.map((pm, index) => (
                 <li 
                   key={index}
-                  onClick={() => {
-                    onPMChange(pm);
-                    setShowDropdown(false);
-                  }}
-                  className="user-list-item"
+                  onClick={() => handlePMSelection(pm)}
+                  className={`user-list-item ${selectedPM === pm ? 'selected' : ''}`}
                 >
                   <div className="user-name">{pm}</div>
                 </li>
@@ -117,19 +152,12 @@ const PMPage = ({ navigate }) => {
     }).format(value / divisor);
   };
 
-  // const formatPercent = (value) => {
-  //   return new Intl.NumberFormat('en-US', {
-  //     style: 'percent',
-  //     minimumFractionDigits: 1,
-  //     maximumFractionDigits: 1,
-  //   }).format(value / 100);
-  // };
-
   // Load project managers on component mount
   useEffect(() => {
     const loadProjectManagers = async () => {
       try {
         const managers = await PMDashboardService.getAllProjectManagers();
+        console.log("Loaded project managers:", managers);
         setProjectManagers(managers);
       } catch (err) {
         console.error('Error loading project managers:', err);
@@ -139,6 +167,12 @@ const PMPage = ({ navigate }) => {
     
     loadProjectManagers();
   }, []);
+
+  // Debug data state changes
+  useEffect(() => {
+    console.log("Dashboard data in state:", dashboardData);
+    console.log(`Project count in state: ${dashboardData.projects ? dashboardData.projects.length : 0}`);
+  }, [dashboardData]);
 
   // Handle week change
   const handleWeekChange = (startDate, endDate) => {
@@ -166,6 +200,12 @@ const PMPage = ({ navigate }) => {
       setIsLoading(true);
       setError(null);
       
+      console.log("Loading dashboard data with params:", {
+        startDate: format(weekStartDate, 'yyyy-MM-dd'),
+        endDate: format(weekEndDate, 'yyyy-MM-dd'),
+        selectedPM: selectedPM || 'All Projects'
+      });
+      
       try {
         const data = await PMDashboardService.getPMDashboardData(
           format(weekStartDate, 'yyyy-MM-dd'),
@@ -173,10 +213,23 @@ const PMPage = ({ navigate }) => {
           selectedPM || null
         );
         
-        setDashboardData(data);
+        console.log("Dashboard data received in component:", data);
+        console.log(`Projects count: ${data.projects ? data.projects.length : 0}`);
+        
+        // Verify data structure before setting state
+        if (!data || !data.projects) {
+          console.error("Received invalid data structure:", data);
+          setError('Data received from server has an unexpected format');
+          setDashboardData({ projects: [], summary: {} });
+        } else {
+          // Force state update with a new object reference
+          setDashboardData({...data});
+          console.log("State updated with dashboard data");
+        }
       } catch (err) {
         console.error('Error loading dashboard data:', err);
         setError('Failed to load project data. ' + (err.message || 'Please try again later.'));
+        setDashboardData({ projects: [], summary: {} });
       } finally {
         setIsLoading(false);
       }
@@ -197,6 +250,21 @@ const PMPage = ({ navigate }) => {
         <div className="pm-dashboard">
           <h2>Project Planning Summary</h2>
           
+          {/* Debug information - remove in production */}
+          <div style={{ 
+            padding: '5px 10px', 
+            margin: '5px 0', 
+            backgroundColor: '#f0f0f0', 
+            border: '1px solid #ddd',
+            borderRadius: '4px',
+            fontSize: '12px'
+          }}>
+            <div><strong>Debug Info:</strong></div>
+            <div>Selected PM: {selectedPM || 'All Projects'}</div>
+            <div>Data Status: {isLoading ? 'Loading' : error ? 'Error' : 'Ready'}</div>
+            <div>Projects Count: {dashboardData.projects ? dashboardData.projects.length : 0}</div>
+          </div>
+          
           {/* Error display with retry button */}
           {error && (
             <div className="error-banner">
@@ -209,13 +277,8 @@ const PMPage = ({ navigate }) => {
           
           {isLoading ? (
             <div className="loading">Loading summary data...</div>
-          ) : dashboardData.projects.length === 0 ? (
-            <div className="no-data">
-              {selectedPM 
-                ? `No projects found for ${selectedPM} in the selected date range.`
-                : 'No projects found for the selected date range.'}
-            </div>
-          ) : (
+          ) : dashboardData.projects && dashboardData.projects.length > 0 ? (
+            // Render projects when data exists
             dashboardData.projects.map((project) => (
               <div key={project.projectNumber} className="project-summary">
                 <h3>
@@ -252,7 +315,7 @@ const PMPage = ({ navigate }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {project.resources.map((resource, index) => (
+                    {project.resources && project.resources.map((resource, index) => (
                       <tr key={index}>
                         <td>{resource.name}</td>
                         <td>{resource.laborCategory}</td>
@@ -275,6 +338,13 @@ const PMPage = ({ navigate }) => {
                 </table>
               </div>
             ))
+          ) : (
+            // Show "no projects found" message when data array is empty
+            <div className="no-data">
+              {selectedPM 
+                ? `No projects found for ${selectedPM} in the selected date range.`
+                : 'No projects found for the selected date range.'}
+            </div>
           )}
         </div>
       </div>
@@ -283,4 +353,3 @@ const PMPage = ({ navigate }) => {
 };
 
 export default PMPage;
-

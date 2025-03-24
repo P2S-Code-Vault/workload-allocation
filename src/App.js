@@ -77,6 +77,7 @@ const Header = ({ currentView,onNavigate, onLogout }) => {
 };
 
 // Main Content Component
+// MainContent Component from App.js - updated to use user data properly
 const MainContent = () => {
   const [rows, setRows] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -94,7 +95,6 @@ const MainContent = () => {
   const [teamMembers, setTeamMembers] = useState([]);
   const [selectedTeamMember, setSelectedTeamMember] = useState(null);
   const [showTeamDropdown, setShowTeamDropdown] = useState(false);
-
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -119,8 +119,14 @@ const MainContent = () => {
       console.log(`Setting current user to: ${details.email}`);
       setCurrentUser(details.email);
       setUserDetails(details);
-      if (details.scheduledHours) {
+      
+      // Use the actual scheduled hours from user details without defaulting
+      if (details.scheduledHours !== null && details.scheduledHours !== undefined) {
+        console.log(`Setting scheduled hours to: ${details.scheduledHours}`);
         setScheduledHours(details.scheduledHours);
+      } else {
+        console.log("No scheduled hours found, defaulting to 40");
+        setScheduledHours(40);
       }
       
       // Check if user is a group leader
@@ -135,26 +141,6 @@ const MainContent = () => {
     }
   }, []);
 
-  // const fetchTeamMembers = async (email) => {
-  //   try {
-  //     const apiUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_TEAM_MEMBERS}?group_manager_email=${encodeURIComponent(email)}`;
-  //     console.log(`Fetching team members from: ${apiUrl}`);
-      
-  //     const response = await fetch(apiUrl);
-  //     if (!response.ok) {
-  //       throw new Error(`Failed to fetch team members: ${response.status}`);
-  //     }
-      
-  //     const data = await response.json();
-  //     console.log("Team members data:", data);
-      
-  //     if (data && data.members && data.members.length > 0) {
-  //       setTeamMembers(data.members);
-  //     }
-  //   } catch (error) {
-  //     console.error("Error fetching team members:", error);
-  //   }
-  // };
   const fetchTeamMembers = async (email) => {
     try {
       // First check the status directly
@@ -183,6 +169,11 @@ const MainContent = () => {
         console.log("Team members data:", data);
         
         if (data && data.members && data.members.length > 0) {
+          // Log scheduled hours for each team member
+          data.members.forEach(member => {
+            console.log(`Team member: ${member.name}, Scheduled hours: ${member.hrs_worked_per_week}`);
+          });
+          
           setTeamMembers(data.members);
         } else {
           console.log("No team members found, but user is a group leader");
@@ -197,7 +188,7 @@ const MainContent = () => {
   };
 
   const handleTeamMemberSelect = (member) => {
-    console.log(`Selected team member: ${member.name}, ${member.email}`);
+    console.log(`Selected team member: ${member.name}, ${member.email}, Hours: ${member.hrs_worked_per_week}`);
     setSelectedTeamMember(member);
     
     // Reset states for the new team member
@@ -205,6 +196,19 @@ const MainContent = () => {
     setLoadError(null);
     setHasLoadedInitialData(false);
     
+    // Set scheduled hours from the team member data
+    // if (member.hrs_worked_per_week !== null && member.hrs_worked_per_week !== undefined) {
+    //   setScheduledHours(member.hrs_worked_per_week);
+    // } else {
+    //   setScheduledHours(40); // Default if not available
+    // }
+    if (member.hrs_worked_per_week !== null && member.hrs_worked_per_week !== undefined) {
+      const hours = Number(member.hrs_worked_per_week);
+      console.log(`Setting scheduled hours to: ${hours} (type: ${typeof hours})`);
+      setScheduledHours(hours);
+    } else {
+      setScheduledHours(40); // Default if not available
+    }
     // This will trigger the useEffect that loads allocations
     setCurrentUser(member.email);
   };
@@ -217,6 +221,13 @@ const MainContent = () => {
     setRows([]);
     setLoadError(null);
     setHasLoadedInitialData(false);
+    
+    // Reset scheduled hours to the group leader's hours
+    if (userDetails && userDetails.scheduledHours !== null && userDetails.scheduledHours !== undefined) {
+      setScheduledHours(userDetails.scheduledHours);
+    } else {
+      setScheduledHours(40);
+    }
     
     // Set current user back to the group leader
     setCurrentUser(userDetails.email);
@@ -249,8 +260,8 @@ const MainContent = () => {
   useEffect(() => {
     if (!weekStartDate || !weekEndDate) {
       const today = new Date();
-      const startDate = startOfWeek(today, { weekStartsOn: 0 });
-      const endDate = endOfWeek(today, { weekStartsOn: 0 });
+      const startDate = startOfWeek(today, { weekStartsOn: 1 });
+      const endDate = endOfWeek(today, { weekStartsOn: 1 });
       
       console.log("Initializing with current week:", {
         startDate: format(startDate, 'yyyy-MM-dd'),
@@ -265,13 +276,15 @@ const MainContent = () => {
   // Debug the dependencies in the allocation loading effect
   useEffect(() => {
     // Log the state of dependencies whenever they change
+    console.log("Loading allocations with scheduledHours:", scheduledHours);
     console.log("Allocation effect dependencies changed:", {
       currentUser,
       weekStartDate: weekStartDate ? format(weekStartDate, 'yyyy-MM-dd') : null,
       weekEndDate: weekEndDate ? format(weekEndDate, 'yyyy-MM-dd') : null,
-      isLoading
+      isLoading,
+      scheduledHours
     });
-  }, [currentUser, weekStartDate, weekEndDate, isLoading]);
+  }, [currentUser, weekStartDate, weekEndDate, isLoading,hasLoadedInitialData, scheduledHours]);
   
   // Load data when week dates change
   useEffect(() => {
@@ -299,28 +312,6 @@ const MainContent = () => {
       startDate: format(weekStartDate, 'yyyy-MM-dd'),
       endDate: format(weekEndDate, 'yyyy-MM-dd')
     });
-    
-    // Make a direct API call to test endpoint accessibility
-    console.log(`Testing API endpoint: /allocations?email=${encodeURIComponent(currentUser)}`);
-    fetch(`http://localhost:8000/allocations?email=${encodeURIComponent(currentUser)}&start_date=${format(weekStartDate, 'yyyy-MM-dd')}&end_date=${format(weekEndDate, 'yyyy-MM-dd')}`)
-      .then(response => {
-        console.log('Direct fetch response status:', response.status);
-        console.log('Direct fetch response headers:', {
-          contentType: response.headers.get('content-type'),
-          contentLength: response.headers.get('content-length')
-        });
-        return response.text();
-      })
-      .then(text => {
-        console.log('Direct fetch response text:', text);
-        try {
-          const testData = JSON.parse(text);
-          console.log('Direct fetch parsed data:', testData);
-        } catch (e) {
-          console.error('Direct fetch parse error:', e);
-        }
-      })
-      .catch(err => console.error('Direct fetch error:', err));
     
     // Fetch the allocations using the service
     ProjectDataService.getAllocations(
@@ -399,6 +390,328 @@ const MainContent = () => {
       isMounted = false;
     };
   }, [currentUser, weekStartDate, weekEndDate, hasLoadedInitialData]);
+// const MainContent = () => {
+//   const [rows, setRows] = useState([]);
+//   const [isLoading, setIsLoading] = useState(true);
+//   const [loadError, setLoadError] = useState(null);
+//   const [currentUser, setCurrentUser] = useState('');
+//   const [userDetails, setUserDetails] = useState(null);
+//   const [isSaving, setIsSaving] = useState(false);
+//   const [saveError, setSaveError] = useState(null);
+//   const [scheduledHours, setScheduledHours] = useState(40);
+//   const [ptoHolHours, setPTOHolHours] = useState(0);
+//   const [weekStartDate, setWeekStartDate] = useState(null);
+//   const [weekEndDate, setWeekEndDate] = useState(null);
+//   const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
+//   const [isGroupLeader, setIsGroupLeader] = useState(false);
+//   const [teamMembers, setTeamMembers] = useState([]);
+//   const [selectedTeamMember, setSelectedTeamMember] = useState(null);
+//   const [showTeamDropdown, setShowTeamDropdown] = useState(false);
+
+
+//   useEffect(() => {
+//     const handleClickOutside = (event) => {
+//       if (!event.target.closest('.team-dropdown')) {
+//         setShowTeamDropdown(false);
+//       }
+//     };
+    
+//     document.addEventListener('mousedown', handleClickOutside);
+//     return () => document.removeEventListener('mousedown', handleClickOutside);
+//   }, []);
+
+//   // Set user data on component mount
+//   useEffect(() => {
+//     // Debug logging
+//     console.log("Checking for current user");
+    
+//     const details = UserService.getCurrentUserDetails();
+//     console.log("User details from storage:", details);
+    
+//     if (details && details.email) {
+//       console.log(`Setting current user to: ${details.email}`);
+//       setCurrentUser(details.email);
+//       setUserDetails(details);
+//       if (details.scheduledHours) {
+//         setScheduledHours(details.scheduledHours);
+//       }
+      
+//       // Check if user is a group leader
+//       setIsGroupLeader(details.isGroupManager || false);
+      
+//       // If the user is a group leader, fetch their team members
+//       if (details.isGroupManager) {
+//         fetchTeamMembers(details.email);
+//       }
+//     } else {
+//       console.warn("No valid user details found");
+//     }
+//   }, []);
+
+//   // const fetchTeamMembers = async (email) => {
+//   //   try {
+//   //     const apiUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_TEAM_MEMBERS}?group_manager_email=${encodeURIComponent(email)}`;
+//   //     console.log(`Fetching team members from: ${apiUrl}`);
+      
+//   //     const response = await fetch(apiUrl);
+//   //     if (!response.ok) {
+//   //       throw new Error(`Failed to fetch team members: ${response.status}`);
+//   //     }
+      
+//   //     const data = await response.json();
+//   //     console.log("Team members data:", data);
+      
+//   //     if (data && data.members && data.members.length > 0) {
+//   //       setTeamMembers(data.members);
+//   //     }
+//   //   } catch (error) {
+//   //     console.error("Error fetching team members:", error);
+//   //   }
+//   // };
+//   const fetchTeamMembers = async (email) => {
+//     try {
+//       // First check the status directly
+//       const statusUrl = `${API_CONFIG.BASE_URL}/gl/check-status?email=${encodeURIComponent(email)}`;
+//       console.log(`Checking GL status from: ${statusUrl}`);
+      
+//       const statusResponse = await fetch(statusUrl);
+//       const statusData = await statusResponse.json();
+      
+//       console.log("GL status check:", statusData);
+      
+//       // Update group leader status based on direct check
+//       if (statusData.is_group_manager) {
+//         setIsGroupLeader(true);
+        
+//         // Now fetch team members
+//         const apiUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_TEAM_MEMBERS}?group_manager_email=${encodeURIComponent(email)}`;
+//         console.log(`Fetching team members from: ${apiUrl}`);
+        
+//         const response = await fetch(apiUrl);
+//         if (!response.ok) {
+//           throw new Error(`Failed to fetch team members: ${response.status}`);
+//         }
+        
+//         const data = await response.json();
+//         console.log("Team members data:", data);
+        
+//         if (data && data.members && data.members.length > 0) {
+//           setTeamMembers(data.members);
+//         } else {
+//           console.log("No team members found, but user is a group leader");
+//         }
+//       } else {
+//         console.log("User is not a group leader according to direct database check");
+//         setIsGroupLeader(false);
+//       }
+//     } catch (error) {
+//       console.error("Error checking group leader status or fetching team members:", error);
+//     }
+//   };
+
+//   const handleTeamMemberSelect = (member) => {
+//     console.log(`Selected team member: ${member.name}, ${member.email}`);
+//     setSelectedTeamMember(member);
+    
+//     // Reset states for the new team member
+//     setRows([]);
+//     setLoadError(null);
+//     setHasLoadedInitialData(false);
+    
+//     // This will trigger the useEffect that loads allocations
+//     setCurrentUser(member.email);
+//   };
+
+//   const resetToGroupLeader = () => {
+//     console.log("Resetting to group leader view");
+//     setSelectedTeamMember(null);
+    
+//     // Reset states
+//     setRows([]);
+//     setLoadError(null);
+//     setHasLoadedInitialData(false);
+    
+//     // Set current user back to the group leader
+//     setCurrentUser(userDetails.email);
+//   };
+
+//   // Handle week change
+//   const handleWeekChange = useCallback((startDate, endDate) => {
+//     console.log("Week changed in MainContent:", {
+//       startDate: format(startDate, 'yyyy-MM-dd'),
+//       endDate: format(endDate, 'yyyy-MM-dd')
+//     });
+//     setWeekStartDate(startDate);
+//     setWeekEndDate(endDate);
+//   }, []);
+
+//   // Calculate PTO hours based on rows
+//   useEffect(() => {
+//     const ptoHours = rows.reduce((sum, row) => {
+//       if (row.projectNumber?.startsWith('0000-0000-0PTO') || 
+//           row.projectNumber?.startsWith('0000-0000-0HOL')) {
+//         return sum + (parseFloat(row.hours) || 0);
+//       }
+//       return sum;
+//     }, 0);
+    
+//     setPTOHolHours(ptoHours);
+//   }, [rows]);
+
+//   // IMPORTANT: Initialize week dates if not set by WeekPicker
+//   useEffect(() => {
+//     if (!weekStartDate || !weekEndDate) {
+//       const today = new Date();
+//       const startDate = startOfWeek(today, { weekStartsOn: 1 }); //chg
+//       const endDate = endOfWeek(today, { weekStartsOn: 1 });
+      
+//       console.log("Initializing with current week:", {
+//         startDate: format(startDate, 'yyyy-MM-dd'),
+//         endDate: format(endDate, 'yyyy-MM-dd')
+//       });
+      
+//       setWeekStartDate(startDate);
+//       setWeekEndDate(endDate);
+//     }
+//   }, []);
+
+//   // Debug the dependencies in the allocation loading effect
+//   useEffect(() => {
+//     // Log the state of dependencies whenever they change
+//     console.log("Allocation effect dependencies changed:", {
+//       currentUser,
+//       weekStartDate: weekStartDate ? format(weekStartDate, 'yyyy-MM-dd') : null,
+//       weekEndDate: weekEndDate ? format(weekEndDate, 'yyyy-MM-dd') : null,
+//       isLoading
+//     });
+//   }, [currentUser, weekStartDate, weekEndDate, isLoading]);
+  
+//   // Load data when week dates change
+//   useEffect(() => {
+//     // Only proceed if we have both a user and date range
+//     if (!currentUser || !weekStartDate || !weekEndDate) {
+//       console.log("Skipping allocation load - missing required data");
+//       return;
+//     }
+
+//     // Don't reload if already loading
+//     if (isLoading && hasLoadedInitialData) {
+//       console.log("Already loading, skip duplicate request");
+//       return;
+//     }
+
+//     // Track if this effect should continue updating state
+//     let isMounted = true;
+    
+//     // Set loading state
+//     setIsLoading(true);
+//     setLoadError(null);
+    
+//     console.log("Loading allocations for:", {
+//       email: currentUser,
+//       startDate: format(weekStartDate, 'yyyy-MM-dd'),
+//       endDate: format(weekEndDate, 'yyyy-MM-dd')
+//     });
+    
+//     // Make a direct API call to test endpoint accessibility
+//     console.log(`Testing API endpoint: /allocations?email=${encodeURIComponent(currentUser)}`);
+//     fetch(`http://localhost:8000/allocations?email=${encodeURIComponent(currentUser)}&start_date=${format(weekStartDate, 'yyyy-MM-dd')}&end_date=${format(weekEndDate, 'yyyy-MM-dd')}`)
+//       .then(response => {
+//         console.log('Direct fetch response status:', response.status);
+//         console.log('Direct fetch response headers:', {
+//           contentType: response.headers.get('content-type'),
+//           contentLength: response.headers.get('content-length')
+//         });
+//         return response.text();
+//       })
+//       .then(text => {
+//         console.log('Direct fetch response text:', text);
+//         try {
+//           const testData = JSON.parse(text);
+//           console.log('Direct fetch parsed data:', testData);
+//         } catch (e) {
+//           console.error('Direct fetch parse error:', e);
+//         }
+//       })
+//       .catch(err => console.error('Direct fetch error:', err));
+    
+//     // Fetch the allocations using the service
+//     ProjectDataService.getAllocations(
+//       currentUser, 
+//       format(weekStartDate, 'yyyy-MM-dd'),
+//       format(weekEndDate, 'yyyy-MM-dd')
+//     )
+//     .then(allocationsData => {
+//       // Skip if component unmounted
+//       if (!isMounted) return;
+      
+//       // Ensure allocationsData is always an array
+//       const dataArray = Array.isArray(allocationsData) ? allocationsData : [];
+//       console.log("Received allocations data:", dataArray);
+      
+//       // Process the data
+//       if (dataArray.length > 0) {
+//         console.log("Processing non-empty allocations");
+//         const newRows = dataArray.map(allocation => ({
+//           id: allocation.ra_id,
+//           resource: currentUser,
+//           projectNumber: allocation.proj_id || allocation.project_number, // Handle different field names
+//           projectName: allocation.project_name || '',
+//           milestone: allocation.milestone_name || '',
+//           pm: allocation.project_manager || '',
+//           labor: allocation.contract_labor || 0,
+//           pctLaborUsed: (allocation.forecast_pm_labor || 0) * 100, // Convert to percentage
+//           hours: allocation.ra_hours || allocation.hours || 0,
+//           remarks: allocation.ra_remarks || allocation.remarks || ""
+//         }));
+//         setRows(newRows);
+//       } else {
+//         console.log("No allocations found, initializing with empty row");
+//         // Initialize with an empty row if no allocations
+//         setRows([{
+//           resource: currentUser,
+//           projectNumber: '',
+//           projectName: '',
+//           milestone: '',
+//           pm: '',
+//           labor: '',
+//           pctLaborUsed: '',
+//           hours: '',
+//           remarks: ''
+//         }]);
+//       }
+      
+//       setHasLoadedInitialData(true);
+//       setIsLoading(false);  // Ensure we exit loading state
+//     })
+//     .catch(err => {
+//       // Skip if component unmounted
+//       if (!isMounted) return;
+      
+//       console.error('Error loading allocations:', err);
+//       setLoadError('Failed to load data: ' + err.message);
+      
+//       // Initialize with an empty row even if loading fails
+//       setRows([{
+//         resource: currentUser,
+//         projectNumber: '',
+//         projectName: '',
+//         milestone: '',
+//         pm: '',
+//         labor: '',
+//         pctLaborUsed: '',
+//         hours: '',
+//         remarks: ''
+//       }]);
+      
+//       setIsLoading(false);  // Ensure we exit loading state
+//     });
+    
+//     // Return cleanup function to prevent state updates after unmounting
+//     return () => {
+//       isMounted = false;
+//     };
+//   }, [currentUser, weekStartDate, weekEndDate, hasLoadedInitialData]);
 
   // Rest of the component remains the same
   const addRow = useCallback(() => {
@@ -663,7 +976,8 @@ const MainContent = () => {
         <div className="table-container">
           {loadError && <div className="error-banner">{loadError}</div>}
           {saveError && <div className="error-banner">{saveError}</div>}
-          <WeekPicker className="week-picker" onWeekChange={handleWeekChange} />
+          {/* <WeekPicker className="week-picker" onWeekChange={handleWeekChange} /> */}
+          <WeekPicker className="resource-week-picker" onWeekChange={handleWeekChange} />
 
           {/* Add user info display here */}
         <div className="user-info-container">
@@ -857,6 +1171,12 @@ const MainContent = () => {
             <span className="ratio-value">{percentFormatter.format(calculateRatioB())}</span>
           </div>
           <div className="table-actions">
+          <button 
+              className="support-button"
+              onClick={() => window.location.href = 'mailto:jonathan.herrera@p2sinc.com'}
+            >
+            Contact Support
+            </button>
             <button onClick={addRow} className="add-btn" disabled={isSaving || isLoading}>Add Row</button>
             <button 
               onClick={handleSave} 
@@ -865,6 +1185,7 @@ const MainContent = () => {
             >
               {isSaving ? 'Saving...' : 'Save'}
             </button>
+            
           </div>
         </div>
       </div>
@@ -877,6 +1198,7 @@ const Footer = () => {
   const [showAboutTooltip, setShowAboutTooltip] = useState(false);
 
   return (
+
     <footer className="footer">
       <div className="footer-left">
         <div
@@ -887,7 +1209,7 @@ const Footer = () => {
           <span className="footer-text">About</span>
           {showAboutTooltip && (
             <div className="tooltip">
-              Our P2S AI Assistant was developed by Nilay Nagar, Chad Peterson, and Jonathan Herrera.
+              Our P2S Resource Allocation was developed by Nilay Nagar, Chad Peterson, and Jonathan Herrera.
             </div>
           )}
         </div>
@@ -900,6 +1222,7 @@ const Footer = () => {
         <span> | © {new Date().getFullYear()} P2S All rights reserved.</span>
       </div>
     </footer>
+    
   );
 };
 
@@ -970,6 +1293,7 @@ return (
     
     {/* Shared Footer - always present */}
     <Footer />
+    
   </div>
 );
 }
