@@ -82,22 +82,44 @@ const TableRow = ({ row, index, updateRow, deleteRow, isLoading, currentUser }) 
     }
   };
 
-  const handleProjectSelect = async (project) => {
-    try {
-      // Update with the selected project data
-      updateRow(index, 'projectNumber', project['Project Number']);
-      updateRow(index, 'projectName', project['Project Name']);
-      updateRow(index, 'milestone', project['Milestone']);
-      updateRow(index, 'pm', project['PM']);
-      updateRow(index, 'labor', project['Labor']);
-      updateRow(index, 'pctLaborUsed', project['Pct Labor Used']);
-      setShowDropdown(false);
-      setHasError(false);
-    } catch (error) {
-      console.error('Failed to select project:', error);
-      setHasError(true);
-    }
-  };
+  // const handleProjectSelect = async (project) => {
+  //   try {
+  //     // Update with the selected project data
+  //     updateRow(index, 'projectNumber', project['Project Number']);
+  //     updateRow(index, 'projectName', project['Project Name']);
+  //     updateRow(index, 'milestone', project['Milestone']);
+  //     updateRow(index, 'pm', project['PM']);
+  //     updateRow(index, 'labor', project['Labor']);
+  //     updateRow(index, 'pctLaborUsed', project['Pct Labor Used']);
+  //     setShowDropdown(false);
+  //     setHasError(false);
+  //   } catch (error) {
+  //     console.error('Failed to select project:', error);
+  //     setHasError(true);
+  //   }
+  // };
+  // In handleProjectSelect function, add a cache for the selected project's data
+const handleProjectSelect = async (project) => {
+  try {
+    // Update with the selected project data
+    updateRow(index, 'projectNumber', project['Project Number']);
+    updateRow(index, 'projectName', project['Project Name']);
+    updateRow(index, 'milestone', project['Milestone']);
+    updateRow(index, 'pm', project['PM']);
+    updateRow(index, 'labor', project['Labor']);
+    updateRow(index, 'pctLaborUsed', project['Pct Labor Used']);
+    
+    // Store the complete project data in the row for use during save
+    // This ensures the selected project data is available when saving
+    updateRow(index, '_projectData', project);  // Add this line
+    
+    setShowDropdown(false);
+    setHasError(false);
+  } catch (error) {
+    console.error('Failed to select project:', error);
+    setHasError(true);
+  }
+};
 
   const handleKeyPress = async (e) => {
     if (e.key === 'Enter') {

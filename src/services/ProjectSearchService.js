@@ -96,6 +96,7 @@ export class ProjectSearchService {
       throw error;
     }
   }
+  
 }
 
 export default ProjectSearchService;

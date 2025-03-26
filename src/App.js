@@ -77,7 +77,6 @@ const Header = ({ currentView,onNavigate, onLogout }) => {
 };
 
 // Main Content Component
-// MainContent Component from App.js - updated to use user data properly
 const MainContent = () => {
   const [rows, setRows] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -196,12 +195,6 @@ const MainContent = () => {
     setLoadError(null);
     setHasLoadedInitialData(false);
     
-    // Set scheduled hours from the team member data
-    // if (member.hrs_worked_per_week !== null && member.hrs_worked_per_week !== undefined) {
-    //   setScheduledHours(member.hrs_worked_per_week);
-    // } else {
-    //   setScheduledHours(40); // Default if not available
-    // }
     if (member.hrs_worked_per_week !== null && member.hrs_worked_per_week !== undefined) {
       const hours = Number(member.hrs_worked_per_week);
       console.log(`Setting scheduled hours to: ${hours} (type: ${typeof hours})`);
@@ -234,14 +227,27 @@ const MainContent = () => {
   };
 
   // Handle week change
+  // In the handleWeekChange function in MainContent
   const handleWeekChange = useCallback((startDate, endDate) => {
     console.log("Week changed in MainContent:", {
       startDate: format(startDate, 'yyyy-MM-dd'),
       endDate: format(endDate, 'yyyy-MM-dd')
     });
+    
+    // Clear cached allocations to ensure fresh data when switching weeks
+    ProjectDataService.clearCacheWithPattern('allocations_');
+    
     setWeekStartDate(startDate);
     setWeekEndDate(endDate);
   }, []);
+  // const handleWeekChange = useCallback((startDate, endDate) => {
+  //   console.log("Week changed in MainContent:", {
+  //     startDate: format(startDate, 'yyyy-MM-dd'),
+  //     endDate: format(endDate, 'yyyy-MM-dd')
+  //   });
+  //   setWeekStartDate(startDate);
+  //   setWeekEndDate(endDate);
+  // }, []);
 
   // Calculate PTO hours based on rows
   useEffect(() => {
@@ -286,26 +292,33 @@ const MainContent = () => {
     });
   }, [currentUser, weekStartDate, weekEndDate, isLoading,hasLoadedInitialData, scheduledHours]);
   
-  // Load data when week dates change
-  useEffect(() => {
+    useEffect(() => {
     // Only proceed if we have both a user and date range
     if (!currentUser || !weekStartDate || !weekEndDate) {
       console.log("Skipping allocation load - missing required data");
       return;
     }
 
+    setIsLoading(true);
+    setLoadError(null);
+
+    setRows([]); // Clear rows when loading new data
+
+    const formattedStartDate = format(weekStartDate, 'yyyy-MM-dd');
+    const formattedEndDate = format(weekEndDate, 'yyyy-MM-dd');
+
     // Don't reload if already loading
-    if (isLoading && hasLoadedInitialData) {
-      console.log("Already loading, skip duplicate request");
-      return;
-    }
+    // if (isLoading && hasLoadedInitialData) {
+    //   console.log("Already loading, skip duplicate request");
+    //   return;
+    // }
 
     // Track if this effect should continue updating state
     let isMounted = true;
     
     // Set loading state
-    setIsLoading(true);
-    setLoadError(null);
+    // setIsLoading(true);
+    // setLoadError(null);
     
     console.log("Loading allocations for:", {
       email: currentUser,
@@ -316,8 +329,8 @@ const MainContent = () => {
     // Fetch the allocations using the service
     ProjectDataService.getAllocations(
       currentUser, 
-      format(weekStartDate, 'yyyy-MM-dd'),
-      format(weekEndDate, 'yyyy-MM-dd')
+      formattedStartDate,
+      formattedEndDate
     )
     .then(allocationsData => {
       // Skip if component unmounted
@@ -390,329 +403,6 @@ const MainContent = () => {
       isMounted = false;
     };
   }, [currentUser, weekStartDate, weekEndDate, hasLoadedInitialData]);
-// const MainContent = () => {
-//   const [rows, setRows] = useState([]);
-//   const [isLoading, setIsLoading] = useState(true);
-//   const [loadError, setLoadError] = useState(null);
-//   const [currentUser, setCurrentUser] = useState('');
-//   const [userDetails, setUserDetails] = useState(null);
-//   const [isSaving, setIsSaving] = useState(false);
-//   const [saveError, setSaveError] = useState(null);
-//   const [scheduledHours, setScheduledHours] = useState(40);
-//   const [ptoHolHours, setPTOHolHours] = useState(0);
-//   const [weekStartDate, setWeekStartDate] = useState(null);
-//   const [weekEndDate, setWeekEndDate] = useState(null);
-//   const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
-//   const [isGroupLeader, setIsGroupLeader] = useState(false);
-//   const [teamMembers, setTeamMembers] = useState([]);
-//   const [selectedTeamMember, setSelectedTeamMember] = useState(null);
-//   const [showTeamDropdown, setShowTeamDropdown] = useState(false);
-
-
-//   useEffect(() => {
-//     const handleClickOutside = (event) => {
-//       if (!event.target.closest('.team-dropdown')) {
-//         setShowTeamDropdown(false);
-//       }
-//     };
-    
-//     document.addEventListener('mousedown', handleClickOutside);
-//     return () => document.removeEventListener('mousedown', handleClickOutside);
-//   }, []);
-
-//   // Set user data on component mount
-//   useEffect(() => {
-//     // Debug logging
-//     console.log("Checking for current user");
-    
-//     const details = UserService.getCurrentUserDetails();
-//     console.log("User details from storage:", details);
-    
-//     if (details && details.email) {
-//       console.log(`Setting current user to: ${details.email}`);
-//       setCurrentUser(details.email);
-//       setUserDetails(details);
-//       if (details.scheduledHours) {
-//         setScheduledHours(details.scheduledHours);
-//       }
-      
-//       // Check if user is a group leader
-//       setIsGroupLeader(details.isGroupManager || false);
-      
-//       // If the user is a group leader, fetch their team members
-//       if (details.isGroupManager) {
-//         fetchTeamMembers(details.email);
-//       }
-//     } else {
-//       console.warn("No valid user details found");
-//     }
-//   }, []);
-
-//   // const fetchTeamMembers = async (email) => {
-//   //   try {
-//   //     const apiUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_TEAM_MEMBERS}?group_manager_email=${encodeURIComponent(email)}`;
-//   //     console.log(`Fetching team members from: ${apiUrl}`);
-      
-//   //     const response = await fetch(apiUrl);
-//   //     if (!response.ok) {
-//   //       throw new Error(`Failed to fetch team members: ${response.status}`);
-//   //     }
-      
-//   //     const data = await response.json();
-//   //     console.log("Team members data:", data);
-      
-//   //     if (data && data.members && data.members.length > 0) {
-//   //       setTeamMembers(data.members);
-//   //     }
-//   //   } catch (error) {
-//   //     console.error("Error fetching team members:", error);
-//   //   }
-//   // };
-//   const fetchTeamMembers = async (email) => {
-//     try {
-//       // First check the status directly
-//       const statusUrl = `${API_CONFIG.BASE_URL}/gl/check-status?email=${encodeURIComponent(email)}`;
-//       console.log(`Checking GL status from: ${statusUrl}`);
-      
-//       const statusResponse = await fetch(statusUrl);
-//       const statusData = await statusResponse.json();
-      
-//       console.log("GL status check:", statusData);
-      
-//       // Update group leader status based on direct check
-//       if (statusData.is_group_manager) {
-//         setIsGroupLeader(true);
-        
-//         // Now fetch team members
-//         const apiUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_TEAM_MEMBERS}?group_manager_email=${encodeURIComponent(email)}`;
-//         console.log(`Fetching team members from: ${apiUrl}`);
-        
-//         const response = await fetch(apiUrl);
-//         if (!response.ok) {
-//           throw new Error(`Failed to fetch team members: ${response.status}`);
-//         }
-        
-//         const data = await response.json();
-//         console.log("Team members data:", data);
-        
-//         if (data && data.members && data.members.length > 0) {
-//           setTeamMembers(data.members);
-//         } else {
-//           console.log("No team members found, but user is a group leader");
-//         }
-//       } else {
-//         console.log("User is not a group leader according to direct database check");
-//         setIsGroupLeader(false);
-//       }
-//     } catch (error) {
-//       console.error("Error checking group leader status or fetching team members:", error);
-//     }
-//   };
-
-//   const handleTeamMemberSelect = (member) => {
-//     console.log(`Selected team member: ${member.name}, ${member.email}`);
-//     setSelectedTeamMember(member);
-    
-//     // Reset states for the new team member
-//     setRows([]);
-//     setLoadError(null);
-//     setHasLoadedInitialData(false);
-    
-//     // This will trigger the useEffect that loads allocations
-//     setCurrentUser(member.email);
-//   };
-
-//   const resetToGroupLeader = () => {
-//     console.log("Resetting to group leader view");
-//     setSelectedTeamMember(null);
-    
-//     // Reset states
-//     setRows([]);
-//     setLoadError(null);
-//     setHasLoadedInitialData(false);
-    
-//     // Set current user back to the group leader
-//     setCurrentUser(userDetails.email);
-//   };
-
-//   // Handle week change
-//   const handleWeekChange = useCallback((startDate, endDate) => {
-//     console.log("Week changed in MainContent:", {
-//       startDate: format(startDate, 'yyyy-MM-dd'),
-//       endDate: format(endDate, 'yyyy-MM-dd')
-//     });
-//     setWeekStartDate(startDate);
-//     setWeekEndDate(endDate);
-//   }, []);
-
-//   // Calculate PTO hours based on rows
-//   useEffect(() => {
-//     const ptoHours = rows.reduce((sum, row) => {
-//       if (row.projectNumber?.startsWith('0000-0000-0PTO') || 
-//           row.projectNumber?.startsWith('0000-0000-0HOL')) {
-//         return sum + (parseFloat(row.hours) || 0);
-//       }
-//       return sum;
-//     }, 0);
-    
-//     setPTOHolHours(ptoHours);
-//   }, [rows]);
-
-//   // IMPORTANT: Initialize week dates if not set by WeekPicker
-//   useEffect(() => {
-//     if (!weekStartDate || !weekEndDate) {
-//       const today = new Date();
-//       const startDate = startOfWeek(today, { weekStartsOn: 1 }); //chg
-//       const endDate = endOfWeek(today, { weekStartsOn: 1 });
-      
-//       console.log("Initializing with current week:", {
-//         startDate: format(startDate, 'yyyy-MM-dd'),
-//         endDate: format(endDate, 'yyyy-MM-dd')
-//       });
-      
-//       setWeekStartDate(startDate);
-//       setWeekEndDate(endDate);
-//     }
-//   }, []);
-
-//   // Debug the dependencies in the allocation loading effect
-//   useEffect(() => {
-//     // Log the state of dependencies whenever they change
-//     console.log("Allocation effect dependencies changed:", {
-//       currentUser,
-//       weekStartDate: weekStartDate ? format(weekStartDate, 'yyyy-MM-dd') : null,
-//       weekEndDate: weekEndDate ? format(weekEndDate, 'yyyy-MM-dd') : null,
-//       isLoading
-//     });
-//   }, [currentUser, weekStartDate, weekEndDate, isLoading]);
-  
-//   // Load data when week dates change
-//   useEffect(() => {
-//     // Only proceed if we have both a user and date range
-//     if (!currentUser || !weekStartDate || !weekEndDate) {
-//       console.log("Skipping allocation load - missing required data");
-//       return;
-//     }
-
-//     // Don't reload if already loading
-//     if (isLoading && hasLoadedInitialData) {
-//       console.log("Already loading, skip duplicate request");
-//       return;
-//     }
-
-//     // Track if this effect should continue updating state
-//     let isMounted = true;
-    
-//     // Set loading state
-//     setIsLoading(true);
-//     setLoadError(null);
-    
-//     console.log("Loading allocations for:", {
-//       email: currentUser,
-//       startDate: format(weekStartDate, 'yyyy-MM-dd'),
-//       endDate: format(weekEndDate, 'yyyy-MM-dd')
-//     });
-    
-//     // Make a direct API call to test endpoint accessibility
-//     console.log(`Testing API endpoint: /allocations?email=${encodeURIComponent(currentUser)}`);
-//     fetch(`http://localhost:8000/allocations?email=${encodeURIComponent(currentUser)}&start_date=${format(weekStartDate, 'yyyy-MM-dd')}&end_date=${format(weekEndDate, 'yyyy-MM-dd')}`)
-//       .then(response => {
-//         console.log('Direct fetch response status:', response.status);
-//         console.log('Direct fetch response headers:', {
-//           contentType: response.headers.get('content-type'),
-//           contentLength: response.headers.get('content-length')
-//         });
-//         return response.text();
-//       })
-//       .then(text => {
-//         console.log('Direct fetch response text:', text);
-//         try {
-//           const testData = JSON.parse(text);
-//           console.log('Direct fetch parsed data:', testData);
-//         } catch (e) {
-//           console.error('Direct fetch parse error:', e);
-//         }
-//       })
-//       .catch(err => console.error('Direct fetch error:', err));
-    
-//     // Fetch the allocations using the service
-//     ProjectDataService.getAllocations(
-//       currentUser, 
-//       format(weekStartDate, 'yyyy-MM-dd'),
-//       format(weekEndDate, 'yyyy-MM-dd')
-//     )
-//     .then(allocationsData => {
-//       // Skip if component unmounted
-//       if (!isMounted) return;
-      
-//       // Ensure allocationsData is always an array
-//       const dataArray = Array.isArray(allocationsData) ? allocationsData : [];
-//       console.log("Received allocations data:", dataArray);
-      
-//       // Process the data
-//       if (dataArray.length > 0) {
-//         console.log("Processing non-empty allocations");
-//         const newRows = dataArray.map(allocation => ({
-//           id: allocation.ra_id,
-//           resource: currentUser,
-//           projectNumber: allocation.proj_id || allocation.project_number, // Handle different field names
-//           projectName: allocation.project_name || '',
-//           milestone: allocation.milestone_name || '',
-//           pm: allocation.project_manager || '',
-//           labor: allocation.contract_labor || 0,
-//           pctLaborUsed: (allocation.forecast_pm_labor || 0) * 100, // Convert to percentage
-//           hours: allocation.ra_hours || allocation.hours || 0,
-//           remarks: allocation.ra_remarks || allocation.remarks || ""
-//         }));
-//         setRows(newRows);
-//       } else {
-//         console.log("No allocations found, initializing with empty row");
-//         // Initialize with an empty row if no allocations
-//         setRows([{
-//           resource: currentUser,
-//           projectNumber: '',
-//           projectName: '',
-//           milestone: '',
-//           pm: '',
-//           labor: '',
-//           pctLaborUsed: '',
-//           hours: '',
-//           remarks: ''
-//         }]);
-//       }
-      
-//       setHasLoadedInitialData(true);
-//       setIsLoading(false);  // Ensure we exit loading state
-//     })
-//     .catch(err => {
-//       // Skip if component unmounted
-//       if (!isMounted) return;
-      
-//       console.error('Error loading allocations:', err);
-//       setLoadError('Failed to load data: ' + err.message);
-      
-//       // Initialize with an empty row even if loading fails
-//       setRows([{
-//         resource: currentUser,
-//         projectNumber: '',
-//         projectName: '',
-//         milestone: '',
-//         pm: '',
-//         labor: '',
-//         pctLaborUsed: '',
-//         hours: '',
-//         remarks: ''
-//       }]);
-      
-//       setIsLoading(false);  // Ensure we exit loading state
-//     });
-    
-//     // Return cleanup function to prevent state updates after unmounting
-//     return () => {
-//       isMounted = false;
-//     };
-//   }, [currentUser, weekStartDate, weekEndDate, hasLoadedInitialData]);
-
   // Rest of the component remains the same
   const addRow = useCallback(() => {
     setRows(prevRows => [...prevRows, {
@@ -760,7 +450,6 @@ const MainContent = () => {
       setRows(prevRows => prevRows.filter((_, i) => i !== index));
     }
   }, [rows]);
-
   const handleSave = async () => {
     try {
       setIsSaving(true);
@@ -769,6 +458,15 @@ const MainContent = () => {
       const savePromises = [];
       const updatedRows = [];
       const newRows = [];
+      
+      // Format week dates once for all operations
+      const formattedWeekStart = weekStartDate ? format(weekStartDate, 'yyyy-MM-dd') : null;
+      const formattedWeekEnd = weekEndDate ? format(weekEndDate, 'yyyy-MM-dd') : null;
+      
+      console.log("Saving with week dates:", {
+        start: formattedWeekStart,
+        end: formattedWeekEnd
+      });
       
       // Debug log all rows before saving
       console.log("All rows before saving:", JSON.stringify(rows));
@@ -790,9 +488,6 @@ const MainContent = () => {
           newRows.push(row);
         }
       }
-      
-      // First, handle updates to prevent duplications
-      console.log(`Processing ${updatedRows.length} updates and ${newRows.length} new rows`);
       
       // Process updates
       for (let row of updatedRows) {
@@ -818,7 +513,10 @@ const MainContent = () => {
             email: currentUser,
             project_number: row.projectNumber,
             hours: parseFloat(row.hours) || 0,
-            remarks: row.remarks || ""
+            remarks: row.remarks || "",
+            week_start: formattedWeekStart,  // Add the week start date
+            week_end: formattedWeekEnd,       // Add the week end date
+            // The project details will be fetched from CSV in the saveResourceAllocation method
           })
             .then(result => {
               console.log(`Create result:`, result);
@@ -836,47 +534,7 @@ const MainContent = () => {
         const results = await Promise.all(savePromises);
         console.log("Save operation results:", results);
         
-        // Clear any cached allocations to ensure fresh data
-        ProjectDataService.clearCacheWithPattern('allocations_');
-        
-        // Reload data with slight delay to ensure backend processing is complete
-        if (weekStartDate && weekEndDate) {
-          console.log("Reloading allocations after save");
-          setTimeout(async () => {
-            try {
-              const allocationsData = await ProjectDataService.getAllocations(
-                currentUser, 
-                format(weekStartDate, 'yyyy-MM-dd'),
-                format(weekEndDate, 'yyyy-MM-dd')
-              );
-              
-              console.log("Refreshed allocation data:", allocationsData);
-              
-              // Ensure allocationsData is an array
-              const dataArray = Array.isArray(allocationsData) ? allocationsData : [];
-              
-              if (dataArray.length > 0) {
-                const newRows = dataArray.map(allocation => ({
-                  id: allocation.ra_id,
-                  resource: currentUser,
-                  projectNumber: allocation.proj_id || allocation.project_number,
-                  projectName: allocation.project_name || '',
-                  milestone: allocation.milestone_name || '',
-                  pm: allocation.project_manager || '',
-                  labor: allocation.contract_labor || 0,
-                  pctLaborUsed: (allocation.forecast_pm_labor || 0) * 100,
-                  hours: allocation.ra_hours || allocation.hours || 0,
-                  remarks: allocation.ra_remarks || allocation.remarks || ""
-                }));
-                setRows(newRows);
-              }
-            } catch (err) {
-              console.error("Error reloading data after save:", err);
-            }
-          }, 500); // 500ms delay to ensure backend processing is complete
-        }
-        
-        console.log("Save process completed successfully!");
+        // Rest of your existing code...
       } else {
         console.log("No changes to save");
       }
@@ -887,6 +545,144 @@ const MainContent = () => {
       setIsSaving(false);
     }
   };
+
+  // const handleSave = async () => {
+  //   try {
+  //     setIsSaving(true);
+  //     setSaveError(null);
+      
+  //     const savePromises = [];
+  //     const updatedRows = [];
+  //     const newRows = [];
+
+  //     // Format week dates once for all operations
+  //     const formattedWeekStart = weekStartDate ? format(weekStartDate, 'yyyy-MM-dd') : null;
+  //     const formattedWeekEnd = weekEndDate ? format(weekEndDate, 'yyyy-MM-dd') : null;
+      
+  //     console.log("Saving with week dates:", {
+  //       start: formattedWeekStart,
+  //       end: formattedWeekEnd
+  //     });
+      
+  //     // Debug log all rows before saving
+  //     console.log("All rows before saving:", JSON.stringify(rows));
+      
+  //     // Organize rows for saving
+  //     for (let row of rows) {
+  //       // Skip rows with no project number or hours
+  //       if (!row.projectNumber || !row.hours) {
+  //         console.log("Skipping row - missing project number or hours:", row);
+  //         continue;
+  //       }
+        
+  //       // Explicitly check and log row ID to debug
+  //       if (row.id) {
+  //         console.log(`Found existing row with ID: ${row.id}, Type: ${typeof row.id}`);
+  //         updatedRows.push(row);
+  //       } else {
+  //         console.log("New row without ID:", row);
+  //         newRows.push(row);
+  //       }
+  //     }
+      
+  //     // First, handle updates to prevent duplications
+  //     console.log(`Processing ${updatedRows.length} updates and ${newRows.length} new rows`);
+      
+  //     // Process updates
+  //     for (let row of updatedRows) {
+  //       console.log(`Updating allocation with ID: ${row.id}`);
+  //       savePromises.push(
+  //         ProjectDataService.updateAllocation(row.id, row.hours, row.remarks)
+  //           .then(result => {
+  //             console.log(`Update result for ID ${row.id}:`, result);
+  //             return { ...result, action: 'update', id: row.id };
+  //           })
+  //           .catch(err => {
+  //             console.error(`Error updating allocation ${row.id}:`, err);
+  //             throw err;
+  //           })
+  //       );
+  //     }
+      
+  //     // Process new rows
+  //     for (let row of newRows) {
+  //       console.log(`Creating new allocation for project: ${row.projectNumber}`);
+  //       savePromises.push(
+  //         ProjectDataService.saveResourceAllocation({
+  //           email: currentUser,
+  //           project_number: row.projectNumber,
+  //           hours: parseFloat(row.hours) || 0,
+  //           remarks: row.remarks || "",
+  //           week_start: formattedWeekStart,  
+  //           week_end: formattedWeekEnd  
+  //         })
+  //           .then(result => {
+  //             console.log(`Create result:`, result);
+  //             return { ...result, action: 'create' };
+  //           })
+  //           .catch(err => {
+  //             console.error(`Error creating allocation:`, err);
+  //             throw err;
+  //           })
+  //       );
+  //     }
+      
+  //     // Wait for all save operations to complete
+  //     if (savePromises.length > 0) {
+  //       const results = await Promise.all(savePromises);
+  //       console.log("Save operation results:", results);
+        
+  //       // Clear any cached allocations to ensure fresh data
+  //       ProjectDataService.clearCacheWithPattern('allocations_');
+        
+  //       // Reload data with slight delay to ensure backend processing is complete
+  //       if (weekStartDate && weekEndDate) {
+  //         console.log("Reloading allocations after save");
+  //         setTimeout(async () => {
+  //           try {
+  //             const allocationsData = await ProjectDataService.getAllocations(
+  //               currentUser, 
+  //               format(weekStartDate, 'yyyy-MM-dd'),
+  //               format(weekEndDate, 'yyyy-MM-dd')
+  //             );
+              
+  //             console.log("Refreshed allocation data:", allocationsData);
+              
+  //             // Ensure allocationsData is an array
+  //             const dataArray = Array.isArray(allocationsData) ? allocationsData : [];
+              
+  //             if (dataArray.length > 0) {
+  //               const newRows = dataArray.map(allocation => ({
+  //                 id: allocation.ra_id,
+  //                 resource: currentUser,
+  //                 projectNumber: allocation.proj_id || allocation.project_number,
+  //                 projectName: allocation.project_name || '',
+  //                 milestone: allocation.milestone_name || '',
+  //                 pm: allocation.project_manager || '',
+  //                 labor: allocation.contract_labor || 0,
+  //                 pctLaborUsed: (allocation.forecast_pm_labor || 0) * 100,
+  //                 hours: allocation.ra_hours || allocation.hours || 0,
+  //                 remarks: allocation.ra_remarks || allocation.remarks || ""
+  //               }));
+  //               setRows(newRows);
+  //             }
+  //           } catch (err) {
+  //             console.error("Error reloading data after save:", err);
+  //           }
+  //         }, 500); // 500ms delay to ensure backend processing is complete
+  //       }
+        
+  //       console.log("Save process completed successfully!");
+  //     } else {
+  //       console.log("No changes to save");
+  //     }
+  //   } catch (error) {
+  //     console.error('Save failed:', error);
+  //     setSaveError('Failed to save data: ' + error.message);
+  //   } finally {
+  //     setIsSaving(false);
+  //   }
+  // };
 
   // Calculate total hours
   const totalHours = rows.reduce((sum, row) => {
