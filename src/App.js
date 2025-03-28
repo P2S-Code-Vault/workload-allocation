@@ -357,9 +357,8 @@ const MainContent = () => {
         }));
         setRows(newRows);
       } else {
-        console.log("No allocations found, initializing with empty row");
-        // Initialize with an empty row if no allocations
-        setRows([{
+        // Initialize with 5 blank rows
+        setRows([...Array(5)].map(() => ({
           resource: currentUser,
           projectNumber: '',
           projectName: '',
@@ -369,7 +368,7 @@ const MainContent = () => {
           pctLaborUsed: '',
           hours: '',
           remarks: ''
-        }]);
+        })));
       }
       
       setHasLoadedInitialData(true);
@@ -382,8 +381,8 @@ const MainContent = () => {
       console.error('Error loading allocations:', err);
       setLoadError('Failed to load data: ' + err.message);
       
-      // Initialize with an empty row even if loading fails
-      setRows([{
+      // Initialize with 5 blank rows even if loading fails
+      setRows([...Array(5)].map(() => ({
         resource: currentUser,
         projectNumber: '',
         projectName: '',
@@ -393,7 +392,7 @@ const MainContent = () => {
         pctLaborUsed: '',
         hours: '',
         remarks: ''
-      }]);
+      })));
       
       setIsLoading(false);  // Ensure we exit loading state
     });
