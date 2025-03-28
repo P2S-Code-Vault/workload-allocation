@@ -67,7 +67,8 @@
 }
 
 .user-name {
-  font-weight: bold;
+  font-weight: 500;
+  color: var(--primary-color);
 }
 
 .user-email {

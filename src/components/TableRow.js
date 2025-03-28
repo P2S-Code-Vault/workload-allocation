@@ -231,14 +231,14 @@ const handleProjectSelect = async (project) => {
               className={hasError ? 'input-error' : ''}
               autoComplete="off"
             />
-            <button 
+            {/* <button 
               type="button" 
               className="search-button" 
               onClick={triggerSearch} 
               disabled={isLoading || isSearching || !row.projectNumber || row.projectNumber.length < 3}
             >
               <FaSearch />
-            </button>
+            </button> */}
           </div>
           {isSearching && <div className="search-indicator">Searching...</div>}
           {hasError && <div className="search-error">Project not found</div>}

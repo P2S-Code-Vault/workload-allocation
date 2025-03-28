@@ -779,9 +779,66 @@ const MainContent = () => {
         <div className="user-info-container">
           <span className="user-label">Current User:</span>
           <span className="user-name">{userDetails?.name || currentUser}</span>
+          {isGroupLeader && (
+            <div className="team-controls">
+              {!selectedTeamMember ? (
+                <div className="team-dropdown">
+                  <button 
+                    className="team-dropdown-btn"
+                    onClick={() => setShowTeamDropdown(!showTeamDropdown)}
+                  >
+                    Select Team Member
+                  </button>
+                  
+                  {showTeamDropdown && (
+                    <div className="team-dropdown-list">
+                      {teamMembers.length > 0 ? (
+                        teamMembers.map(member => (
+                          <div 
+                            key={member.id}
+                            className="team-member-option"
+                            onClick={() => handleTeamMemberSelect(member)}
+                          >
+                            <div className="member-name">{member.name}</div>
+                            <div className="member-details">{member.email}</div>
+                          </div>
+                        ))
+                      ) : (
+                        <div className="no-team-members">No team members found</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="managing-indicator">
+                  <span>Managing Team Member:</span>
+                  <strong>{selectedTeamMember.name}</strong>
+                  <button 
+                    className="reset-view-btn"
+                    onClick={resetToGroupLeader}
+                  >
+                    Return to My View
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="scheduled-hours-container">
+            <label htmlFor="scheduledHours">Scheduled Hours:</label>
+            <input
+              id="scheduledHours"
+              type="number"
+              value={scheduledHours}
+              readOnly
+              disabled
+              onChange={(e) => setScheduledHours(Number(e.target.value))}
+              min="0"
+              max="168"
+            />
+          </div>
         </div>
         {/* Add team member selector for group leaders */}
-        {isGroupLeader && (
+        {/* {isGroupLeader && (
     <div className="team-controls">
       {!selectedTeamMember ? (
         <div className="team-dropdown">
@@ -824,11 +881,8 @@ const MainContent = () => {
         </div>
       )}
     </div>
-  )}
-  
-
-          
-          <div className="scheduled-hours-container">
+  )} */}
+          {/* <div className="scheduled-hours-container">
             <label htmlFor="scheduledHours">Scheduled Hours:</label>
             <input
               id="scheduledHours"
@@ -840,7 +894,7 @@ const MainContent = () => {
               min="0"
               max="168"
             />
-          </div>
+          </div> */}
           
           {isLoading ? (
             <div className="loading-indicator">Loading data...</div>
@@ -854,8 +908,8 @@ const MainContent = () => {
                   <th>MS PM</th>
                   <th>Contract Total Labor</th>
                   <th>% EAC Labor Used</th>
-                  <th style={{ width: '80px' }}>Planned Hours</th>
-                  <th style={{ width: '250px' }}>Remarks</th>
+                  <th>Planned Hours</th>
+                  <th>Remarks</th>
                   <th> </th>
                 </tr>
               </thead>
@@ -1005,7 +1059,7 @@ const Footer = () => {
           <span className="footer-text">About</span>
           {showAboutTooltip && (
             <div className="tooltip">
-              Our P2S Resource Allocation was developed by Nilay Nagar, Chad Peterson, and Jonathan Herrera.
+              Our Resource Allocation App was developed by Nilay Nagar, Chad Peterson, and Jonathan Herrera.
             </div>
           )}
         </div>
@@ -1081,11 +1135,11 @@ return (
     />
     
     {/* Main Content - changes based on current view */}
-    <main className="main-content">
-      {currentView === 'resource' && <MainContent userDetails={userDetails} />}
-      {currentView === 'pm' && <PMPage navigate={handleNavigate} />}
-      {currentView === 'leadership' && <LeadershipPage navigate={handleNavigate} />}
-    </main>
+    {/* <main className="main-content"> */}
+    {currentView === 'resource' && <MainContent userDetails={userDetails} />}
+    {currentView === 'pm' && <PMPage navigate={handleNavigate} />}
+    {currentView === 'leadership' && <LeadershipPage navigate={handleNavigate} />}
+    {/* </main> */}
     
     {/* Shared Footer - always present */}
     <Footer />
