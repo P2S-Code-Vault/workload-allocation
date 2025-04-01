@@ -77,7 +77,8 @@
 }
 
 .time-entry .project-number,
-.time-entry .project-name {
+.time-entry .project-name,
+.time-entry .remarks {
   text-align: left;
 }
 
