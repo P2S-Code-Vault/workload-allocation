@@ -88,52 +88,7 @@ export class ProjectDataService {
       throw error;
     }
   }
-/***
- * static async getAllocations(email, startDate, endDate) {
-  try {
-    // Validate inputs
-    if (!email) {
-      throw new Error("Email is required for fetching allocations");
-    }
-    
-    // Create a unique cache key for this query - add more details to it
-    const cacheKey = `allocations_${email}_${startDate || 'current'}_${endDate || 'current'}_v2`;
-    
-    console.log(`Fetching allocations with dates: start=${startDate}, end=${endDate}`);
-    
-    // For debugging, always skip cache when explicit dates are provided
-    // This helps identify if caching is the issue
-    const skipCache = (startDate && endDate);
-    const cachedData = skipCache ? null : this.getCachedData(cacheKey);
-    
-    if (cachedData) {
-      console.log(`Using cached allocations for ${email} from ${startDate} to ${endDate}`);
-      return cachedData;
-    }
-    
-    // Build query parameters - ensure dates are properly formatted
-    const params = new URLSearchParams();
-    params.append('email', email);
-    
-    if (startDate) {
-      console.log(`Adding start_date param: ${startDate}`);
-      params.append('start_date', startDate);
-    }
-    
-    if (endDate) {
-      console.log(`Adding end_date param: ${endDate}`);
-      params.append('end_date', endDate);
-    }
-    
-    // Log the full URL for debugging
-    const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.ALLOCATIONS}?${params.toString()}`;
-    console.log("Fetching allocations from URL:", url);
-    
-    const response = await fetch(url);
-    
-    // Handle response...
-    // Rest of your existing code
- */
+
 static async getAllocations(email, startDate, endDate) {
   try {
     // Validate inputs
@@ -153,13 +108,6 @@ static async getAllocations(email, startDate, endDate) {
       console.log(`Using cached allocations for ${email} from ${startDate} to ${endDate}`);
       return cachedData;
     }
-    // Try cache first
-    // const cachedData = this.getCachedData(cacheKey);
-    // if (cachedData) {
-    //   console.log(`Using cached allocations for ${email} from ${startDate} to ${endDate}`);
-    //   return cachedData;
-    // }
-    
     // Build query parameters
     const params = new URLSearchParams();
     params.append('email', email);
@@ -268,21 +216,6 @@ static cacheData(key, data, ttlMs) {
   }
 }
 
-// static cacheData(key, data, ttlMs) {
-//   try {
-//     const cacheItem = {
-//       data,
-//       expiry: Date.now() + ttlMs
-//     };
-    
-//     localStorage.setItem(key, JSON.stringify(cacheItem));
-//   } catch (error) {
-//     console.warn(`Error caching data for ${key}:`, error);
-//     // If localStorage is full, clear old cache items
-//     this.pruneCache();
-//   }
-// }
-
 static pruneCache() {
   try {
     // Find all cache entries
@@ -385,43 +318,6 @@ static async saveResourceAllocation(data) {
     throw error;
   }
 }
-  // static async saveResourceAllocation(data) {
-  //   try {
-  //     // Validation
-  //     if (!data.email || !data.project_number || !data.hours) {
-  //       throw new Error("Missing required allocation data: email, project_number, and hours are required");
-  //     }
-      
-  //     // Format the data to match backend expectations
-  //     const requestBody = {
-  //       email: data.email,
-  //       project_number: data.project_number,
-  //       hours: parseFloat(data.hours) || 0,
-  //       remarks: data.remarks || "",
-  //       week_start: data.week_start || null,
-  //       week_end: data.week_end || null
-  //     };
-      
-  //     console.log(`Creating new allocation:`, requestBody);
-  //     const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.ALLOCATIONS}`, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json"
-  //       },
-  //       body: JSON.stringify(requestBody)
-  //     });
-      
-  //     if (!response.ok) {
-  //       const errorText = await this.handleErrorResponse(response);
-  //       throw new Error(`Failed to save allocation: ${errorText}`);
-  //     }
-      
-  //     return await response.json();
-  //   } catch (error) {
-  //     console.error("Error saving allocation:", error);
-  //     throw error;
-  //   }
-  // }
 
   static async updateAllocation(allocationId, hours, remarks) {
     try {
@@ -629,37 +525,6 @@ static async saveResourceAllocation(data) {
       console.warn("Error cleaning allocation from cache:", error);
     }
   }
-
-  //Search projects based on project number
-  // static async searchProjects(searchTerm) {
-  //   if (!searchTerm || searchTerm.length < 3) {
-  //     return [];
-  //   }
-    
-  //   try {
-  //     console.log(`Searching projects with term: ${searchTerm}`);
-      
-  //     // Since no search endpoint exists yet, we'll try to get the milestone directly
-  //     try {
-  //       const milestone = await this.getMilestoneDetails(searchTerm);
-  //       return [{
-  //         'Project Number': milestone.project_number,
-  //         'Project Name': milestone.project_name,
-  //         'Milestone': milestone.milestone_name,
-  //         'PM': milestone.project_manager,
-  //         'Labor': milestone.contract_labor,
-  //         'Pct Labor Used': milestone.forecast_pm_labor * 100
-  //       }];
-  //     } catch (error) {
-  //       console.log("No exact milestone match:", error.message);
-  //       return [];
-  //     }
-  //   } catch (error) {
-  //     console.error("Error searching projects:", error);
-  //     return [];
-  //   }
-  // }
-
 
 }
 
