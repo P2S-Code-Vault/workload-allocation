@@ -35,9 +35,10 @@
 .expand-details-btn {
   background: none;
   border: none;
-  padding: 4px;
+  padding: 0px;
   cursor: pointer;
   color: var(--primary-color);
+  font-size: 1rem;
 }
 
 .expand-details-btn:hover {
@@ -49,26 +50,30 @@
 }
 
 .no-entries {
-  padding: 0.5rem;
-  color: var(--temp-text);
+  /* padding: 0.5rem; */
+  color: var(--primary-text);
   font-style: italic;
   text-align: center;
 }
 
 .time-entries {
-  padding: 1rem;
-  max-height: 300px;
+  /* padding: 0.5rem; */
+  max-height: 500px;
   overflow-y: auto;
   background-color: var(--white);
 }
 
 .time-entry {
   display: grid;
-  grid-template-columns: 300px minmax(100px, 1fr) 100px;
-  gap: 1rem;
+  grid-template-columns: 300px 1fr 1fr 1fr;
+  /* gap: 1rem; */
   padding: 0.5rem;
   border-bottom: 1px solid var(--border-color);
   align-items: center;
+}
+
+.time-entry:hover {
+  background-color: var(--primary-light);
 }
 
 .time-entry .project-number,
@@ -86,7 +91,7 @@
 }
 
 .time-entry .project-name {
-  color: var(--temp-text);
+  color: var(--primary-text);
 }
 
 .time-entry .number-cell {

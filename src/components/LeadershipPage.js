@@ -164,6 +164,7 @@ const CollapsibleMember = ({ member, formatter, formatPercent }) => {
                   <div key={i} className="time-entry">
                     <span className="project-number">{entry.projectNumber}</span>
                     <span className="project-name">{entry.projectName}</span>
+                    <span className="remarks">{entry.remarks}</span>
                     <span className="number-cell">{formatter.format(entry.hours)}</span>
                   </div>
                 ))
