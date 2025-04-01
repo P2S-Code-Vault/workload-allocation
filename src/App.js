@@ -43,7 +43,7 @@ const Header = ({ currentView,onNavigate, onLogout }) => {
           onClick={() => currentView !== 'resource' && onNavigate('resource')}
           disabled={currentView === 'resource'}
         >
-          Resource View
+          Main View
         </button>
         
         {/* PM View Button - disabled when on pm view */}
