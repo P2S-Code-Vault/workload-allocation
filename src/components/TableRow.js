@@ -252,10 +252,11 @@ const handleProjectSelect = async (project) => {
                   tabIndex="0"
                   onKeyDown={(e) => e.key === 'Enter' && handleProjectSelect(project)}
                 >
-                  <div className="suggestion-project-number">
-                    {highlightMatch(project['Project Number'], searchTerm)}
-                  </div>
                   <div className="suggestion-project-name">{project['Project Name']}</div>
+                  {/* <div className="suggestion-project-number">
+                    {highlightMatch(project['Project Number'], searchTerm)}
+                  </div> */}
+                  <div className="suggestion-project-name">{project['Milestone']}</div>
                 </div>
               ))}
             </div>

@@ -112,14 +112,15 @@ body {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  right: 0;
+  /* right: 0; */
   background: var(--white);
   border: 1px solid var(--border-color);
   border-radius: 4px;
-  max-height: 200px;
+  max-height: 500px;
   overflow-y: auto;
   z-index: 1000;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  width: 500px;
 }
 
 .error-message {
@@ -131,6 +132,8 @@ body {
 }
 
 .suggestion-item {
+  font-family: var(--font-primary);
+  font-size: var(--font-sm);
   padding: 8px 12px;
   cursor: pointer;
 }
@@ -231,7 +234,7 @@ body {
 .resource-table th,
 .resource-table td {
   padding: 4px;
-  text-align: center;
+  text-align: left;
   border: 1px solid var(--border-color);
 }
 
@@ -257,10 +260,25 @@ body {
   text-align: center;
 }
 
-.resource-table td:nth-child(6) input,
-.resource-table td:nth-child(7) input, 
-.resource-table td:nth-child(8) input {
+.resource-table td:nth-child(6) input { 
+/* .resource-table td:nth-child(8) input { */
+  font-family: var(--font-primary);
+  font-size: var(--font-sm);
   text-align: center;
+}
+
+.resource-table td:nth-child(7) input { 
+/* .resource-table td:nth-child(8) input { */
+  font-family: var(--font-primary);
+  font-size: var(--font-sm);
+  text-align: center;
+  padding-left: 20px;
+}
+
+.resource-table td:nth-child(8) input {
+  font-family: var(--font-primary);
+  font-size: var(--font-sm);
+  text-align: left;
 }
 
 .resource-table td:last-child {
@@ -277,9 +295,9 @@ body {
   width: 10%;
 }
 
-.resource-table td:nth-child(2) {  /* Name */
-  width: 15%;
-}
+/* .resource-table td:nth-child(2) {  Name */
+  /* width: 10%; */
+/* } */
 
 .resource-table td:nth-child(3) {  /* Milestone */
   width: 15%;
@@ -302,11 +320,11 @@ body {
 }
 
 .resource-table td:nth-child(8) {  /* Remarks */
-  width: 18%;
+  width: 25%;
 }
 
 .resource-table td:nth-child(9) {  /* Delete button column */
-  width: 2%;
+  width: 2.5%;
 }
 
 /* Ensure consistent widths between headers and cells */
@@ -1090,7 +1108,9 @@ body {
 .resource-table input[readonly] {
   border: none;
   background-color: transparent;
-  /* padding: 2px; */
+  font-family: var(--font-primary);
+  font-size: var(--font-sm);
+  padding: 1px;
   width: 100%;
 }
 
