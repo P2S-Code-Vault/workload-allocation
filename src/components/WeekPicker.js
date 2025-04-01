@@ -10,6 +10,7 @@ import "react-datepicker/dist/react-datepicker.css";
 
 const WeekPicker = ({ onWeekChange, className = '' }) => {
   const [currentDate, setCurrentDate] = useState(new Date());
+  // const [currentDate, setCurrentDate] = useState(addWeeks(new Date(), 1));
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   
   // Calculate start and end dates based on current date

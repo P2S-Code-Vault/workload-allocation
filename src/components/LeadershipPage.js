@@ -501,7 +501,7 @@ const LeadershipPage = ({ navigate }) => {
         directHours: 0,
         ptoHours: 0,
         overheadHours: 0,
-        memberCount: members.length
+        memberCount: members.length,
       };
       
       // Process members and group by studio
@@ -540,7 +540,7 @@ const LeadershipPage = ({ navigate }) => {
             scheduledHours: 0,
             directHours: 0,
             ptoHours: 0,
-            overheadHours: 0
+            overheadHours: 0,
           };
         }
         
@@ -560,11 +560,14 @@ const LeadershipPage = ({ navigate }) => {
         const directHours = memberRows
           .filter(row => !row.projectNumber.startsWith('0000-0000'))
           .reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
-          
+
         const ptoHours = memberRows
           .filter(row => 
             row.projectNumber.startsWith('0000-0000-0PTO') || 
-            row.projectNumber.startsWith('0000-0000-0HOL')
+            row.projectNumber.startsWith('0000-0000-0HOL') ||
+            row.projectNumber.startsWith('0000-0000-0SIC') ||
+            row.projectNumber.startsWith('0000-0000-LWOP') ||
+            row.projectNumber.startsWith('0000-0000-JURY')
           )
           .reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
           
@@ -572,11 +575,14 @@ const LeadershipPage = ({ navigate }) => {
           .filter(row => 
             row.projectNumber.startsWith('0000-0000') && 
             !row.projectNumber.startsWith('0000-0000-0PTO') && 
-            !row.projectNumber.startsWith('0000-0000-0HOL')
+            !row.projectNumber.startsWith('0000-0000-0HOL') &&
+            !row.projectNumber.startsWith('0000-0000-0SIC') &&
+            !row.projectNumber.startsWith('0000-0000-LWOP') &&
+            !row.projectNumber.startsWith('0000-0000-JURY')
           )
           .reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
           
-        const totalHours = directHours + ptoHours + overheadHours;
+        const totalHours = directHours + ptoHours + overheadHours; 
         
         // Add member to studio
         allGroupsData[groupManager].studios[studio].members.push({
@@ -882,8 +888,8 @@ useEffect(() => {
 }, [currentUser, weekStartDate, weekEndDate, leaders]);
 
   // Calculate RatioB
-  const calculateRatioB = (directHours, scheduledHours, ptoHours, lwopHours = 0) => {
-    const denominator = scheduledHours - ptoHours - lwopHours;
+  const calculateRatioB = (directHours, scheduledHours, ptoHours) => {
+    const denominator = scheduledHours - ptoHours;
     if (denominator <= 0) return 0;
     return directHours / denominator;
   };

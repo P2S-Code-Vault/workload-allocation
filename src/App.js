@@ -701,6 +701,8 @@ const MainContent = () => {
   const getGroupedRows = useCallback(() => {
     const ptoRows = rows.filter(row => 
       row.projectNumber?.startsWith('0000-0000-0PTO') || 
+      row.projectNumber.startsWith('0000-0000-0SIC') ||
+      row.projectNumber.startsWith('0000-0000-JURY') ||
       row.projectNumber?.startsWith('0000-0000-0HOL')
     );
     const lwopRows = rows.filter(row =>
@@ -710,6 +712,8 @@ const MainContent = () => {
       row.projectNumber?.startsWith('0000-0000') && 
       !row.projectNumber?.startsWith('0000-0000-0PTO') && 
       !row.projectNumber?.startsWith('0000-0000-0HOL') &&
+      !row.projectNumber?.startsWith('0000-0000-0SIC') &&
+      !row.projectNumber?.startsWith('0000-0000-JURY') &&
       !row.projectNumber?.startsWith('0000-0000-LWOP')
     );
     const normalRows = rows.filter(row => 
