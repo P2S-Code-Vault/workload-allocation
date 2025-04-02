@@ -229,6 +229,7 @@ body {
   background-color: var(--white);
   box-shadow: var(--shadow-sm);
   table-layout: fixed !important; /* Add this to enforce column widths */
+  margin-top: var(--spacing-lg);
 }
 
 .resource-table th,
@@ -470,6 +471,7 @@ body {
   /* padding: var(--spacing-sm); */
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-sm);
+  margin-top: var(--spacing-lg);
 }
 
 .pm-dashboard h2 {
@@ -1265,7 +1267,7 @@ body {
   border-radius: 4px 4px 0px 0px;
   align-items: center;
   flex-wrap: wrap;
-  margin-bottom: 15px;
+  /* margin-bottom: 15px; */
   box-shadow: var(--shadow-sm);
 }
 

@@ -239,3 +239,22 @@
   text-align: center;
   padding-left: 12px;
 }
+
+/* Group selector specific styling */
+.group-selector {
+  margin-bottom: 16px;
+  background-color: var(--white);
+  border-radius: var(--border-radius);
+  box-shadow: var(--shadow-sm);
+}
+
+.group-selector .user-label {
+  font-weight: 500;
+  color: var(--primary-color);
+  margin: 10px;
+}
+
+.user-list-item.selected {
+  background-color: var(--primary-light);
+  font-weight: bold;
+}
