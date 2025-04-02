@@ -938,13 +938,13 @@ useEffect(() => {
             </div>
           ) : (
             <div className="group-summary">
-              <h2>Resource Allocation by Group</h2>
+              <div className='pm-dashboard-title'>Resource Allocation by Group</div>
               
               {viewMode === 'hierarchy' ? (
                 <>
                   {/* Summary table for all managers */}
-                  <div className="project-summary">
-                    <h3>Group Manager Summary</h3>
+                  {/* <div className="project-summary"> */}
+                    {/* <h3>Group Manager Summary</h3> */}
                     <table className="summary-table">
                       <thead>
                         <tr className="project-metrics">
@@ -973,7 +973,7 @@ useEffect(() => {
                         ))}
                       </tbody>
                     </table>
-                  </div>
+                  {/* </div> */}
                   
                   {/* Detailed tables for each manager and their studios */}
                   {Object.entries(teamData).map(([manager, managerData]) => (
