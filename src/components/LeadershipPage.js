@@ -124,7 +124,7 @@ const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent }) =>
           <table className="summary-table">
             <thead>
               <tr className="project-metrics">
-                <th>Studio</th>
+                <th>Studio Leader</th>
                 <th>Team Members</th>
                 <th>Scheduled Hours</th>
                 <th>Direct Hours</th>
@@ -382,7 +382,7 @@ const StaffTableView = ({ weekStartDate, weekEndDate, formatter, formatPercent }
       <table className="summary-table">
         <thead>
           <tr>
-            <th>Group Manager</th>
+            <th>Group Leader</th>
             <th>Studio</th>
             <th>Team Member</th>
             <th>Labor Category</th>
@@ -421,6 +421,154 @@ const StaffTableView = ({ weekStartDate, weekEndDate, formatter, formatPercent }
   );
 };
 
+// New ProjectsTableView component to display all projects for the team
+const ProjectsTableView = ({ teamData, formatter }) => {
+  const [projectsData, setProjectsData] = useState([]);
+  
+  useEffect(() => {
+    // Process team data to extract all projects
+    const projects = [];
+    
+    Object.entries(teamData).forEach(([manager, managerData]) => {
+      Object.entries(managerData.studios).forEach(([studio, studioData]) => {
+        studioData.members.forEach(member => {
+          // Process each member's rows to extract project data
+          if (member.rows && member.rows.length > 0) {
+            member.rows.forEach(row => {
+              // Skip non-project rows (overhead, PTO, etc.)
+              if (!row.projectNumber.startsWith('0000-0000')) {
+                // Check if this project already exists in our projects array
+                const existingProject = projects.find(p => p.projectNumber === row.projectNumber);
+                
+                if (existingProject) {
+                  // Project exists, update hours and add team member if not already included
+                  existingProject.totalHours += parseFloat(row.hours) || 0;
+                  if (!existingProject.teamMembers.some(tm => tm.id === member.id)) {
+                    existingProject.teamMembers.push({
+                      id: member.id,
+                      name: member.name,
+                      hours: parseFloat(row.hours) || 0,
+                      studio: studio,
+                      remarks: row.remarks || ""
+                    });
+                  } else {
+                    // Update existing team member's hours
+                    const teamMember = existingProject.teamMembers.find(tm => tm.id === member.id);
+                    teamMember.hours += parseFloat(row.hours) || 0;
+                    // Update remarks if not already set
+                    if (!teamMember.remarks && row.remarks) {
+                      teamMember.remarks = row.remarks;
+                    }
+                  }
+                } else {
+                  projects.push({
+                    projectNumber: row.projectNumber,
+                    projectName: row.projectName,
+                    pm: row.pm || 'Unassigned',
+                    // Fix these incorrect lines that have syntax errors
+                    labor: parseFloat(row.labor || row.contractLabor || 0),
+                    pctLaborUsed: parseFloat(row.pctLaborUsed || row.percentLaborUsed || 0),
+                    totalHours: parseFloat(row.hours) || 0,
+                    teamMembers: [{
+                      id: member.id,
+                      name: member.name,
+                      hours: parseFloat(row.hours) || 0,
+                      studio: studio,
+                      remarks: row.remarks || ""
+                    }]
+                  });
+                }
+              }
+            });
+          }
+        });
+      });
+    });
+    
+    // Sort projects by project number
+    const sortedProjects = projects.sort((a, b) => a.projectNumber.localeCompare(b.projectNumber));
+    setProjectsData(sortedProjects);
+  }, [teamData]);
+  
+  // Format currency for labor
+  const formatCurrency = (value) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 0,
+    }).format(value);
+  };
+
+  // Format percentage for labor used
+  const formatLaborUsed = (value) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'percent',
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }).format(value / 100);
+  };
+  
+  // If no projects, show empty message
+  if (projectsData.length === 0) {
+    return <div className="no-data-message">No project data available.</div>;
+  }
+  
+  return (
+    <div className="project-summary">
+      <div className='pm-dashboard-title'>Project Summary</div>
+      
+      <table className="summary-table projects-view-table">
+        <thead>
+          <tr>
+            {/* <th>Project Number</th> */}
+            <th>Project Name</th>
+            <th>Project Manager</th>
+            <th>Contract Total Labor</th>
+            <th>% EAC Labor Used</th>
+            <th>Total Hours</th>
+            <th>Team Members</th>
+            <th>Remarks</th>
+          </tr>
+        </thead>
+        <tbody>
+          {projectsData.map((project, index) => (
+            <tr key={index}>
+              {/* <td>{project.projectNumber}</td> */}
+              <td>{project.projectName}</td>
+              <td>{project.pm}</td>
+              <td className="number-cell">{formatCurrency(project.labor)}</td>
+              <td className={`number-cell ${
+                project.pctLaborUsed >= 100 ? 'warning-cell' : 
+                project.pctLaborUsed >= 90 ? 'caution-cell' : ''
+              }`}>
+                {formatLaborUsed(project.pctLaborUsed)}
+              </td>
+              <td className="number-cell">{formatter.format(project.totalHours)}</td>
+              <td>
+                {project.teamMembers.map((member, idx) => (
+                  <div key={idx} className="project-team-member">
+                    {member.name} ({formatter.format(member.hours)})
+                  </div>
+                ))}
+              </td>
+              <td>
+                {project.teamMembers.map((member, idx) => (
+                  member.remarks ? (
+                    <div key={idx} className="project-team-member">
+                      <strong>{member.name}:</strong> {member.remarks}
+                    </div>
+                  ) : null
+                )).filter(Boolean)}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+};
+
 const LeadershipPage = ({ navigate }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -429,7 +577,7 @@ const LeadershipPage = ({ navigate }) => {
   const [teamData, setTeamData] = useState({});
   const [weekStartDate, setWeekStartDate] = useState(null);
   const [weekEndDate, setWeekEndDate] = useState(null);
-  const [viewMode, setViewMode] = useState('hierarchy'); // 'hierarchy' or 'table'
+  const [viewMode, setViewMode] = useState('hierarchy'); // 'hierarchy', 'table', or 'projects'
   const [currentUser, setCurrentUser] = useState(null);
   const [leaders, setLeaders] = useState([]);
   const [groupList, setGroupList] = useState([]); // New state for list of groups
@@ -560,7 +708,7 @@ const LeadershipPage = ({ navigate }) => {
           console.log(`Found GroupName for ${member.name}: ${member.GroupName}`);
           studio = member.GroupName;
         } else {
-          console.log(`No GroupName found for ${member.name}, using 'Unassigned'`);
+          console.log(`No GroupName found for ${member.name}, using 'Unassigned'}`);
         }
         
         // Skip if a group filter is applied and doesn't match
@@ -606,10 +754,13 @@ const LeadershipPage = ({ navigate }) => {
           projectName: allocation.project_name || '',
           milestone: allocation.milestone_name || '',
           pm: allocation.project_manager || '',
+          // Ensure we properly extract labor and percentage values
+          labor: parseFloat(allocation.contract_labor || allocation.labor || 0),
+          pctLaborUsed: parseFloat(allocation.forecast_pm_labor || allocation.percentLaborUsed || 0) * 100,
           hours: parseFloat(allocation.ra_hours || allocation.hours || 0),
           remarks: allocation.ra_remarks || allocation.remarks || ''
         }));
-        
+
         const directHours = memberRows
           .filter(row => !row.projectNumber.startsWith('0000-0000'))
           .reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
@@ -750,7 +901,13 @@ const LeadershipPage = ({ navigate }) => {
               className={`toggle-button ${viewMode === 'hierarchy' ? 'active' : ''}`}
               onClick={() => setViewMode('hierarchy')}
             >
-              Group By Team
+              Group by Team
+            </button>
+            <button 
+              className={`toggle-button ${viewMode === 'projects' ? 'active' : ''}`}
+              onClick={() => setViewMode('projects')}
+            >
+              Group by Projects
             </button>
             <button 
               className={`toggle-button ${viewMode === 'table' ? 'active' : ''}`}
@@ -776,11 +933,11 @@ const LeadershipPage = ({ navigate }) => {
                 <>
                   {/* Summary table for all managers */}
                   <div className="project-summary">
-                    <div className='pm-dashboard-title'>Group Manager Summary</div>
+                    <div className='pm-dashboard-title'>Group Summary</div>
                     <table className="summary-table">
                       <thead>
                         <tr className="project-metrics">
-                          <th>Group Manager</th>
+                          <th>Group Leader</th>
                           <th>Team Members</th>
                           <th>Scheduled Hours</th>
                           <th>Direct Hours</th>
@@ -818,13 +975,18 @@ const LeadershipPage = ({ navigate }) => {
                     />
                   ))}
                 </>
-              ) : (
+              ) : viewMode === 'table' ? (
                 <StaffTableView 
                   // data={teamData}
                   weekStartDate={weekStartDate}
                   weekEndDate={weekEndDate}
                   formatter={formatter}
                   formatPercent={formatPercent}
+                />
+              ) : (
+                <ProjectsTableView 
+                  teamData={teamData}
+                  formatter={formatter}
                 />
               )}
             </div>

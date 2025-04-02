@@ -229,7 +229,7 @@
 
 .group-summary .project-summary .summary-table th:nth-child(2), /* Studio */
 .group-summary .project-summary .summary-table td:nth-child(2) {
-  width: 15% !important;
+  width: 15%;
   text-align: center;
 }
 
@@ -257,4 +257,68 @@
 .user-list-item.selected {
   background-color: var(--primary-light);
   font-weight: bold;
+}
+
+/* Project view specific styles */
+.project-team-member {
+  padding: 3px 0;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.project-team-member:last-child {
+  border-bottom: none;
+}
+
+.projects-view-table th:nth-child(1), /* Project Name */
+.projects-view-table td:nth-child(1) {
+  width: 30% !important;
+  text-align: left !important;
+}
+
+.projects-view-table th:nth-child(2), /* Project Manager */
+.projects-view-table td:nth-child(2) {
+  width: 10% !important;
+  text-align: center;
+}
+
+.projects-view-table th:nth-child(3), /* Contract Total Labor */
+.projects-view-table td:nth-child(3) {
+  width: 5% !important;
+  text-align: center;
+}
+
+.projects-view-table th:nth-child(4), /* % EAC Labor Used */
+.projects-view-table td:nth-child(4) {
+  width: 5% !important;
+  text-align: center;
+}
+
+.projects-view-table th:nth-child(5), /* Total Hours */
+.projects-view-table td:nth-child(5) {
+  width: 4% !important;
+  text-align: center;
+}
+
+.projects-view-table th:nth-child(6), /* Team Members */
+.projects-view-table td:nth-child(6) {
+  width: 10%;
+  text-align: left !important;
+}
+
+.projects-view-table th:nth-child(7), /* Remarks */
+.projects-view-table td:nth-child(7) {
+  width: 20% !important;
+  text-align: left !important;
+  word-wrap: break-word;
+}
+
+/* Add style for warning cells */
+.warning-cell {
+  background-color: #ffebee;
+  color: var(--error-color);
+  font-weight: 600;
+}
+
+.caution-cell {
+  background-color: #ffe6003f;
 }
