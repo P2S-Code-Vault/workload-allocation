@@ -223,20 +223,6 @@ static cacheData(key, data, ttlMs) {
   }
 }
 
-// static cacheData(key, data, ttlMs) {
-//   try {
-//     const cacheItem = {
-//       data,
-//       expiry: Date.now() + ttlMs
-//     };
-    
-//     localStorage.setItem(key, JSON.stringify(cacheItem));
-//   } catch (error) {
-//     console.warn(`Error caching data for ${key}:`, error);
-//     // If localStorage is full, clear old cache items
-//     this.pruneCache();
-//   }
-// }
 
 static pruneCache() {
   try {
@@ -357,70 +343,7 @@ static pruneCache() {
       throw error;
     }
   }
-  
 
-// static async saveResourceAllocation(data) {
-//   try {
-//     // Validation
-//     if (!data.email || !data.project_number || !data.hours) {
-//       throw new Error("Missing required allocation data: email, project_number, and hours are required");
-//     }
-    
-//     // Try to get project details from CSV if available
-//     let projectDetails = null;
-//     try {
-//       projectDetails = await ProjectSearchService.getProjectDetails(data.project_number);
-//       console.log("Found project details in CSV:", projectDetails);
-//     } catch (e) {
-//       console.log(`Project details not found in CSV for ${data.project_number}`);
-//     }
-    
-//     // Format the data to match backend expectations
-//     const requestBody = {
-//       email: data.email,
-//       project_number: data.project_number,
-//       hours: parseFloat(data.hours) || 0,
-//       remarks: data.remarks || "",
-//       week_start: data.week_start || null,
-//       week_end: data.week_end || null
-//     };
-    
-//     // Add milestone information if available from CSV
-//     if (projectDetails) {
-//       requestBody.project_name = projectDetails['Project Name'] || null;
-//       requestBody.milestone_name = projectDetails['Milestone'] || null;
-//       requestBody.project_manager = projectDetails['PM'] || null;
-//       requestBody.contract_labor = projectDetails['Labor'] || null;
-      
-//       // Log that we're including milestone data
-//       console.log(`Including milestone data from CSV for ${data.project_number}`, {
-//         project_name: requestBody.project_name,
-//         milestone_name: requestBody.milestone_name,
-//         project_manager: requestBody.project_manager,
-//         contract_labor: requestBody.contract_labor
-//       });
-//     }
-    
-//     console.log(`Creating new allocation:`, requestBody);
-//     const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.ALLOCATIONS}`, {
-//       method: "POST",
-//       headers: {
-//         "Content-Type": "application/json"
-//       },
-//       body: JSON.stringify(requestBody)
-//     });
-    
-//     if (!response.ok) {
-//       const errorText = await this.handleErrorResponse(response);
-//       throw new Error(`Failed to save allocation: ${errorText}`);
-//     }
-    
-//     return await response.json();
-//   } catch (error) {
-//     console.error("Error saving allocation:", error);
-//     throw error;
-//   }
-// }
  
 
   static async updateAllocation(allocationId, hours, remarks) {
@@ -629,37 +552,6 @@ static pruneCache() {
       console.warn("Error cleaning allocation from cache:", error);
     }
   }
-
-  //Search projects based on project number
-  // static async searchProjects(searchTerm) {
-  //   if (!searchTerm || searchTerm.length < 3) {
-  //     return [];
-  //   }
-    
-  //   try {
-  //     console.log(`Searching projects with term: ${searchTerm}`);
-      
-  //     // Since no search endpoint exists yet, we'll try to get the milestone directly
-  //     try {
-  //       const milestone = await this.getMilestoneDetails(searchTerm);
-  //       return [{
-  //         'Project Number': milestone.project_number,
-  //         'Project Name': milestone.project_name,
-  //         'Milestone': milestone.milestone_name,
-  //         'PM': milestone.project_manager,
-  //         'Labor': milestone.contract_labor,
-  //         'Pct Labor Used': milestone.forecast_pm_labor * 100
-  //       }];
-  //     } catch (error) {
-  //       console.log("No exact milestone match:", error.message);
-  //       return [];
-  //     }
-  //   } catch (error) {
-  //     console.error("Error searching projects:", error);
-  //     return [];
-  //   }
-  // }
-
 
 }
 
