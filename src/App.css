@@ -1109,13 +1109,16 @@ body {
 
 .direct-total-label,
 .pto-total-label,
-.overhead-total-label {
+.overhead-total-label,
+.lwop-total-label {
   text-align: right !important;
+  padding: var(--spacing-sm) !important;
 }
 
 .direct-total-hours,
 .pto-total-hours,
-.overhead-total-hours {
+.overhead-total-hours,
+.lwop-total-hours {
   text-align: center !important;
   font-weight: bold;
 }
