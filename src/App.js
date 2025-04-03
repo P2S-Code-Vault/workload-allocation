@@ -910,7 +910,7 @@ const MainContent = () => {
                   <th>Milestone</th>
                   <th>MS PM</th>
                   <th>Contract Total Labor</th>
-                  <th>% EAC Labor Used</th>
+                  <th>Reported % Complete</th>
                   <th>Planned Hours</th>
                   <th>Remarks</th>
                   <th> </th>

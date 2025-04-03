@@ -557,9 +557,9 @@ const TableRow = ({ row, index, updateRow, deleteRow, isLoading, currentUser }) 
                   tabIndex="0"
                   onKeyDown={(e) => e.key === 'Enter' && handleProjectSelect(project)}
                 >
-                  <div className="suggestion-project-number">
+                  {/* <div className="suggestion-project-number">
                     {highlightMatch(project['Project Number'], searchTerm)}
-                  </div>
+                  </div> */}
                   <div className="suggestion-project-name">
                     {highlightMatch(project['Project Name'], searchTerm)}
                   </div>

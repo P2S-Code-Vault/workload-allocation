@@ -525,7 +525,7 @@ const ProjectsTableView = ({ teamData, formatter }) => {
             <th>Project Name</th>
             <th>Project Manager</th>
             <th>Contract Total Labor</th>
-            <th>% EAC Labor Used</th>
+            <th>Reported % Complete</th>
             <th>Total Hours</th>
             <th>Team Members</th>
             <th>Remarks</th>
@@ -874,10 +874,11 @@ const LeadershipPage = ({ navigate }) => {
   });
   
   const formatPercent = (value) => {
+    // const divisor = value > 1000 ? 10000 : 100;
     return new Intl.NumberFormat('en-US', {
       style: 'percent',
       minimumFractionDigits: 1,
-      maximumFractionDigits: 1
+      maximumFractionDigits: 1,
     }).format(value);
   };
 

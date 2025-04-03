@@ -15,18 +15,19 @@ const CollapsibleProject = ({ project, formatNumber, formatCurrency, formatPerce
         onClick={() => setIsExpanded(!isExpanded)}
       >
         {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
-        <h3>{project.name}</h3>
-
+        <h3>{project.name} - MS {project.projectNumber ? project.projectNumber.split('-').pop() || project.projectNumber : 'N/A'
+  }</h3>
         <div className="project-info">
-          <span>Total Contract Labor: {formatCurrency(project.labor)}</span>
+          <span>Contract Labor: {formatCurrency(project.labor)}</span>
           <span>Total Hours: {formatNumber(project.totalHours)}</span>
           <span>Projected Cost: {formatCurrency(project.totalCost)}</span>
-          <span className={
+          <span>Reported % Complete: {formatPercent(project.laborUsed)}</span>
+          {/* <span className={
             project.laborUsed >= 100 ? 'warning' : 
             project.laborUsed >= 90 ? 'caution' : ''
-          }>
-            EAC Used: {formatPercent(project.laborUsed)}
-          </span>
+          }> */}
+            {/* EAC Used: {formatPercent(project.laborUsed)} */}
+          {/* </span> */}
         </div>
       </div>
       
