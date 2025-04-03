@@ -892,39 +892,14 @@ const LeadershipPage = ({ navigate }) => {
     maximumFractionDigits: 1
   });
   const formatPercent = (value) => {
-    // Convert to number and handle invalid values
-    const numValue = parseFloat(value) || 0;
-    
-    // Check if the value is already scaled to represent percentage directly
-    if (numValue >= 100 && numValue % 100 === 0) {
-      return new Intl.NumberFormat('en-US', {
-        style: 'percent',
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1,
-      }).format(numValue / 10000);
-    } else {
-      return new Intl.NumberFormat('en-US', {
-        style: 'percent',
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1,
-      }).format(numValue / 100);
-    }
+    // Ratio B is already a decimal value (e.g., 0.85 for 85%)
+    // It shouldn't be divided by 100 again as that's making it display as 0.85%
+    return new Intl.NumberFormat('en-US', {
+      style: 'percent',
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }).format(value); // Remove the division by 100
   };
-  // const formatPercent = (value) => {
-  //   return new Intl.NumberFormat('en-US', {
-  //     style: 'percent',
-  //     minimumFractionDigits: 1,
-  //     maximumFractionDigits: 1,
-  //   }).format(value / 100);
-  // };
-  // const formatPercent = (value) => {
-  //   // const divisor = value > 1000 ? 10000 : 100;
-  //   return new Intl.NumberFormat('en-US', {
-  //     style: 'percent',
-  //     minimumFractionDigits: 1,
-  //     maximumFractionDigits: 1,
-  //   }).format(value);
-  // };
 
   return (
     <div className="page-layout">
