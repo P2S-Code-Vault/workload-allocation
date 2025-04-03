@@ -289,16 +289,43 @@ const PMPage = ({ navigate }) => {
       maximumFractionDigits: 0,
     }).format(value);
   };
-
   const formatPercent = (value) => {
-    // If the value is over 1000, assume it's been multiplied by 100 twice
-    const divisor = value > 1000 ? 10000 : 100;
-    return new Intl.NumberFormat('en-US', {
-      style: 'percent',
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    }).format(value / divisor);
+    // Convert to number and handle invalid values
+    const numValue = parseFloat(value) || 0;
+    
+    // Check if the value is already scaled to represent percentage directly
+    if (numValue >= 100 && numValue % 100 === 0) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }).format(numValue / 10000);
+    } else {
+      return new Intl.NumberFormat('en-US', {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }).format(numValue / 100);
+    }
   };
+
+  // const formatPercent = (value) => {
+  //   // Simplified - always treat as whole number percentage
+  //   return new Intl.NumberFormat('en-US', {
+  //     style: 'percent',
+  //     minimumFractionDigits: 1,
+  //     maximumFractionDigits: 1,
+  //   }).format(value / 100);
+  // };
+  // const formatPercent = (value) => {
+  //   // If the value is over 1000, assume it's been multiplied by 100 twice
+  //   const divisor = value > 1000 ? 10000 : 100;
+  //   return new Intl.NumberFormat('en-US', {
+  //     style: 'percent',
+  //     minimumFractionDigits: 1,
+  //     maximumFractionDigits: 1,
+  //   }).format(value / divisor);
+  // };
 
   // Load project managers on component mount
   useEffect(() => {

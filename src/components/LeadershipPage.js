@@ -501,14 +501,32 @@ const ProjectsTableView = ({ teamData, formatter }) => {
   };
 
   // Format percentage for labor used
-  const formatLaborUsed = (value) => {
-    const divisor = value > 1000 ? 10000 : 100;
+  // const formatLaborUsed = (value) => {
+  //   const divisor = value > 1000 ? 10000 : 100;
+  //   return new Intl.NumberFormat('en-US', {
+  //     style: 'percent',
+  //     minimumFractionDigits: 1,
+  //     maximumFractionDigits: 1,
+  //   }).format(value / divisor);
+  // };
+  // In the formatLaborUsed function (if it exists)
+const formatLaborUsed = (value) => {
+  const numValue = parseFloat(value) || 0;
+  
+  if (numValue >= 100 && numValue % 100 === 0) {
     return new Intl.NumberFormat('en-US', {
       style: 'percent',
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,
-    }).format(value / divisor);
-  };
+    }).format(numValue / 10000);
+  } else {
+    return new Intl.NumberFormat('en-US', {
+      style: 'percent',
+      minimumFractionDigits: 1,
+      maximumFractionDigits: 1,
+    }).format(numValue / 100);
+  }
+};
   
   // If no projects, show empty message
   if (projectsData.length === 0) {
@@ -873,15 +891,40 @@ const LeadershipPage = ({ navigate }) => {
     minimumFractionDigits: 0,
     maximumFractionDigits: 1
   });
-  
   const formatPercent = (value) => {
-    // const divisor = value > 1000 ? 10000 : 100;
-    return new Intl.NumberFormat('en-US', {
-      style: 'percent',
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    }).format(value);
+    // Convert to number and handle invalid values
+    const numValue = parseFloat(value) || 0;
+    
+    // Check if the value is already scaled to represent percentage directly
+    if (numValue >= 100 && numValue % 100 === 0) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }).format(numValue / 10000);
+    } else {
+      return new Intl.NumberFormat('en-US', {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }).format(numValue / 100);
+    }
   };
+  // const formatPercent = (value) => {
+  //   return new Intl.NumberFormat('en-US', {
+  //     style: 'percent',
+  //     minimumFractionDigits: 1,
+  //     maximumFractionDigits: 1,
+  //   }).format(value / 100);
+  // };
+  // const formatPercent = (value) => {
+  //   // const divisor = value > 1000 ? 10000 : 100;
+  //   return new Intl.NumberFormat('en-US', {
+  //     style: 'percent',
+  //     minimumFractionDigits: 1,
+  //     maximumFractionDigits: 1,
+  //   }).format(value);
+  // };
 
   return (
     <div className="page-layout">

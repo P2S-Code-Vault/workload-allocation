@@ -8,7 +8,6 @@ import WeekPicker from './components/WeekPicker';
 import Login from './components/Login';
 import PMPage from './components/PMPage';
 import LeadershipPage from './components/LeadershipPage';
-import GLView from './components/GLPage';
 import format from 'date-fns/format';
 import { startOfWeek, endOfWeek } from 'date-fns';
 import API_CONFIG from './services/apiConfig';

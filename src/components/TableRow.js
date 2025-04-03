@@ -406,15 +406,71 @@ const TableRow = ({ row, index, updateRow, deleteRow, isLoading, currentUser }) 
     }
   };
 
+  // const handleProjectSelect = async (project) => {
+  //   try {
+  //     // Update with the selected project data
+  //     updateRow(index, 'projectNumber', project['Project Number']);
+  //     updateRow(index, 'projectName', project['Project Name']);
+  //     updateRow(index, 'milestone', project['Milestone']);
+  //     updateRow(index, 'pm', project['PM']);
+  //     updateRow(index, 'labor', project['Labor']);
+  //     updateRow(index, 'pctLaborUsed', project['Pct Labor Used']);
+      
+  //     // Store the complete project data in the row for use during save
+  //     updateRow(index, '_projectData', project);
+      
+  //     setShowDropdown(false);
+  //     setHasError(false);
+  //   } catch (error) {
+  //     console.error('Failed to select project:', error);
+  //     setHasError(true);
+  //   }
+  // };
+  // const handleProjectSelect = async (project) => {
+  //   try {
+  //     // Log the full project data from CSV for debugging
+  //     console.log("Selected project from CSV:", project);
+      
+  //     // Update with the selected project data
+  //     updateRow(index, 'projectNumber', project['Project Number']);
+  //     updateRow(index, 'projectName', project['Project Name']);
+  //     updateRow(index, 'milestone', project['Milestone']);
+  //     updateRow(index, 'pm', project['PM']);
+  //     updateRow(index, 'labor', project['Labor']);
+      
+  //     // Ensure the Pct Labor Used (Report % Complete) is properly handled
+  //     // This is the key field that was causing inconsistencies
+  //     const pctLaborUsed = project['Pct Labor Used'];
+  //     updateRow(index, 'pctLaborUsed', pctLaborUsed);
+      
+  //     // Store the complete project data in the row for use during save
+  //     // This ensures the selected project data is available when saving
+  //     updateRow(index, '_projectData', project);  
+      
+  //     setShowDropdown(false);
+  //     setHasError(false);
+  //   } catch (error) {
+  //     console.error('Failed to select project:', error);
+  //     setHasError(true);
+  //   }
+  // };
   const handleProjectSelect = async (project) => {
     try {
+      // Log the raw values
+      console.log("CSV project data:", project);
+      console.log("Raw Pct Labor Used:", project['Pct Labor Used']);
+      
+      // Parse the percentage value properly
+      const pctLaborUsed = parseFloat(project['Pct Labor Used']) || 0;
+      console.log("Parsed pctLaborUsed:", pctLaborUsed);
+      
       // Update with the selected project data
       updateRow(index, 'projectNumber', project['Project Number']);
       updateRow(index, 'projectName', project['Project Name']);
       updateRow(index, 'milestone', project['Milestone']);
       updateRow(index, 'pm', project['PM']);
       updateRow(index, 'labor', project['Labor']);
-      updateRow(index, 'pctLaborUsed', project['Pct Labor Used']);
+      updateRow(index, 'pctLaborUsed', pctLaborUsed); // Use the parsed value
       
       // Store the complete project data in the row for use during save
       updateRow(index, '_projectData', project);
@@ -497,14 +553,47 @@ const TableRow = ({ row, index, updateRow, deleteRow, isLoading, currentUser }) 
   });
 
   const percentFormatter = (value) => {
-    // If the value is over 1000, assume it's been multiplied by 100 twice
-    const divisor = value > 1000 ? 10000 : 100;
-    return new Intl.NumberFormat('en-US', {
-      style: 'percent',
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    }).format(value / divisor);
+    // Add debugging
+    console.log("Formatting percentage value:", value, "Type:", typeof value);
+    
+    // Convert to number and handle invalid values
+    const numValue = parseFloat(value) || 0;
+    
+    
+    if (numValue >= 100 && numValue % 100 === 0) {
+      // Assuming these are stored as 1000 for 10%
+      return new Intl.NumberFormat('en-US', {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }).format(numValue / 10000); // Divide by 10000 to get to decimal form (0.1)
+    } else {
+      // Normal case for smaller values
+      return new Intl.NumberFormat('en-US', {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }).format(numValue / 100);
+    }
   };
+  // const percentFormatter = (value) => {
+  //   // Standardize to always expect whole numbers (5 = 5%)
+  //   return new Intl.NumberFormat('en-US', {
+  //     style: 'percent',
+  //     minimumFractionDigits: 1,
+  //     maximumFractionDigits: 1,
+  //   }).format(value / 100);
+  // };
+
+  // const percentFormatter = (value) => {
+  //   // If the value is over 1000, assume it's been multiplied by 100 twice
+  //   const divisor = value > 1000 ? 10000 : 100;
+  //   return new Intl.NumberFormat('en-US', {
+  //     style: 'percent',
+  //     minimumFractionDigits: 1,
+  //     maximumFractionDigits: 1,
+  //   }).format(value / divisor);
+  // };
 
   // Highlight matching part of the suggestion text
   const highlightMatch = (text, query) => {

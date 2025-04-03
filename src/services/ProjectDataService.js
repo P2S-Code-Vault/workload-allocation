@@ -88,52 +88,7 @@ export class ProjectDataService {
       throw error;
     }
   }
-/***
- * static async getAllocations(email, startDate, endDate) {
-  try {
-    // Validate inputs
-    if (!email) {
-      throw new Error("Email is required for fetching allocations");
-    }
-    
-    // Create a unique cache key for this query - add more details to it
-    const cacheKey = `allocations_${email}_${startDate || 'current'}_${endDate || 'current'}_v2`;
-    
-    console.log(`Fetching allocations with dates: start=${startDate}, end=${endDate}`);
-    
-    // For debugging, always skip cache when explicit dates are provided
-    // This helps identify if caching is the issue
-    const skipCache = (startDate && endDate);
-    const cachedData = skipCache ? null : this.getCachedData(cacheKey);
-    
-    if (cachedData) {
-      console.log(`Using cached allocations for ${email} from ${startDate} to ${endDate}`);
-      return cachedData;
-    }
-    
-    // Build query parameters - ensure dates are properly formatted
-    const params = new URLSearchParams();
-    params.append('email', email);
-    
-    if (startDate) {
-      console.log(`Adding start_date param: ${startDate}`);
-      params.append('start_date', startDate);
-    }
-    
-    if (endDate) {
-      console.log(`Adding end_date param: ${endDate}`);
-      params.append('end_date', endDate);
-    }
-    
-    // Log the full URL for debugging
-    const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.ALLOCATIONS}?${params.toString()}`;
-    console.log("Fetching allocations from URL:", url);
-    
-    const response = await fetch(url);
-    
-    // Handle response...
-    // Rest of your existing code
- */
+
 static async getAllocations(email, startDate, endDate) {
   try {
     // Validate inputs
@@ -323,105 +278,150 @@ static pruneCache() {
 
 
   // Save a new resource allocation
-static async saveResourceAllocation(data) {
-  try {
-    // Validation
-    if (!data.email || !data.project_number || !data.hours) {
-      throw new Error("Missing required allocation data: email, project_number, and hours are required");
-    }
-    
-    // Try to get project details from CSV if available
-    let projectDetails = null;
+  static async saveResourceAllocation(data) {
     try {
-      projectDetails = await ProjectSearchService.getProjectDetails(data.project_number);
-      console.log("Found project details in CSV:", projectDetails);
-    } catch (e) {
-      console.log(`Project details not found in CSV for ${data.project_number}`);
-    }
-    
-    // Format the data to match backend expectations
-    const requestBody = {
-      email: data.email,
-      project_number: data.project_number,
-      hours: parseFloat(data.hours) || 0,
-      remarks: data.remarks || "",
-      week_start: data.week_start || null,
-      week_end: data.week_end || null
-    };
-    
-    // Add milestone information if available from CSV
-    if (projectDetails) {
-      requestBody.project_name = projectDetails['Project Name'] || null;
-      requestBody.milestone_name = projectDetails['Milestone'] || null;
-      requestBody.project_manager = projectDetails['PM'] || null;
-      requestBody.contract_labor = projectDetails['Labor'] || null;
+      // Validation
+      if (!data.email || !data.project_number || !data.hours) {
+        throw new Error("Missing required allocation data: email, project_number, and hours are required");
+      }
       
-      // Log that we're including milestone data
-      console.log(`Including milestone data from CSV for ${data.project_number}`, {
-        project_name: requestBody.project_name,
-        milestone_name: requestBody.milestone_name,
-        project_manager: requestBody.project_manager,
-        contract_labor: requestBody.contract_labor
+      // Try to get project details from CSV if available
+      let projectDetails = null;
+      try {
+        if (data._projectData) {
+          // Use the stored project data if available from selection
+          projectDetails = data._projectData;
+          console.log("Using stored project data:", projectDetails);
+        } else {
+          // Otherwise try to fetch from project search service
+          projectDetails = await ProjectSearchService.getProjectDetails(data.project_number);
+          console.log("Found project details in CSV:", projectDetails);
+        }
+      } catch (e) {
+        console.log(`Project details not found in CSV for ${data.project_number}`);
+      }
+      
+      // Format the data to match backend expectations
+      const requestBody = {
+        email: data.email,
+        project_number: data.project_number,
+        hours: parseFloat(data.hours) || 0,
+        remarks: data.remarks || "",
+        week_start: data.week_start || null,
+        week_end: data.week_end || null
+      };
+      
+      // Add milestone information if available from CSV or stored data
+      if (projectDetails) {
+        requestBody.project_name = projectDetails['Project Name'] || null;
+        requestBody.milestone_name = projectDetails['Milestone'] || null;
+        requestBody.project_manager = projectDetails['PM'] || null;
+        requestBody.contract_labor = projectDetails['Labor'] || null;
+        
+        // This is the key field we need to ensure is passed correctly
+        // The value in the CSV is already the percentage value (e.g. 25.5 for 25.5%)
+        // We need to pass it as a decimal to the backend (0.255)
+        const pctLaborUsed = projectDetails['Pct Labor Used'];
+        if (pctLaborUsed !== undefined && pctLaborUsed !== null) {
+          // Convert to decimal form for storage in DB
+          requestBody.forecast_pm_labor = pctLaborUsed; // pct/100
+        }
+        
+        // Log that we're including milestone data
+        console.log(`Including milestone data from CSV for ${data.project_number}`, {
+          project_name: requestBody.project_name,
+          milestone_name: requestBody.milestone_name,
+          project_manager: requestBody.project_manager,
+          contract_labor: requestBody.contract_labor,
+          forecast_pm_labor: requestBody.forecast_pm_labor
+        });
+      }
+      
+      console.log(`Creating new allocation:`, requestBody);
+      const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.ALLOCATIONS}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json"
+        },
+        body: JSON.stringify(requestBody)
       });
+      
+      if (!response.ok) {
+        const errorText = await this.handleErrorResponse(response);
+        throw new Error(`Failed to save allocation: ${errorText}`);
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error("Error saving allocation:", error);
+      throw error;
     }
-    
-    console.log(`Creating new allocation:`, requestBody);
-    const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.ALLOCATIONS}`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json"
-      },
-      body: JSON.stringify(requestBody)
-    });
-    
-    if (!response.ok) {
-      const errorText = await this.handleErrorResponse(response);
-      throw new Error(`Failed to save allocation: ${errorText}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error("Error saving allocation:", error);
-    throw error;
   }
-}
-  // static async saveResourceAllocation(data) {
-  //   try {
-  //     // Validation
-  //     if (!data.email || !data.project_number || !data.hours) {
-  //       throw new Error("Missing required allocation data: email, project_number, and hours are required");
-  //     }
+  
+
+// static async saveResourceAllocation(data) {
+//   try {
+//     // Validation
+//     if (!data.email || !data.project_number || !data.hours) {
+//       throw new Error("Missing required allocation data: email, project_number, and hours are required");
+//     }
+    
+//     // Try to get project details from CSV if available
+//     let projectDetails = null;
+//     try {
+//       projectDetails = await ProjectSearchService.getProjectDetails(data.project_number);
+//       console.log("Found project details in CSV:", projectDetails);
+//     } catch (e) {
+//       console.log(`Project details not found in CSV for ${data.project_number}`);
+//     }
+    
+//     // Format the data to match backend expectations
+//     const requestBody = {
+//       email: data.email,
+//       project_number: data.project_number,
+//       hours: parseFloat(data.hours) || 0,
+//       remarks: data.remarks || "",
+//       week_start: data.week_start || null,
+//       week_end: data.week_end || null
+//     };
+    
+//     // Add milestone information if available from CSV
+//     if (projectDetails) {
+//       requestBody.project_name = projectDetails['Project Name'] || null;
+//       requestBody.milestone_name = projectDetails['Milestone'] || null;
+//       requestBody.project_manager = projectDetails['PM'] || null;
+//       requestBody.contract_labor = projectDetails['Labor'] || null;
       
-  //     // Format the data to match backend expectations
-  //     const requestBody = {
-  //       email: data.email,
-  //       project_number: data.project_number,
-  //       hours: parseFloat(data.hours) || 0,
-  //       remarks: data.remarks || "",
-  //       week_start: data.week_start || null,
-  //       week_end: data.week_end || null
-  //     };
-      
-  //     console.log(`Creating new allocation:`, requestBody);
-  //     const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.ALLOCATIONS}`, {
-  //       method: "POST",
-  //       headers: {
-  //         "Content-Type": "application/json"
-  //       },
-  //       body: JSON.stringify(requestBody)
-  //     });
-      
-  //     if (!response.ok) {
-  //       const errorText = await this.handleErrorResponse(response);
-  //       throw new Error(`Failed to save allocation: ${errorText}`);
-  //     }
-      
-  //     return await response.json();
-  //   } catch (error) {
-  //     console.error("Error saving allocation:", error);
-  //     throw error;
-  //   }
-  // }
+//       // Log that we're including milestone data
+//       console.log(`Including milestone data from CSV for ${data.project_number}`, {
+//         project_name: requestBody.project_name,
+//         milestone_name: requestBody.milestone_name,
+//         project_manager: requestBody.project_manager,
+//         contract_labor: requestBody.contract_labor
+//       });
+//     }
+    
+//     console.log(`Creating new allocation:`, requestBody);
+//     const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.ALLOCATIONS}`, {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json"
+//       },
+//       body: JSON.stringify(requestBody)
+//     });
+    
+//     if (!response.ok) {
+//       const errorText = await this.handleErrorResponse(response);
+//       throw new Error(`Failed to save allocation: ${errorText}`);
+//     }
+    
+//     return await response.json();
+//   } catch (error) {
+//     console.error("Error saving allocation:", error);
+//     throw error;
+//   }
+// }
+ 
 
   static async updateAllocation(allocationId, hours, remarks) {
     try {
