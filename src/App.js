@@ -906,9 +906,9 @@ const MainContent = () => {
               <thead>
                 <tr>
                   <th>Project No.</th>
-                  <th>Name</th>
+                  <th>Project No. & Name</th>
                   <th>Milestone</th>
-                  <th>MS PM</th>
+                  <th>Project Manager</th>
                   <th>Contract Total Labor</th>
                   <th>Reported % Complete</th>
                   <th>Planned Hours</th>

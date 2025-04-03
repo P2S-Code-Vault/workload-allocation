@@ -502,11 +502,12 @@ const ProjectsTableView = ({ teamData, formatter }) => {
 
   // Format percentage for labor used
   const formatLaborUsed = (value) => {
+    const divisor = value > 1000 ? 10000 : 100;
     return new Intl.NumberFormat('en-US', {
       style: 'percent',
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,
-    }).format(value / 100);
+    }).format(value / divisor);
   };
   
   // If no projects, show empty message

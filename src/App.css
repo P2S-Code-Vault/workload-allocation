@@ -1122,6 +1122,7 @@ body {
 
 /* Read-only input styles */
 .resource-table input[readonly] {
+  text-align: center;
   border: none;
   background-color: transparent;
   font-family: var(--font-primary);
