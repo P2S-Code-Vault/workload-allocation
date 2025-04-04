@@ -24,20 +24,7 @@ const Header = ({ currentView,onNavigate, onLogout }) => {
          'Resource Allocation'}
       </h1>
       <div className="nav-buttons">
-        {/* <button 
-          className="nav-button"
-          onClick={() => onNavigate('pm')}
-        >
-          PM View
-        </button>
         <button 
-          className="nav-button"
-          onClick={() => onNavigate('leadership')}
-        >
-          GL View
-        </button>
-        <button onClick={onLogout} className="logout-button">Logout</button> */}
-         <button 
           className={`nav-button ${currentView === 'resource' ? 'disabled' : ''}`}
           onClick={() => currentView !== 'resource' && onNavigate('resource')}
           disabled={currentView === 'resource'}
@@ -306,18 +293,7 @@ const MainContent = () => {
     const formattedStartDate = format(weekStartDate, 'yyyy-MM-dd');
     const formattedEndDate = format(weekEndDate, 'yyyy-MM-dd');
 
-    // Don't reload if already loading
-    // if (isLoading && hasLoadedInitialData) {
-    //   console.log("Already loading, skip duplicate request");
-    //   return;
-    // }
-
-    // Track if this effect should continue updating state
     let isMounted = true;
-    
-    // Set loading state
-    // setIsLoading(true);
-    // setLoadError(null);
     
     console.log("Loading allocations for:", {
       email: currentUser,
@@ -543,144 +519,6 @@ const MainContent = () => {
       setIsSaving(false);
     }
   };
-
-  // const handleSave = async () => {
-  //   try {
-  //     setIsSaving(true);
-  //     setSaveError(null);
-      
-  //     const savePromises = [];
-  //     const updatedRows = [];
-  //     const newRows = [];
-
-  //     // Format week dates once for all operations
-  //     const formattedWeekStart = weekStartDate ? format(weekStartDate, 'yyyy-MM-dd') : null;
-  //     const formattedWeekEnd = weekEndDate ? format(weekEndDate, 'yyyy-MM-dd') : null;
-      
-  //     console.log("Saving with week dates:", {
-  //       start: formattedWeekStart,
-  //       end: formattedWeekEnd
-  //     });
-      
-  //     // Debug log all rows before saving
-  //     console.log("All rows before saving:", JSON.stringify(rows));
-      
-  //     // Organize rows for saving
-  //     for (let row of rows) {
-  //       // Skip rows with no project number or hours
-  //       if (!row.projectNumber || !row.hours) {
-  //         console.log("Skipping row - missing project number or hours:", row);
-  //         continue;
-  //       }
-        
-  //       // Explicitly check and log row ID to debug
-  //       if (row.id) {
-  //         console.log(`Found existing row with ID: ${row.id}, Type: ${typeof row.id}`);
-  //         updatedRows.push(row);
-  //       } else {
-  //         console.log("New row without ID:", row);
-  //         newRows.push(row);
-  //       }
-  //     }
-      
-  //     // First, handle updates to prevent duplications
-  //     console.log(`Processing ${updatedRows.length} updates and ${newRows.length} new rows`);
-      
-  //     // Process updates
-  //     for (let row of updatedRows) {
-  //       console.log(`Updating allocation with ID: ${row.id}`);
-  //       savePromises.push(
-  //         ProjectDataService.updateAllocation(row.id, row.hours, row.remarks)
-  //           .then(result => {
-  //             console.log(`Update result for ID ${row.id}:`, result);
-  //             return { ...result, action: 'update', id: row.id };
-  //           })
-  //           .catch(err => {
-  //             console.error(`Error updating allocation ${row.id}:`, err);
-  //             throw err;
-  //           })
-  //       );
-  //     }
-      
-  //     // Process new rows
-  //     for (let row of newRows) {
-  //       console.log(`Creating new allocation for project: ${row.projectNumber}`);
-  //       savePromises.push(
-  //         ProjectDataService.saveResourceAllocation({
-  //           email: currentUser,
-  //           project_number: row.projectNumber,
-  //           hours: parseFloat(row.hours) || 0,
-  //           remarks: row.remarks || "",
-  //           week_start: formattedWeekStart,  
-  //           week_end: formattedWeekEnd  
-  //         })
-  //           .then(result => {
-  //             console.log(`Create result:`, result);
-  //             return { ...result, action: 'create' };
-  //           })
-  //           .catch(err => {
-  //             console.error(`Error creating allocation:`, err);
-  //             throw err;
-  //           })
-  //       );
-  //     }
-      
-  //     // Wait for all save operations to complete
-  //     if (savePromises.length > 0) {
-  //       const results = await Promise.all(savePromises);
-  //       console.log("Save operation results:", results);
-        
-  //       // Clear any cached allocations to ensure fresh data
-  //       ProjectDataService.clearCacheWithPattern('allocations_');
-        
-  //       // Reload data with slight delay to ensure backend processing is complete
-  //       if (weekStartDate && weekEndDate) {
-  //         console.log("Reloading allocations after save");
-  //         setTimeout(async () => {
-  //           try {
-  //             const allocationsData = await ProjectDataService.getAllocations(
-  //               currentUser, 
-  //               format(weekStartDate, 'yyyy-MM-dd'),
-  //               format(weekEndDate, 'yyyy-MM-dd')
-  //             );
-              
-  //             console.log("Refreshed allocation data:", allocationsData);
-              
-  //             // Ensure allocationsData is an array
-  //             const dataArray = Array.isArray(allocationsData) ? allocationsData : [];
-              
-  //             if (dataArray.length > 0) {
-  //               const newRows = dataArray.map(allocation => ({
-  //                 id: allocation.ra_id,
-  //                 resource: currentUser,
-  //                 projectNumber: allocation.proj_id || allocation.project_number,
-  //                 projectName: allocation.project_name || '',
-  //                 milestone: allocation.milestone_name || '',
-  //                 pm: allocation.project_manager || '',
-  //                 labor: allocation.contract_labor || 0,
-  //                 pctLaborUsed: (allocation.forecast_pm_labor || 0) * 100,
-  //                 hours: allocation.ra_hours || allocation.hours || 0,
-  //                 remarks: allocation.ra_remarks || allocation.remarks || ""
-  //               }));
-  //               setRows(newRows);
-  //             }
-  //           } catch (err) {
-  //             console.error("Error reloading data after save:", err);
-  //           }
-  //         }, 500); // 500ms delay to ensure backend processing is complete
-  //       }
-        
-  //       console.log("Save process completed successfully!");
-  //     } else {
-  //       console.log("No changes to save");
-  //     }
-  //   } catch (error) {
-  //     console.error('Save failed:', error);
-  //     setSaveError('Failed to save data: ' + error.message);
-  //   } finally {
-  //     setIsSaving(false);
-  //   }
-  // };
 
   // Calculate total hours
   const totalHours = rows.reduce((sum, row) => {
