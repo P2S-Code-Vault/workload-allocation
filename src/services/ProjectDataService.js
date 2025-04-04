@@ -263,7 +263,6 @@ static async saveResourceAllocation(data) {
     if (!data.email || !data.project_number || !data.hours) {
       throw new Error("Missing required allocation data: email, project_number, and hours are required");
     }
-  }
   
     // Try to get project details from CSV if available
     let projectDetails = null;
