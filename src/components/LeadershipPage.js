@@ -66,7 +66,7 @@ const GroupSelector = ({ onGroupChange, selectedGroup, groups = [] }) => {
             className="team-dropdown-btn"
             onClick={() => setShowDropdown(!showDropdown)}
           >
-            Change Group
+            Change
           </button>
         </div>
         
@@ -251,7 +251,7 @@ const CollapsibleMember = ({ member, formatter, formatPercent }) => {
         <tr className="member-details">
           <td colSpan="9">
             <div className="time-entries">
-              <h5>Time Entries</h5>
+              {/* <h4>Time Entries</h4> */}
               {sortedRows.length === 0 ? (
                 <div className="no-entries">No time entries found</div>
               ) : (
@@ -557,12 +557,13 @@ const formatLaborUsed = (value) => {
               <td>{project.projectName}</td>
               <td>{project.pm}</td>
               <td className="number-cell">{formatCurrency(project.labor)}</td>
-              <td className={`number-cell ${
+              <td className="number-cell">{formatLaborUsed(project.pctLaborUsed)}</td>
+              {/* <td className={`number-cell ${
                 project.pctLaborUsed >= 100 ? 'warning-cell' : 
                 project.pctLaborUsed >= 90 ? 'caution-cell' : ''
               }`}>
                 {formatLaborUsed(project.pctLaborUsed)}
-              </td>
+              </td> */}
               <td className="number-cell">{formatter.format(project.totalHours)}</td>
               <td>
                 {project.teamMembers.map((member, idx) => (

@@ -627,7 +627,7 @@ const MainContent = () => {
                     className="team-dropdown-btn"
                     onClick={() => setShowTeamDropdown(!showTeamDropdown)}
                   >
-                    Select Team Member
+                    Change
                   </button>
                   
                   {showTeamDropdown && (
@@ -640,7 +640,7 @@ const MainContent = () => {
                             onClick={() => handleTeamMemberSelect(member)}
                           >
                             <div className="member-name">{member.name}</div>
-                            <div className="member-details">{member.email}</div>
+                            {/* <div className="member-details">{member.email}</div> */}
                           </div>
                         ))
                       ) : (
@@ -651,13 +651,13 @@ const MainContent = () => {
                 </div>
               ) : (
                 <div className="managing-indicator">
-                  <span>Managing Team Member:</span>
+                  {/* <span>Team Member:</span> */}
                   <strong>{selectedTeamMember.name}</strong>
                   <button 
                     className="reset-view-btn"
                     onClick={resetToGroupLeader}
                   >
-                    Return to My View
+                    Reset
                   </button>
                 </div>
               )}

@@ -123,7 +123,7 @@ const PMSelector = ({ onPMChange, selectedPM, projectManagers = [] }) => {
             className="team-dropdown-btn"
             onClick={() => setShowDropdown(!showDropdown)}
           >
-            Change PM
+            Change
           </button>
         </div>
         

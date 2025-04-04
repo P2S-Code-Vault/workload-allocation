@@ -47,29 +47,30 @@
 
 .member-details {
   background-color: var(--background-gray);
+  color: var(--primary-color);
 }
 
 .no-entries {
-  /* padding: 0.5rem; */
   color: var(--primary-text);
   font-style: italic;
   text-align: center;
 }
 
 .time-entries {
-  /* padding: 0.5rem; */
   max-height: 500px;
   overflow-y: auto;
   background-color: var(--white);
+  font-family: var(--font-primary);
 }
 
 .time-entry {
   display: grid;
-  grid-template-columns: 300px 1fr 1fr 1fr;
-  /* gap: 1rem; */
+  grid-template-columns: 300px 1.5fr 1fr 1fr;
   padding: 0.5rem;
   border-bottom: 1px solid var(--border-color);
   align-items: center;
+  color: var(--primary-color);
+  font-size: 2rem;
 }
 
 .time-entry:hover {
@@ -80,6 +81,8 @@
 .time-entry .project-name,
 .time-entry .remarks {
   text-align: left;
+  color: var(--primary-text);
+  font-size: 0.95rem;
 }
 
 .time-entry:last-child {
@@ -87,17 +90,16 @@
 }
 
 .time-entry .project-number {
-  font-family: var(--font-primary);
   color: var(--primary-color);
 }
 
-.time-entry .project-name {
+/* .time-entry .project-name {
   color: var(--primary-text);
-}
+} */
 
 .time-entry .number-cell {
   text-align: center;
-  font-family: var(--font-primary);
+  font-size: 1rem;
 }
 
 .time-entry .hours {
@@ -142,6 +144,18 @@
 /* Apply same widths to table cells */
 .summary-table td {
   width: inherit;
+}
+
+.summary-table tr:hover td {
+  background-color: var(--primary-light);
+}
+
+.summary-table td:hover {
+  background-color: inherit;
+}
+
+.summary-table thead tr:hover th {
+  background-color: var(--primary-color);
 }
 
 .view-toggle {
@@ -214,7 +228,7 @@
 
 .project-summary .summary-table td {
   padding: 8px 4px;
-  white-space: nowrap;
+  white-space: wrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
@@ -259,9 +273,73 @@
   font-weight: bold;
 }
 
+/* Align dropdown styling with PM view */
+.group-selector .user-dropdown {
+  position: absolute;
+  left: 235px;
+  right: 0;
+  min-width: 250px;
+  width: auto;
+  max-width: 300px;
+  z-index: 1001;
+  margin-top: 0;
+  background-color: white;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: var(--shadow-lg);
+  overflow-y: auto;
+}
+
+.group-selector .user-search {
+  width: 100%;
+  padding: 8px 10px;
+  border: none;
+  border-bottom: 1px solid var(--background-color);
+  font-size: 0.9rem;
+}
+
+.group-selector .user-list {
+  max-height: 300px;
+  overflow-y: auto;
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+}
+
+.group-selector .user-list-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--background-color);
+  transition: background-color 0.2s;
+}
+
+.group-selector .user-list-item:hover {
+  background-color: var(--background-gray);
+}
+
+.group-selector .user-list-item .user-name {
+  font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--primary-dark);
+}
+
+.group-selector .user-list-item.selected {
+  background-color: var(--primary-light);
+  font-weight: bold;
+}
+
+.group-selector .team-dropdown-btn {
+  position: relative;
+  z-index: 1000;
+}
+
+.group-selector .user-selector-container {
+  position: relative;
+}
+
 /* Project view specific styles */
 .project-team-member {
-  padding: 3px 0;
+  padding: 0px 4px;
   border-bottom: 1px solid var(--border-color);
 }
 
@@ -321,4 +399,16 @@
 
 .caution-cell {
   background-color: #ffe6003f;
+}
+
+.projects-view-table tr:hover td {
+  background-color: var(--primary-light);
+}
+
+.projects-view-table td:hover {
+  background-color: inherit; 
+}
+
+.projects-view-table thead tr:hover th {
+  background-color: var(--primary-color);
 }
