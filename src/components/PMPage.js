@@ -22,39 +22,11 @@ const CollapsibleProject = ({ project, formatNumber, formatCurrency, formatPerce
           <span>Total Hours: {formatNumber(project.totalHours)}</span>
           <span>Projected Cost: {formatCurrency(project.totalCost)}</span>
           <span>Reported % Complete: {formatPercent(project.laborUsed)}</span>
-          {/* <span className={
-            project.laborUsed >= 100 ? 'warning' : 
-            project.laborUsed >= 90 ? 'caution' : ''
-          }> */}
-            {/* EAC Used: {formatPercent(project.laborUsed)} */}
-          {/* </span> */}
         </div>
       </div>
       
       {isExpanded && (
         <div className="collapsible-content pm-projects">
-          {/* <table className="summary-table">
-            <thead>
-              <tr className="project-metrics">
-                <th>Project Manager</th>
-                <th>Contract Total Labor</th>
-                <th>% EAC Labor Used</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr className="project-metrics">
-                <td className="number-cell">{project.pm || 'N/A'}</td>
-                <td className="number-cell">{formatCurrency(project.labor)}</td>
-                <td className={`number-cell ${
-                  project.laborUsed >= 100 ? 'warning-cell' : 
-                  project.laborUsed >= 90 ? 'caution-cell' : ''
-                }`}>
-                  {formatPercent(project.laborUsed)}
-                </td>
-              </tr>
-            </tbody>
-          </table> */}
-
           <table className="summary-table resource-details">
             <thead>
               <tr>
@@ -71,18 +43,6 @@ const CollapsibleProject = ({ project, formatNumber, formatCurrency, formatPerce
                   <td className="number-cell">{formatNumber(resource.hours)}</td>
                 </tr>
               ))}
-              {/* <tr className="total-row">
-                <td colSpan="2"><strong style={{ textAlign: 'right', display: 'block' }}>Total Hours</strong></td>
-                <td className="number-cell">
-                  <strong>{formatNumber(project.totalHours)}</strong>
-                </td>
-              </tr>
-              <tr className="total-row">
-                <td colSpan="2"><strong style={{ textAlign: 'right', display: 'block' }}>Projected Cost</strong></td>
-                <td className="number-cell">
-                  <strong>{formatCurrency(project.totalCost)}</strong>
-                </td>
-              </tr> */}
             </tbody>
           </table>
         </div>
@@ -158,7 +118,7 @@ const PMSelector = ({ onPMChange, selectedPM, projectManagers = [] }) => {
       <div className="user-selector-container" ref={dropdownRef}>
         <div className="user-info-container">
           <span className="user-label">Filter by PM:</span>
-          <strong className="user-label">{selectedPM || 'All Projects'}</strong>
+          <strong className="user-name">{selectedPM || 'All Projects'}</strong>
           <button 
             className="team-dropdown-btn"
             onClick={() => setShowDropdown(!showDropdown)}
@@ -168,7 +128,7 @@ const PMSelector = ({ onPMChange, selectedPM, projectManagers = [] }) => {
         </div>
         
         {showDropdown && (
-          <div className="user-dropdown">
+          <div className="user-dropdown pm-dashboard-dropdown">
             <input
               type="text"
               placeholder="Search project manager..."
@@ -308,24 +268,6 @@ const PMPage = ({ navigate }) => {
       }).format(numValue / 100);
     }
   };
-
-  // const formatPercent = (value) => {
-  //   // Simplified - always treat as whole number percentage
-  //   return new Intl.NumberFormat('en-US', {
-  //     style: 'percent',
-  //     minimumFractionDigits: 1,
-  //     maximumFractionDigits: 1,
-  //   }).format(value / 100);
-  // };
-  // const formatPercent = (value) => {
-  //   // If the value is over 1000, assume it's been multiplied by 100 twice
-  //   const divisor = value > 1000 ? 10000 : 100;
-  //   return new Intl.NumberFormat('en-US', {
-  //     style: 'percent',
-  //     minimumFractionDigits: 1,
-  //     maximumFractionDigits: 1,
-  //   }).format(value / divisor);
-  // };
 
   // Load project managers on component mount
   useEffect(() => {
