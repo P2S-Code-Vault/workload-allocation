@@ -881,7 +881,7 @@ const LeadershipPage = ({ navigate }) => {
             )}
             
             <div className="view-controls-container">
-              <button 
+              {/* <button 
                 className={`view-control-btn ${showAllGroups ? 'active' : ''}`}
                 onClick={() => {
                   if (!showAllGroups) {
@@ -891,7 +891,7 @@ const LeadershipPage = ({ navigate }) => {
                 }}
               >
                 {showAllGroups ? 'My Group Only' : 'All Groups'}
-              </button>
+              </button> */}
               
               <button 
                 className={`view-control-btn ${viewMode === 'hierarchy' ? 'active' : ''}`}
