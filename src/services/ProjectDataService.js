@@ -448,7 +448,10 @@ static async saveResourceAllocation(data) {
       
       // Remove matched keys
       console.log(`Clearing ${keysToRemove.length} cached items matching pattern: ${pattern}`);
-      keysToRemove.forEach(key => localStorage.removeItem(key));
+      keysToRemove.forEach(key => {
+        console.log(`Removing cache key: ${key}`);
+        localStorage.removeItem(key);
+      });
     } catch (error) {
       console.warn(`Error clearing cache with pattern ${pattern}:`, error);
     }

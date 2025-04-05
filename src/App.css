@@ -38,6 +38,7 @@
 
   /* Font Sizes */
   --font-sm: 0.9rem;
+  --font-md: 1.0rem;
   --font-lg: 1.1rem;
 }
 
@@ -112,7 +113,6 @@ body {
   position: absolute;
   top: calc(100% + 4px);
   left: 0;
-  /* right: 0; */
   background: var(--white);
   border: 1px solid var(--border-color);
   border-radius: 4px;
@@ -224,11 +224,10 @@ body {
 
 .resource-table {
   flex: 1;
-  /* width: 100%; */
   border-collapse: collapse;
   background-color: var(--white);
   box-shadow: var(--shadow-sm);
-  table-layout: fixed !important; /* Add this to enforce column widths */
+  table-layout: fixed !important;
   margin-top: var(--spacing-lg);
 }
 
@@ -262,14 +261,12 @@ body {
 }
 
 .resource-table td:nth-child(6) input { 
-/* .resource-table td:nth-child(8) input { */
   font-family: var(--font-primary);
   font-size: var(--font-sm);
   text-align: center;
 }
 
 .resource-table td:nth-child(7) input { 
-/* .resource-table td:nth-child(8) input { */
   font-family: var(--font-primary);
   font-size: var(--font-sm);
   text-align: center;
@@ -295,10 +292,6 @@ body {
 .resource-table td:nth-child(1) {  /* Project No. */
   width: 10%;
 }
-
-/* .resource-table td:nth-child(2) {  Name */
-  /* width: 10%; */
-/* } */
 
 .resource-table td:nth-child(3) {  /* Milestone */
   width: 15%;
@@ -340,32 +333,6 @@ body {
 .resource-table th:nth-child(9) {
   width: inherit;
 }
-
-/* .resource-table th:nth-child(5),
-.resource-table td:nth-child(5) {
-  width: 100px;
-} */
-
-/* .resource-table th:nth-child(6),
-.resource-table td:nth-child(6) {
-  width: 100px;
-} */
-
-/* Adjust these specific widths */
-/* .resource-table th:nth-child(7),
-.resource-table td:nth-child(7) {
-  width: 100px !important;
-} */
-
-/* .resource-table th:nth-child(8),
-.resource-table td:nth-child(8) {
-  width: 250px !important;
-} */
-
-/* .resource-table th:nth-child(10),
-.resource-table td:nth-child(10) {
-  width: 20px;
-} */
 
 .table-actions {
   margin-top: 20px;
@@ -464,21 +431,6 @@ body {
   font-weight: bold;
 }
 
-/* Dashboard Components */
-.pm-dashboard {
-  background-color: var(--white);
-  padding: 0px 10px;
-  /* padding: var(--spacing-sm); */
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-sm);
-  margin-top: var(--spacing-lg);
-}
-
-.pm-dashboard h2 {
-  color: var(--primary-color);
-  margin-bottom: 20px;
-}
-
 .resource-summary {
   margin-bottom: 30px;
 }
@@ -557,10 +509,7 @@ body {
 
 .project-summary {
   background-color: var(--white);
-  /* padding: var(--spacing-xl); */
-  /* margin-bottom: var(--spacing-xl); */
   border-radius: var(--border-radius);
-  /* box-shadow: var(--shadow-sm); */
 }
 
 .project-summary h2 {
@@ -582,12 +531,6 @@ body {
   flex-wrap: wrap;
   gap: 5px;
 }
-
-/* .project-summary h3 {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-} */
 
 .project-name {
   font-weight: normal;
@@ -717,9 +660,9 @@ body {
 .group-summary {
   background-color: var(--white);
   padding: 0px 10px;
-  /* padding: var(--spacing-xl); */
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-sm);
+  margin-top: 16px;
 }
 
 .group-summary h2 {
@@ -1212,10 +1155,6 @@ body {
   margin: 20px 0;
 }
 
-.pm-dashboard .user-selector {
-  margin-bottom: 20px;
-}
-
 /* Project Metrics Table Styles - Update column widths for GL page tables */
 .gl-dashboard .project-summary .summary-table th:nth-child(1), /* Project Number */
 .gl-dashboard .project-summary .summary-table td:nth-child(1) {
@@ -1271,7 +1210,6 @@ body {
   border-radius: 4px 4px 0px 0px;
   align-items: center;
   flex-wrap: wrap;
-  /* margin-bottom: 15px; */
   box-shadow: var(--shadow-sm);
 }
 
@@ -1289,7 +1227,8 @@ body {
 
 .user-name {
   font-weight: 500;
-  color: var(--primary-color);}
+  color: var(--primary-color);
+}
 
 /* Team controls styling */
 .team-controls {
@@ -1320,10 +1259,10 @@ body {
 .team-dropdown-list {
   position: absolute;
   top: 100%;
-  left: 0;
+  left: 8px;
   z-index: 100;
   background-color: white;
-  border: 1px solid #ccc;
+  border: 1px solid var(--border-color);
   border-radius: 4px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   min-width: 250px;
@@ -1368,7 +1307,7 @@ body {
   background-color: #ebf8ff;
   border: 1px solid #bee3f8;
   border-radius: 4px;
-  padding: 6px 12px;
+  padding: 2px 10px;
 }
 
 .managing-indicator span {
@@ -1404,12 +1343,6 @@ body {
   font-weight: 500;
   color: var(--primary-color);
   margin-left: auto;
-  /* gap: 5px; */
-  /* padding: 10px; */
-  /* background-color: var(--white); */
-  /* border-radius: 4px; */
-  /* margin-bottom: 20px; */
-  /* box-shadow: 0 1px 3px var(--shadow-lg); */
 }
 
 .scheduled-hours-container input {
@@ -1431,6 +1364,7 @@ body {
   font: var(--font-primary);
   cursor: default;
 }
+
 /* Support Button Styles */
 .support-button {
   position: static;
@@ -1486,7 +1420,26 @@ body {
   min-width: 240px;
 }
 
-/* PM Page Collapsible Styles */
+.pm-dashboard {
+  background-color: var(--white);
+  padding: 0px 10px;
+  border: 1px solid var(--border-color);
+  border-radius : 0px 0px 4px 4px;
+  /* border-radius: var(--border-radius); */
+  box-shadow: var(--shadow-sm);
+  margin-top: var(--spacing-lg);
+}
+
+.pm-dashboard h2 {
+  color: var(--primary-color);
+  margin-bottom: 20px;
+}
+
+.pm-dashboard .user-selector {
+  position: relative;
+  margin-bottom: var(--spacing-xl);
+}
+
 .pm-dashboard-title {
   font-size: 1.5rem;
   font-weight: 500;
@@ -1512,18 +1465,15 @@ body {
 
 .pm-dashboard .collapsible-header h3 {
   display: flex;
+  padding: 0;
   flex: 1;
   align-items: center;
   gap: var(--spacing-lg);
   color: var(--primary-dark);
+  color: var(--primary-dark);
   margin: 0;
 }
 
-/* .pm-dashboard .project-summary {
-  margin-bottom: 1rem;
-} */
-
-/* PM Page User Selector Styles */
 .pm-dashboard .user-selector {
   margin-bottom: var(--spacing-xl);
   background-color: var(--white);
@@ -1564,26 +1514,46 @@ body {
   opacity: 0.9;
 }
 
-.pm-dashboard .user-dropdown {
+/* Fix PM dropdown styling to match team-dropdown-list */
+.user-dropdown,
+.pm-dashboard-dropdown {
   position: absolute;
-  top: 100%;
-  left: 0;
-  right: 0;
-  background: var(--white);
+  left: 218px;
+  background-color: white;
   border: 1px solid var(--border-color);
-  border-radius: var(--border-radius);
-  box-shadow: var(--shadow-md);
-  z-index: 1000;
-  margin-top: var(--spacing-sm);
+  border-radius: 4px;
+  box-shadow: var(--shadow-lg);
+  min-width: 250px;
+  max-height: 300px;
+  overflow-y: auto;
+  margin-top: 5px;
+  z-index: 100;
 }
 
-.pm-dashboard .user-search {
+.pm-dashboard .user-dropdown,
+.pm-dashboard-dropdown {
+  position: absolute;
+  right: 0;
+  min-width: 250px;
+  width: auto;
+  max-width: 300px;
+  z-index: 1001;
+  margin-top: 0;
+}
+
+.pm-dashboard .team-dropdown-btn {
+  position: relative;
+  z-index: 1000;
+}
+
+.user-search,
+.pm-dashboard .user-search,
+.pm-dashboard-dropdown .user-search {
   width: 100%;
-  padding: var(--spacing-md);
+  padding: 8px 10px;
   border: none;
-  border-bottom: 1px solid var(--border-color);
-  font-size: var(--font-sm);
-  color: var(--primary-dark);
+  border-bottom: 1px solid var(--background-color);
+  font-size: 0.9rem;
 }
 
 .pm-dashboard .user-list {
@@ -1594,28 +1564,43 @@ body {
   list-style: none;
 }
 
-.pm-dashboard .user-list-item {
-  padding: var(--spacing-md) var(--spacing-lg);
-  border-bottom: 1px solid var(--border-color);
+.user-list {
+  list-style-type: none;
+  padding-left: 0;
+  margin-top: 0;
+}
+
+.pm-dashboard .user-list-item,
+.pm-dashboard-dropdown .user-list-item {
+  padding: 8px 12px;
   cursor: pointer;
-  transition: background-color 0.2s ease;
+  border-bottom: 1px solid var(--background-color);
+  transition: background-color 0.2s;
 }
 
-.pm-dashboard .user-list-item:hover {
-  background-color: var(--primary-light);
+.pm-dashboard .user-list-item:hover,
+.pm-dashboard-dropdown .user-list-item:hover {
+  background-color: var(--background-gray);
 }
 
-.pm-dashboard .user-list-item .user-name {
-  color: var(--primary-dark);
-  font-size: var(--font-sm);
+.pm-dashboard .user-list-item .user-name,
+.pm-dashboard-dropdown .user-list-item .user-name {
   font-weight: 500;
+  font-size: 0.95rem;
+  color: var(--primary-dark);
+}
+
+/* Selected item styling */
+.pm-dashboard .user-list-item.selected,
+.pm-dashboard-dropdown .user-list-item.selected {
+  background-color: var(--primary-light);
+  font-weight: bold;
 }
 
 /* PM Groups Styles */
 .pm-groups {
   display: flex;
   flex-direction: column;
-  /* gap: var(--spacing-lg); */
 }
 
 .pm-group {
@@ -1641,14 +1626,7 @@ body {
 
 .pm-group .collapsible-header h3 {
   color: var(--primary-dark);
-  font-size: var(--font-lg);
-}
-
-.pm-dashboard .collapsible-header h3 {
-  display: flex;
-  padding: 0;
-  align-items: center;
-  color: var(--primary-dark);
+  font-size: var(--font-md);
 }
 
 .pm-dashboard .collapsible-header .project-info {
@@ -1680,4 +1658,4 @@ body {
 .pm-projects {
   padding: var(--spacing-md);
   border-radius: var(--border-radius);
-} 
+}

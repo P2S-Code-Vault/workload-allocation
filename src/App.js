@@ -9,7 +9,7 @@ import Login from './components/Login';
 import PMPage from './components/PMPage';
 import LeadershipPage from './components/LeadershipPage';
 import format from 'date-fns/format';
-import { startOfWeek, endOfWeek } from 'date-fns';
+import { startOfWeek, endOfWeek, addWeeks } from 'date-fns';
 import API_CONFIG from './services/apiConfig';
 
 // Header Component
@@ -213,7 +213,6 @@ const MainContent = () => {
   };
 
   // Handle week change
-  // In the handleWeekChange function in MainContent
   const handleWeekChange = useCallback((startDate, endDate) => {
     console.log("Week changed in MainContent:", {
       startDate: format(startDate, 'yyyy-MM-dd'),
@@ -221,19 +220,32 @@ const MainContent = () => {
     });
     
     // Clear cached allocations to ensure fresh data when switching weeks
-    ProjectDataService.clearCacheWithPattern('allocations_');
+    try {
+      ProjectDataService.clearCacheWithPattern('allocations_');
+    } catch (e) {
+      console.warn("Failed to clear allocations cache:", e);
+    }
     
     setWeekStartDate(startDate);
     setWeekEndDate(endDate);
   }, []);
-  // const handleWeekChange = useCallback((startDate, endDate) => {
-  //   console.log("Week changed in MainContent:", {
-  //     startDate: format(startDate, 'yyyy-MM-dd'),
-  //     endDate: format(endDate, 'yyyy-MM-dd')
-  //   });
-  //   setWeekStartDate(startDate);
-  //   setWeekEndDate(endDate);
-  // }, []);
+
+  // IMPORTANT: Initialize week dates if not set by WeekPicker
+  useEffect(() => {
+    if (!weekStartDate || !weekEndDate) {
+      const today = addWeeks(new Date(), 1); // Start one week ahead
+      const startDate = startOfWeek(today, { weekStartsOn: 1 });
+      const endDate = endOfWeek(today, { weekStartsOn: 1 });
+      
+      console.log("Initializing with next week:", {
+        startDate: format(startDate, 'yyyy-MM-dd'),
+        endDate: format(endDate, 'yyyy-MM-dd')
+      });
+      
+      setWeekStartDate(startDate);
+      setWeekEndDate(endDate);
+    }
+  }, [weekStartDate, weekEndDate]);
 
   // Calculate PTO hours based on rows
   useEffect(() => {
@@ -247,23 +259,6 @@ const MainContent = () => {
     
     setPTOHolHours(ptoHours);
   }, [rows]);
-
-  // IMPORTANT: Initialize week dates if not set by WeekPicker
-  useEffect(() => {
-    if (!weekStartDate || !weekEndDate) {
-      const today = new Date();
-      const startDate = startOfWeek(today, { weekStartsOn: 1 });
-      const endDate = endOfWeek(today, { weekStartsOn: 1 });
-      
-      console.log("Initializing with current week:", {
-        startDate: format(startDate, 'yyyy-MM-dd'),
-        endDate: format(endDate, 'yyyy-MM-dd')
-      });
-      
-      setWeekStartDate(startDate);
-      setWeekEndDate(endDate);
-    }
-  }, []);
 
   // Debug the dependencies in the allocation loading effect
   useEffect(() => {
@@ -627,7 +622,7 @@ const MainContent = () => {
                     className="team-dropdown-btn"
                     onClick={() => setShowTeamDropdown(!showTeamDropdown)}
                   >
-                    Select Team Member
+                    Change
                   </button>
                   
                   {showTeamDropdown && (
@@ -640,7 +635,7 @@ const MainContent = () => {
                             onClick={() => handleTeamMemberSelect(member)}
                           >
                             <div className="member-name">{member.name}</div>
-                            <div className="member-details">{member.email}</div>
+                            {/* <div className="member-details">{member.email}</div> */}
                           </div>
                         ))
                       ) : (
@@ -651,13 +646,13 @@ const MainContent = () => {
                 </div>
               ) : (
                 <div className="managing-indicator">
-                  <span>Managing Team Member:</span>
+                  {/* <span>Team Member:</span> */}
                   <strong>{selectedTeamMember.name}</strong>
                   <button 
                     className="reset-view-btn"
                     onClick={resetToGroupLeader}
                   >
-                    Return to My View
+                    Reset
                   </button>
                 </div>
               )}

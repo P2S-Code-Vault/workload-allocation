@@ -5,6 +5,9 @@ export class PMDashboardService {
 
   static async getPMDashboardData(startDate, endDate, pmName = null) {
     try {
+      // Create a cache key for potentially caching the results
+      const cacheKey = `pm_dashboard_${startDate || 'all'}_${endDate || 'all'}_${pmName || 'all'}`;
+      
       // Build query parameters
       const params = new URLSearchParams();
       
@@ -18,7 +21,7 @@ export class PMDashboardService {
       
       if (pmName) {
         console.log(`Request filtering by PM: "${pmName}"`);
-        params.append('pm_name',pmName);
+        params.append('pm_name', pmName);
       }
       
       // Log the full URL for debugging
@@ -47,44 +50,58 @@ export class PMDashboardService {
       }
 
       // Clone the response for debugging
-    const responseClone = response.clone();
-    
-    try {
-      // Try to get the response as text first
-      const responseText = await responseClone.text();
-      console.log("Raw API response text:", responseText);
+      const responseClone = response.clone();
       
-      // Now parse it to check if it's valid JSON
       try {
-        JSON.parse(responseText);
-        console.log("Response is valid JSON");
-      } catch (jsonError) {
-        console.error("Response is not valid JSON:", jsonError);
+        // Try to get the response as text first
+        const responseText = await responseClone.text();
+        console.log("Raw API response text:", responseText);
+        
+        // Now parse it to check if it's valid JSON
+        try {
+          JSON.parse(responseText);
+          console.log("Response is valid JSON");
+        } catch (jsonError) {
+          console.error("Response is not valid JSON:", jsonError);
+        }
+      } catch (e) {
+        console.error("Could not clone and check response:", e);
       }
-    } catch (e) {
-      console.error("Could not clone and check response:", e);
-    }
       
       const data = await response.json();
       console.log("Received PM dashboard data:", data);
       
-       // Check if data has expected structure
-    if (!data.projects) {
-      console.error("API response missing 'projects' array:", data);
-      return this._getFallbackData();
-    }
-    
-    console.log(`Received ${data.projects.length} projects for ${pmName || 'all PMs'}`);
-    
-    // Log summary information
-    if (data.summary) {
-      console.log("Summary data:", {
-        totalProjects: data.summary.totalProjects || 0,
-        totalResources: data.summary.totalResources || 0,
-        totalHours: data.summary.totalHours || 0,
-        totalCost: data.summary.totalCost || 0,
-      });
-    }
+      // Check if data has expected structure
+      if (!data.projects) {
+        console.error("API response missing 'projects' array:", data);
+        return this._getFallbackData();
+      }
+      
+      console.log(`Received ${data.projects.length} projects for ${pmName || 'all PMs'}`);
+      
+      // Log summary information
+      if (data.summary) {
+        console.log("Summary data:", {
+          totalProjects: data.summary.totalProjects || 0,
+          totalResources: data.summary.totalResources || 0,
+          totalHours: data.summary.totalHours || 0,
+          totalCost: data.summary.totalCost || 0,
+        });
+      }
+      
+      // Cache successful results (not for fallback data)
+      if (data.projects) {
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify({
+            data: data,
+            timestamp: Date.now(),
+            expiry: Date.now() + (30 * 60 * 1000) // 30 minute expiry
+          }));
+          console.log(`Cached PM dashboard data with key: ${cacheKey}`);
+        } catch (cacheError) {
+          console.warn("Failed to cache PM dashboard data:", cacheError);
+        }
+      }
       
       return data;
     } catch (error) {
