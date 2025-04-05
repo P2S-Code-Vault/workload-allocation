@@ -662,6 +662,7 @@ body {
   padding: 0px 10px;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow-sm);
+  margin-top: 16px;
 }
 
 .group-summary h2 {

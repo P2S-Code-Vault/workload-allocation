@@ -23,7 +23,6 @@ const GroupSelector = ({ onGroupChange, selectedGroup, groups = [] }) => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
 
-  // Log available groups for debugging
   useEffect(() => {
     if (groups && groups.length > 0) {
       console.log('Available Groups:', groups);
@@ -40,12 +39,10 @@ const GroupSelector = ({ onGroupChange, selectedGroup, groups = [] }) => {
     : groups;
 
   const handleGroupSelection = (group) => {
-    // Always trim the group name to ensure consistent API requests
     const trimmedGroup = group.trim();
     console.log(`Group selected: "${group}"`);
     console.log(`Trimmed Group name: "${trimmedGroup}"`);
     
-    // Use the trimmed group name
     onGroupChange(trimmedGroup);
     setShowDropdown(false);
   };
@@ -59,7 +56,7 @@ const GroupSelector = ({ onGroupChange, selectedGroup, groups = [] }) => {
   return (
     <div className="user-selector group-selector">
       <div className="user-selector-container" ref={dropdownRef}>
-        <div className="user-info-container">
+        {/* <div className="user-info-container"> */}
           <span className="user-label">Filter by Studio:</span>
           <strong className="user-label">{selectedGroup || 'All Studios'}</strong>
           <button 
@@ -68,7 +65,7 @@ const GroupSelector = ({ onGroupChange, selectedGroup, groups = [] }) => {
           >
             Change
           </button>
-        </div>
+        {/* </div> */}
         
         {showDropdown && (
           <div className="user-dropdown">
@@ -120,7 +117,6 @@ const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent }) =>
       
       {isExpanded && (
         <div className="collapsible-content">
-          {/* Studio Summary Table */}
           <table className="summary-table">
             <thead>
               <tr className="project-metrics">
@@ -150,7 +146,6 @@ const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent }) =>
             </tbody>
           </table>
 
-          {/* Studio Details with Collapsible Members */}
           {Object.entries(managerData.studios).map(([studio, studioData]) => (
             <CollapsibleStudio 
               key={studio}
@@ -215,7 +210,6 @@ const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent }) => 
 const CollapsibleMember = ({ member, formatter, formatPercent }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
-  // Sort rows by project number
   const sortedRows = [...(member.rows || [])].sort((a, b) => 
     a.projectNumber.localeCompare(b.projectNumber)
   );
@@ -251,7 +245,6 @@ const CollapsibleMember = ({ member, formatter, formatPercent }) => {
         <tr className="member-details">
           <td colSpan="9">
             <div className="time-entries">
-              {/* <h4>Time Entries</h4> */}
               {sortedRows.length === 0 ? (
                 <div className="no-entries">No time entries found</div>
               ) : (
@@ -272,13 +265,11 @@ const CollapsibleMember = ({ member, formatter, formatPercent }) => {
   );
 };
 
-// StaffTableView component - Updated to fetch and display all company staff
 const StaffTableView = ({ weekStartDate, weekEndDate, formatter, formatPercent }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [allStaffData, setAllStaffData] = useState({});
   
-  // Load all staff data when component mounts
   useEffect(() => {
     if (!weekStartDate || !weekEndDate) return;
     
@@ -287,7 +278,6 @@ const StaffTableView = ({ weekStartDate, weekEndDate, formatter, formatPercent }
       setError(null);
       
       try {
-        // Make API call to get all staff data
         const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_ALL_STAFF}?start_date=${format(weekStartDate, 'yyyy-MM-dd')}&end_date=${format(weekEndDate, 'yyyy-MM-dd')}`;
         console.log(`Fetching all staff data from: ${url}`);
         
@@ -312,7 +302,6 @@ const StaffTableView = ({ weekStartDate, weekEndDate, formatter, formatPercent }
     fetchAllStaffData();
   }, [weekStartDate, weekEndDate]);
   
-  // If loading or error, show appropriate message
   if (isLoading) {
     return <div className="loading-indicator">Loading all staff data...</div>;
   }
@@ -321,15 +310,12 @@ const StaffTableView = ({ weekStartDate, weekEndDate, formatter, formatPercent }
     return <div className="error-banner">{error}</div>;
   }
   
-  // If no data, show empty message
   if (!allStaffData || !allStaffData.managers || Object.keys(allStaffData.managers).length === 0) {
     return <div className="no-data-message">No staff data available.</div>;
   }
   
-  // Flatten all staff members from managers and studios
   const allStaff = [];
   
-  // Process data from API response format
   Object.entries(allStaffData.managers).forEach(([managerName, managerData]) => {
     Object.entries(managerData.studios).forEach(([studioName, studioData]) => {
       studioData.members.forEach(member => {
@@ -342,7 +328,6 @@ const StaffTableView = ({ weekStartDate, weekEndDate, formatter, formatPercent }
     });
   });
   
-  // Sort by manager, then studio, then name
   const sortedStaff = allStaff.sort((a, b) => {
     const managerCompare = a.manager.localeCompare(b.manager);
     if (managerCompare !== 0) return managerCompare;
@@ -357,7 +342,6 @@ const StaffTableView = ({ weekStartDate, weekEndDate, formatter, formatPercent }
     <div className="project-summary">
       <div className='pm-dashboard-title'>All Staff Summary</div>
       
-      {/* Company-wide stats */}
       {allStaffData.companyTotals && (
         <div className="company-stats">
           <div className="stat-item">
@@ -421,27 +405,21 @@ const StaffTableView = ({ weekStartDate, weekEndDate, formatter, formatPercent }
   );
 };
 
-// New ProjectsTableView component to display all projects for the team
 const ProjectsTableView = ({ teamData, formatter }) => {
   const [projectsData, setProjectsData] = useState([]);
   
   useEffect(() => {
-    // Process team data to extract all projects
     const projects = [];
     
     Object.entries(teamData).forEach(([manager, managerData]) => {
       Object.entries(managerData.studios).forEach(([studio, studioData]) => {
         studioData.members.forEach(member => {
-          // Process each member's rows to extract project data
           if (member.rows && member.rows.length > 0) {
             member.rows.forEach(row => {
-              // Skip non-project rows (overhead, PTO, etc.)
               if (!row.projectNumber.startsWith('0000-0000')) {
-                // Check if this project already exists in our projects array
                 const existingProject = projects.find(p => p.projectNumber === row.projectNumber);
                 
                 if (existingProject) {
-                  // Project exists, update hours and add team member if not already included
                   existingProject.totalHours += parseFloat(row.hours) || 0;
                   if (!existingProject.teamMembers.some(tm => tm.id === member.id)) {
                     existingProject.teamMembers.push({
@@ -452,10 +430,8 @@ const ProjectsTableView = ({ teamData, formatter }) => {
                       remarks: row.remarks || ""
                     });
                   } else {
-                    // Update existing team member's hours
                     const teamMember = existingProject.teamMembers.find(tm => tm.id === member.id);
                     teamMember.hours += parseFloat(row.hours) || 0;
-                    // Update remarks if not already set
                     if (!teamMember.remarks && row.remarks) {
                       teamMember.remarks = row.remarks;
                     }
@@ -465,7 +441,6 @@ const ProjectsTableView = ({ teamData, formatter }) => {
                     projectNumber: row.projectNumber,
                     projectName: row.projectName,
                     pm: row.pm || 'Unassigned',
-                    // Fix these incorrect lines that have syntax errors
                     labor: parseFloat(row.labor || row.contractLabor || 0),
                     pctLaborUsed: parseFloat(row.pctLaborUsed || row.percentLaborUsed || 0),
                     totalHours: parseFloat(row.hours) || 0,
@@ -485,12 +460,10 @@ const ProjectsTableView = ({ teamData, formatter }) => {
       });
     });
     
-    // Sort projects by project number
     const sortedProjects = projects.sort((a, b) => a.projectNumber.localeCompare(b.projectNumber));
     setProjectsData(sortedProjects);
   }, [teamData]);
   
-  // Format currency for labor
   const formatCurrency = (value) => {
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
@@ -500,16 +473,6 @@ const ProjectsTableView = ({ teamData, formatter }) => {
     }).format(value);
   };
 
-  // Format percentage for labor used
-  // const formatLaborUsed = (value) => {
-  //   const divisor = value > 1000 ? 10000 : 100;
-  //   return new Intl.NumberFormat('en-US', {
-  //     style: 'percent',
-  //     minimumFractionDigits: 1,
-  //     maximumFractionDigits: 1,
-  //   }).format(value / divisor);
-  // };
-  // In the formatLaborUsed function (if it exists)
 const formatLaborUsed = (value) => {
   const numValue = parseFloat(value) || 0;
   
@@ -528,7 +491,6 @@ const formatLaborUsed = (value) => {
   }
 };
   
-  // If no projects, show empty message
   if (projectsData.length === 0) {
     return <div className="no-data-message">No project data available.</div>;
   }
@@ -540,7 +502,6 @@ const formatLaborUsed = (value) => {
       <table className="summary-table projects-view-table">
         <thead>
           <tr>
-            {/* <th>Project Number</th> */}
             <th>Project Name</th>
             <th>Project Manager</th>
             <th>Contract Total Labor</th>
@@ -553,17 +514,10 @@ const formatLaborUsed = (value) => {
         <tbody>
           {projectsData.map((project, index) => (
             <tr key={index}>
-              {/* <td>{project.projectNumber}</td> */}
               <td>{project.projectName}</td>
               <td>{project.pm}</td>
               <td className="number-cell">{formatCurrency(project.labor)}</td>
               <td className="number-cell">{formatLaborUsed(project.pctLaborUsed)}</td>
-              {/* <td className={`number-cell ${
-                project.pctLaborUsed >= 100 ? 'warning-cell' : 
-                project.pctLaborUsed >= 90 ? 'caution-cell' : ''
-              }`}>
-                {formatLaborUsed(project.pctLaborUsed)}
-              </td> */}
               <td className="number-cell">{formatter.format(project.totalHours)}</td>
               <td>
                 {project.teamMembers.map((member, idx) => (
@@ -593,30 +547,28 @@ const LeadershipPage = ({ navigate }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedLeader, setSelectedLeader] = useState('');
-  const [selectedGroup, setSelectedGroup] = useState(''); // New state for group filter
+  const [selectedGroup, setSelectedGroup] = useState('');
   const [teamData, setTeamData] = useState({});
   const [weekStartDate, setWeekStartDate] = useState(null);
   const [weekEndDate, setWeekEndDate] = useState(null);
-  const [viewMode, setViewMode] = useState('hierarchy'); // 'hierarchy', 'table', or 'projects'
+  const [viewMode, setViewMode] = useState('hierarchy');
   const [currentUser, setCurrentUser] = useState(null);
   const [leaders, setLeaders] = useState([]);
-  const [groupList, setGroupList] = useState([]); // New state for list of groups
+  const [groupList, setGroupList] = useState([]);
+  const [showAllGroups, setShowAllGroups] = useState(false);
   
-  // Initialize user and date range
   useEffect(() => {
     const userDetails = UserService.getCurrentUserDetails();
     if (userDetails) {
       setCurrentUser(userDetails);
     }
     
-    // Set default week to current week
     const today = new Date();
-    const startDate = startOfWeek(today, { weekStartsOn: 1 }); //chg
+    const startDate = startOfWeek(today, { weekStartsOn: 1 });
     const endDate = endOfWeek(today, { weekStartsOn: 1 });
     setWeekStartDate(startDate);
     setWeekEndDate(endDate);
     
-    // Fetch all group leaders at initialization
     const fetchAllLeaders = async () => {
       try {
         const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.LEADERSHIP_LEADERS}?type=gl`);
@@ -634,7 +586,6 @@ const LeadershipPage = ({ navigate }) => {
     fetchAllLeaders();
   }, []);
   
-  // Handle week change from WeekPicker
   const handleWeekChange = (startDate, endDate) => {
     console.log("Week changed:", {
       start: format(startDate, 'yyyy-MM-dd'),
@@ -644,7 +595,6 @@ const LeadershipPage = ({ navigate }) => {
     setWeekEndDate(endDate);
   };
   
-  // New function to extract all unique group names
   const extractGroupNames = (teamData) => {
     const groups = new Set();
     
@@ -659,7 +609,6 @@ const LeadershipPage = ({ navigate }) => {
     return Array.from(groups).sort();
   };
 
-  // Add group filter to loadTeamData function
   const loadTeamData = async () => {
     setIsLoading(true);
     setError(null);
@@ -667,19 +616,57 @@ const LeadershipPage = ({ navigate }) => {
     try {
       console.log("Loading leadership data for current user:", currentUser.email);
       
-      // Use the group manager information stored during login
       const userGroupManager = currentUser.groupManager;
       
-      if (!userGroupManager) {
+      if (!userGroupManager && !showAllGroups) {
         console.log("User is not assigned to any group");
         setTeamData({});
         setIsLoading(false);
         return;
       }
       
+      if (showAllGroups) {
+        console.log("Fetching data for all groups");
+        
+        try {
+          const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_ALL_STAFF}?start_date=${format(weekStartDate, 'yyyy-MM-dd')}&end_date=${format(weekEndDate, 'yyyy-MM-dd')}`);
+          
+          if (!response.ok) {
+            throw new Error(`Failed to fetch all groups data: ${response.status}`);
+          }
+          
+          const allData = await response.json();
+          console.log("Received all groups data:", allData);
+          
+          if (allData && allData.managers) {
+            setTeamData(allData.managers);
+            
+            const groups = new Set();
+            Object.entries(allData.managers).forEach(([manager, managerData]) => {
+              Object.keys(managerData.studios).forEach(studio => {
+                if (studio !== 'Unassigned') {
+                  groups.add(studio);
+                }
+              });
+            });
+            setGroupList(Array.from(groups).sort());
+          } else {
+            setError("Failed to load data for all groups");
+            setTeamData({});
+          }
+          setIsLoading(false);
+          return;
+        } catch (err) {
+          console.error("Error loading all groups data:", err);
+          setError(`Failed to load all groups data: ${err.message}`);
+          setTeamData({});
+          setIsLoading(false);
+          return;
+        }
+      }
+      
       console.log(`User belongs to group managed by: ${userGroupManager}`);
       
-      // Use the new service to get team members with multiple fallback approaches
       const members = await GLTeamService.getTeamMembersForUser(
         currentUser.email, 
         userGroupManager
@@ -695,17 +682,14 @@ const LeadershipPage = ({ navigate }) => {
       
       console.log(`Found ${members.length} team members for group manager: ${userGroupManager}`);
       
-      // Get emails for all team members
       const emails = members.map(member => member.email);
       
-      // Get allocations for this time period
       const allocations = await GLTeamService.getTeamAllocations(
         emails,
         format(weekStartDate, 'yyyy-MM-dd'),
         format(weekEndDate, 'yyyy-MM-dd')
       );
       
-      // Structure the data
       const allGroupsData = {};
       const groupManager = userGroupManager;
       
@@ -719,9 +703,7 @@ const LeadershipPage = ({ navigate }) => {
         memberCount: members.length,
       };
       
-      // Process members and group by studio
       members.forEach(member => {
-        // Get GroupName with detailed logging
         let studio = 'Unassigned';
         
         if (member.GroupName) {
@@ -731,20 +713,16 @@ const LeadershipPage = ({ navigate }) => {
           console.log(`No GroupName found for ${member.name}, using 'Unassigned'}`);
         }
         
-        // Skip if a group filter is applied and doesn't match
         if (selectedGroup && studio !== selectedGroup) {
           console.log(`Filtering out member ${member.name} because group "${studio}" doesn't match selected group "${selectedGroup}"`);
           return;
         }
         
-        // Ensure scheduledHours is consistently a number
-        let scheduledHours = 40.0; // Default value
+        let scheduledHours = 40.0;
         
         if (member.scheduled_hours !== null && member.scheduled_hours !== undefined) {
-          // Convert to number if it's not already
           scheduledHours = Number(member.scheduled_hours);
           
-          // Handle NaN case
           if (isNaN(scheduledHours)) {
             console.warn(`Invalid hours value for ${member.name}: ${member.scheduled_hours}, using default 40`);
             scheduledHours = 40.0;
@@ -753,7 +731,6 @@ const LeadershipPage = ({ navigate }) => {
         
         console.log(`Processing member: ${member.name}, Studio: ${studio}, Hours: ${scheduledHours} (type: ${typeof scheduledHours})`);
         
-        // Initialize studio if needed
         if (!allGroupsData[groupManager].studios[studio]) {
           allGroupsData[groupManager].studios[studio] = {
             members: [],
@@ -765,16 +742,13 @@ const LeadershipPage = ({ navigate }) => {
           };
         }
         
-        // Filter allocations for this member
         const memberAllocations = allocations.filter(a => a.email === member.email);
         
-        // Calculate hours by category
         const memberRows = memberAllocations.map(allocation => ({
           projectNumber: allocation.proj_id || allocation.project_number || '',
           projectName: allocation.project_name || '',
           milestone: allocation.milestone_name || '',
           pm: allocation.project_manager || '',
-          // Ensure we properly extract labor and percentage values
           labor: parseFloat(allocation.contract_labor || allocation.labor || 0),
           pctLaborUsed: parseFloat(allocation.forecast_pm_labor || allocation.percentLaborUsed || 0) * 100,
           hours: parseFloat(allocation.ra_hours || allocation.hours || 0),
@@ -808,13 +782,12 @@ const LeadershipPage = ({ navigate }) => {
           
         const totalHours = directHours + ptoHours + overheadHours; 
         
-        // Add member to studio
         allGroupsData[groupManager].studios[studio].members.push({
           id: member.id,
           name: member.name,
           email: member.email,
           laborCategory: member.labor_category || '',
-          scheduledHours: scheduledHours,  // Consistently a number
+          scheduledHours: scheduledHours,
           directHours,
           ptoHours, 
           overheadHours,
@@ -823,23 +796,19 @@ const LeadershipPage = ({ navigate }) => {
           rows: memberRows
         });
         
-        // Update studio totals
-        console.log(`Adding to studio ${studio}: Current=${allGroupsData[groupManager].studios[studio].scheduledHours}, Adding=${scheduledHours}`);
         allGroupsData[groupManager].studios[studio].totalHours += totalHours;
-        allGroupsData[groupManager].studios[studio].scheduledHours += scheduledHours; // Now a number
+        allGroupsData[groupManager].studios[studio].scheduledHours += scheduledHours;
         allGroupsData[groupManager].studios[studio].directHours += directHours;
         allGroupsData[groupManager].studios[studio].ptoHours += ptoHours;
         allGroupsData[groupManager].studios[studio].overheadHours += overheadHours;
         
-        // Update manager totals
         allGroupsData[groupManager].totalHours += totalHours;
-        allGroupsData[groupManager].scheduledHours += scheduledHours; // Now a number
+        allGroupsData[groupManager].scheduledHours += scheduledHours;
         allGroupsData[groupManager].directHours += directHours;
         allGroupsData[groupManager].ptoHours += ptoHours;
         allGroupsData[groupManager].overheadHours += overheadHours;
       });
       
-      // Calculate ratio B for studios and manager
       Object.keys(allGroupsData[groupManager].studios).forEach(studio => {
         const studioData = allGroupsData[groupManager].studios[studio];
         studioData.ratioB = calculateRatioB(
@@ -855,7 +824,6 @@ const LeadershipPage = ({ navigate }) => {
         allGroupsData[groupManager].ptoHours
       );
       
-      // Extract unique group names and update state
       const groups = extractGroupNames(allGroupsData);
       setGroupList(groups);
       console.log("Available groups:", groups);
@@ -871,35 +839,30 @@ const LeadershipPage = ({ navigate }) => {
     }
   };
 
-  // Update useEffect hook to include selectedGroup in dependencies
   useEffect(() => {
     if (!currentUser || !weekStartDate || !weekEndDate || leaders.length === 0) {
       return;
     }
     
     loadTeamData();
-  }, [currentUser, weekStartDate, weekEndDate, leaders, selectedGroup]); // Add selectedGroup here
+  }, [currentUser, weekStartDate, weekEndDate, leaders, selectedGroup, showAllGroups]);
 
-  // Calculate RatioB
   const calculateRatioB = (directHours, scheduledHours, ptoHours) => {
     const denominator = scheduledHours - ptoHours;
     if (denominator <= 0) return 0;
     return directHours / denominator;
   };
 
-  // Format numbers
   const formatter = new Intl.NumberFormat('en-US', {
     minimumFractionDigits: 0,
     maximumFractionDigits: 1
   });
   const formatPercent = (value) => {
-    // Ratio B is already a decimal value (e.g., 0.85 for 85%)
-    // It shouldn't be divided by 100 again as that's making it display as 0.85%
     return new Intl.NumberFormat('en-US', {
       style: 'percent',
       minimumFractionDigits: 1,
       maximumFractionDigits: 1,
-    }).format(value); // Remove the division by 100
+    }).format(value);
   };
 
   return (
@@ -908,34 +871,51 @@ const LeadershipPage = ({ navigate }) => {
         <div className="content-wrapper">
           <WeekPicker onWeekChange={handleWeekChange} />
           
-          {/* Add GroupSelector component */}
-          {groupList.length > 0 && (
-            <GroupSelector 
-              onGroupChange={setSelectedGroup}
-              selectedGroup={selectedGroup}
-              groups={groupList}
-            />
-          )}
-          
-          <div className="view-toggle">
-            <button 
-              className={`toggle-button ${viewMode === 'hierarchy' ? 'active' : ''}`}
-              onClick={() => setViewMode('hierarchy')}
-            >
-              Group by Team
-            </button>
-            <button 
-              className={`toggle-button ${viewMode === 'projects' ? 'active' : ''}`}
-              onClick={() => setViewMode('projects')}
-            >
-              Group by Projects
-            </button>
-            <button 
-              className={`toggle-button ${viewMode === 'table' ? 'active' : ''}`}
-              onClick={() => setViewMode('table')}
-            >
-              All Staff
-            </button>
+          <div className="user-info-container">
+            {groupList.length > 0 && (
+              <GroupSelector 
+                onGroupChange={setSelectedGroup}
+                selectedGroup={selectedGroup}
+                groups={groupList}
+              />
+            )}
+            
+            <div className="view-controls-container">
+              <button 
+                className={`view-control-btn ${showAllGroups ? 'active' : ''}`}
+                onClick={() => {
+                  if (!showAllGroups) {
+                    setSelectedGroup('');
+                  }
+                  setShowAllGroups(!showAllGroups);
+                }}
+              >
+                {showAllGroups ? 'My Group Only' : 'All Groups'}
+              </button>
+              
+              <button 
+                className={`view-control-btn ${viewMode === 'hierarchy' ? 'active' : ''}`}
+                onClick={() => setViewMode('hierarchy')}
+              >
+                Group By Team
+              </button>
+              
+              <button 
+                className={`view-control-btn ${viewMode === 'projects' ? 'active' : ''} ${showAllGroups ? 'disabled' : ''}`}
+                onClick={() => !showAllGroups && setViewMode('projects')}
+                disabled={showAllGroups}
+                title={showAllGroups ? "Projects view not available when viewing all groups" : ""}
+              >
+                Group By Projects
+              </button>
+              
+              <button 
+                className={`view-control-btn ${viewMode === 'table' ? 'active' : ''}`}
+                onClick={() => setViewMode('table')}
+              >
+                All Staff
+              </button>
+            </div>
           </div>
           
           {error && <div className="error-message">{error}</div>}
@@ -948,11 +928,8 @@ const LeadershipPage = ({ navigate }) => {
             </div>
           ) : (
             <div className="group-summary">
-              {/* <div className='pm-dashboard-title'>Resource Allocation by Group</div> */}
-              
               {viewMode === 'hierarchy' ? (
                 <>
-                  {/* Summary table for all managers */}
                   <div className="project-summary">
                     <div className='pm-dashboard-title'>Group Summary</div>
                     <table className="summary-table">
@@ -985,7 +962,6 @@ const LeadershipPage = ({ navigate }) => {
                     </table>
                   </div>
                   
-                  {/* Detailed tables for each manager and their studios */}
                   {Object.entries(teamData).map(([manager, managerData]) => (
                     <CollapsibleGroup
                       key={manager}
@@ -998,7 +974,6 @@ const LeadershipPage = ({ navigate }) => {
                 </>
               ) : viewMode === 'table' ? (
                 <StaffTableView 
-                  // data={teamData}
                   weekStartDate={weekStartDate}
                   weekEndDate={weekEndDate}
                   formatter={formatter}

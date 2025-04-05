@@ -158,22 +158,83 @@
   background-color: var(--primary-color);
 }
 
-.view-toggle {
+/* Update user-info-container to accommodate the new buttons */
+.user-info-container {
+  display: flex;
+  justify-content: flex-start;
+  align-items: center;
+  flex-wrap: wrap;
+  background-color: var(--white);
+  border-radius: var(--border-radius);
+  padding: 8px 16px;
+  /* margin-bottom: 16px; */
+  box-shadow: var(--shadow-sm);
+}
+
+/* Add styles for the view-controls-container */
+.view-controls-container {
   display: flex;
   gap: 8px;
+  margin-left: auto;
+}
+
+.view-control-btn {
+  padding: 8px 12px;
+  border: 1px solid var(--primary-color);
+  background-color: var(--white);
+  color: var(--primary-color);
+  border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+  font-size: 0.9rem;
+}
+
+.view-control-btn.active {
+  background-color: var(--primary-color);
+  color: var(--white);
+}
+
+.view-control-btn:hover:not(.active) {
+  background-color: var(--primary-light);
+}
+
+.view-control-btn.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: var(--background-gray);
+  color: var(--temp-text);
+  border-color: var(--border-color);
+}
+
+.view-control-btn.disabled:hover {
+  background-color: var(--background-gray);
+}
+
+.view-controls, .view-toggle {
+  display: none;
+}
+
+/* View Controls styling */
+.view-controls {
+  display: flex;
+  justify-content: flex-end;
   margin-bottom: 16px;
 }
 
-.view-toggle .toggle-button {
+.view-controls .toggle-button {
   padding: 8px 16px;
-  border: 1px solid var(--border-color);
-  background: var(--white);
-  cursor: pointer;
+  border: 1px solid var(--primary-color);
+  background-color: var(--white);
+  color: var(--primary-color);
   border-radius: 4px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
 }
 
-.view-toggle .toggle-button.active {
-  background: var(--primary-color);
+.view-controls .toggle-button.active {
+  background-color: var(--primary-color);
   color: var(--white);
 }
 
@@ -256,16 +317,26 @@
 
 /* Group selector specific styling */
 .group-selector {
-  margin-bottom: 16px;
-  background-color: var(--white);
+  /* margin-bottom: 16px; */
+  /* background-color: transparent; */
+  /* background-color: var(--white); */
   border-radius: var(--border-radius);
-  box-shadow: var(--shadow-sm);
+  /* box-shadow: var(--shadow-sm); */
 }
 
+.group-selector .group-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background-color: var(--background-gray);
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
 .group-selector .user-label {
   font-weight: 500;
   color: var(--primary-color);
-  margin: 10px;
+  /* margin: 10px; */
 }
 
 .user-list-item.selected {
@@ -282,7 +353,7 @@
   width: auto;
   max-width: 300px;
   z-index: 1001;
-  margin-top: 0;
+  /* margin-top: 0; */
   background-color: white;
   border: 1px solid var(--border-color);
   border-radius: 4px;
