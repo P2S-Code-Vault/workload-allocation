@@ -441,7 +441,7 @@ static async saveResourceAllocation(data) {
       // Find all cache keys matching the pattern
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.includes(pattern)) {
+        if (key && key.startsWith(pattern)) {
           keysToRemove.push(key);
         }
       }
