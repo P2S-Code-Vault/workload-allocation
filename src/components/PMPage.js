@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import WeekPicker from './WeekPicker';
-import { format } from 'date-fns';
+import { format, addWeeks, startOfWeek, endOfWeek } from 'date-fns';
 import PMDashboardService from '../services/PMDashboardService';
+import { ProjectDataService } from '../services/ProjectDataService';
 import { FaChevronDown, FaChevronRight } from 'react-icons/fa';
 
 // CollapsibleProject component for individual project display
@@ -283,6 +284,19 @@ const PMPage = ({ navigate }) => {
     };
     
     loadProjectManagers();
+    
+    // Initialize with next week's dates
+    const today = addWeeks(new Date(), 1);
+    const startDate = startOfWeek(today, { weekStartsOn: 1 });
+    const endDate = endOfWeek(today, { weekStartsOn: 1 });
+    
+    console.log("PM Page - Initializing with next week:", {
+      startDate: format(startDate, 'yyyy-MM-dd'),
+      endDate: format(endDate, 'yyyy-MM-dd')
+    });
+    
+    setWeekStartDate(startDate);
+    setWeekEndDate(endDate);
   }, []);
 
   // Debug data state changes
@@ -297,6 +311,14 @@ const PMPage = ({ navigate }) => {
       startDate: format(startDate, 'yyyy-MM-dd'),
       endDate: format(endDate, 'yyyy-MM-dd')
     });
+    
+    // Clear any cached data to ensure fresh load
+    try {
+      ProjectDataService.clearCacheWithPattern('pm_dashboard_');
+    } catch (e) {
+      console.warn("Failed to clear PM dashboard cache:", e);
+    }
+    
     setWeekStartDate(startDate);
     setWeekEndDate(endDate);
     setRetryCount(0); // Reset retry counter when dates change

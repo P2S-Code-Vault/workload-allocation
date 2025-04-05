@@ -1,11 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { UserService } from '../services/UserService';
 import { GLTeamService } from '../services/GLTeamService';
+import { ProjectDataService } from '../services/ProjectDataService';
 import WeekPicker from './WeekPicker';
 import './LeadershipPage.css';
 import { FaChevronDown, FaChevronRight, FaUserClock } from 'react-icons/fa';
 import format from 'date-fns/format';
-import { startOfWeek, endOfWeek } from 'date-fns';
+import { startOfWeek, endOfWeek, addWeeks } from 'date-fns';
 import API_CONFIG from '../services/apiConfig';
 
 const GroupSelector = ({ onGroupChange, selectedGroup, groups = [] }) => {
@@ -563,9 +564,16 @@ const LeadershipPage = ({ navigate }) => {
       setCurrentUser(userDetails);
     }
     
-    const today = new Date();
+    // Initialize with next week's dates instead of current week
+    const today = addWeeks(new Date(), 1);
     const startDate = startOfWeek(today, { weekStartsOn: 1 });
     const endDate = endOfWeek(today, { weekStartsOn: 1 });
+    
+    console.log("Leadership Page - Initializing with next week:", {
+      startDate: format(startDate, 'yyyy-MM-dd'),
+      endDate: format(endDate, 'yyyy-MM-dd')
+    });
+    
     setWeekStartDate(startDate);
     setWeekEndDate(endDate);
     
@@ -587,14 +595,27 @@ const LeadershipPage = ({ navigate }) => {
   }, []);
   
   const handleWeekChange = (startDate, endDate) => {
-    console.log("Week changed:", {
+    console.log("Week changed in LeadershipPage:", {
       start: format(startDate, 'yyyy-MM-dd'),
       end: format(endDate, 'yyyy-MM-dd')
     });
+    
+    // Clear any cached data to ensure fresh load
+    try {
+      const cachePattern = 'all_staff_';
+      console.log(`Clearing cached items matching pattern: ${cachePattern}`);
+      // Check if ProjectDataService has the method
+      if (typeof ProjectDataService?.clearCacheWithPattern === 'function') {
+        ProjectDataService.clearCacheWithPattern(cachePattern);
+      }
+    } catch (e) {
+      console.warn("Failed to clear Leadership page cache:", e);
+    }
+    
     setWeekStartDate(startDate);
     setWeekEndDate(endDate);
   };
-  
+
   const extractGroupNames = (teamData) => {
     const groups = new Set();
     

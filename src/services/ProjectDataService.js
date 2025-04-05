@@ -441,14 +441,17 @@ static async saveResourceAllocation(data) {
       // Find all cache keys matching the pattern
       for (let i = 0; i < localStorage.length; i++) {
         const key = localStorage.key(i);
-        if (key && key.startsWith(pattern)) {
+        if (key && key.includes(pattern)) {
           keysToRemove.push(key);
         }
       }
       
       // Remove matched keys
       console.log(`Clearing ${keysToRemove.length} cached items matching pattern: ${pattern}`);
-      keysToRemove.forEach(key => localStorage.removeItem(key));
+      keysToRemove.forEach(key => {
+        console.log(`Removing cache key: ${key}`);
+        localStorage.removeItem(key);
+      });
     } catch (error) {
       console.warn(`Error clearing cache with pattern ${pattern}:`, error);
     }
