@@ -891,7 +891,8 @@ const Footer = () => {
           onMouseEnter={() => setShowAboutTooltip(true)}
           onMouseLeave={() => setShowAboutTooltip(false)}
         >
-          <span className="footer-text">About</span>
+          {/* <span className="footer-text">Version 0.4 </span> */}
+          <span className="footer-text">Version 0.4 | About</span>
           {showAboutTooltip && (
             <div className="tooltip">
               Our Resource Allocation App was developed by Nilay Nagar, Chad Peterson, and Jonathan Herrera.
@@ -913,7 +914,10 @@ const Footer = () => {
 
 // Main App Component
 function App() {
-  const [currentView, setCurrentView] = useState('resource');
+  const [currentView, setCurrentView] = useState(() => {
+    const savedView = localStorage.getItem('currentView');
+    return savedView || 'resource';
+  });
   const [userDetails, setUserDetails] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -935,6 +939,26 @@ function App() {
 
   const handleNavigate = (view) => {
     console.log(`Navigating to ${view} view`);
+    
+    // Clear any cached data that might be causing dropdowns to appear
+    if (view === 'resource') {
+      // Clear search suggestions and cached project data
+      if (window.clearSearchSuggestions) {
+        window.clearSearchSuggestions();
+      }
+      // Attempt to clear any cached dropdown states
+      try {
+        const inputs = document.querySelectorAll('input[type="text"]');
+        inputs.forEach(input => {
+          input.blur();
+        });
+      } catch (e) {
+        console.warn('Failed to clear input focus states:', e);
+      }
+    }
+    
+    // Save the current view to localStorage
+    localStorage.setItem('currentView', view);
     setCurrentView(view);
   };
 
@@ -948,8 +972,11 @@ function App() {
     setCurrentView('resource');
   };
 
+  // Update localStorage when user logs out
   const handleLogout = () => {
     UserService.logout();
+    // Clear the saved view when logging out
+    localStorage.removeItem('currentView');
     setIsLoggedIn(false);
     setUserDetails(null);
   };
