@@ -250,8 +250,11 @@ const MainContent = () => {
   // Calculate PTO hours based on rows
   useEffect(() => {
     const ptoHours = rows.reduce((sum, row) => {
-      if (row.projectNumber?.startsWith('0000-0000-0PTO') || 
-          row.projectNumber?.startsWith('0000-0000-0HOL')) {
+      if (row.projectNumber.startsWith('0000-0000-0PTO') || 
+        row.projectNumber.startsWith('0000-0000-0HOL') ||
+        row.projectNumber.startsWith('0000-0000-0SIC') ||
+        row.projectNumber.startsWith('0000-0000-LWOP') ||
+        row.projectNumber.startsWith('0000-0000-JURY')) {
         return sum + (parseFloat(row.hours) || 0);
       }
       return sum;
