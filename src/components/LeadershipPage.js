@@ -266,146 +266,6 @@ const CollapsibleMember = ({ member, formatter, formatPercent }) => {
   );
 };
 
-const StaffTableView = ({ weekStartDate, weekEndDate, formatter, formatPercent }) => {
-  const [isLoading, setIsLoading] = useState(true);
-  const [error, setError] = useState(null);
-  const [allStaffData, setAllStaffData] = useState({});
-  
-  useEffect(() => {
-    if (!weekStartDate || !weekEndDate) return;
-    
-    const fetchAllStaffData = async () => {
-      setIsLoading(true);
-      setError(null);
-      
-      try {
-        const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_ALL_STAFF}?start_date=${format(weekStartDate, 'yyyy-MM-dd')}&end_date=${format(weekEndDate, 'yyyy-MM-dd')}`;
-        console.log(`Fetching all staff data from: ${url}`);
-        
-        const response = await fetch(url);
-        
-        if (!response.ok) {
-          throw new Error(`Failed to fetch all staff data: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log("Received all staff data:", data);
-        
-        setAllStaffData(data);
-      } catch (err) {
-        console.error("Error fetching all staff data:", err);
-        setError(`Failed to fetch all staff data: ${err.message}`);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-    
-    fetchAllStaffData();
-  }, [weekStartDate, weekEndDate]);
-  
-  if (isLoading) {
-    return <div className="loading-indicator">Loading all staff data...</div>;
-  }
-  
-  if (error) {
-    return <div className="error-banner">{error}</div>;
-  }
-  
-  if (!allStaffData || !allStaffData.managers || Object.keys(allStaffData.managers).length === 0) {
-    return <div className="no-data-message">No staff data available.</div>;
-  }
-  
-  const allStaff = [];
-  
-  Object.entries(allStaffData.managers).forEach(([managerName, managerData]) => {
-    Object.entries(managerData.studios).forEach(([studioName, studioData]) => {
-      studioData.members.forEach(member => {
-        allStaff.push({
-          ...member,
-          studio: studioName,
-          manager: managerName
-        });
-      });
-    });
-  });
-  
-  const sortedStaff = allStaff.sort((a, b) => {
-    const managerCompare = a.manager.localeCompare(b.manager);
-    if (managerCompare !== 0) return managerCompare;
-    
-    const studioCompare = a.studio.localeCompare(b.studio);
-    if (studioCompare !== 0) return studioCompare;
-    
-    return a.name.localeCompare(b.name);
-  });
-
-  return (
-    <div className="project-summary">
-      <div className='pm-dashboard-title'>All Staff Summary</div>
-      
-      {allStaffData.companyTotals && (
-        <div className="company-stats">
-          <div className="stat-item">
-            <span className="stat-label">Total Team Members:</span>
-            <span className="stat-value">{allStaffData.companyTotals.memberCount}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Total Scheduled Hours:</span>
-            <span className="stat-value">{formatter.format(allStaffData.companyTotals.scheduledHours)}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Total Direct Hours:</span>
-            <span className="stat-value">{formatter.format(allStaffData.companyTotals.directHours)}</span>
-          </div>
-          <div className="stat-item">
-            <span className="stat-label">Company Ratio B:</span>
-            <span className="stat-value">{formatPercent(allStaffData.companyTotals.ratioB)}</span>
-          </div>
-        </div>
-      )}
-      
-      <table className="summary-table">
-        <thead>
-          <tr>
-            <th>Group Leader</th>
-            <th>Studio</th>
-            <th>Team Member</th>
-            <th>Labor Category</th>
-            <th>Scheduled Hours</th>
-            <th>Direct Hours</th>
-            <th>PTO/HOL</th>
-            <th>Indirect Hours</th>
-            <th>Total Hours</th>
-            <th>Ratio B</th>
-          </tr>
-        </thead>
-        <tbody>
-          {sortedStaff.map((staff, index) => (
-            <tr key={index} title={`${staff.name} - ${staff.laborCategory}`}>
-              <td title={staff.manager}>{staff.manager}</td>
-              <td title={staff.studio}>{staff.studio}</td>
-              <td title={staff.name}>{staff.name}</td>
-              <td title={staff.laborCategory}>{staff.laborCategory}</td>
-              <td className="number-cell">
-                {formatter.format(Number(staff.scheduledHours || 40))}
-              </td>
-              <td className="number-cell">{formatter.format(staff.directHours)}</td>
-              <td className="number-cell">{formatter.format(staff.ptoHours)}</td>
-              <td className="number-cell">{formatter.format(staff.overheadHours)}</td>
-              <td className={`number-cell ${staff.totalHours < staff.scheduledHours ? 'hours-warning' : ''}`}>
-                <strong>{formatter.format(staff.totalHours)}</strong>
-              </td>
-              <td className="number-cell">
-                <strong>{formatPercent(staff.ratioB)}</strong>
-              </td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
-};
-
 const ProjectsTableView = ({ teamData, formatter }) => {
   const [projectsData, setProjectsData] = useState([]);
   
@@ -902,7 +762,7 @@ const LeadershipPage = ({ navigate }) => {
             )}
             
             <div className="view-controls-container">
-              {/* <button 
+              <button 
                 className={`view-control-btn ${showAllGroups ? 'active' : ''}`}
                 onClick={() => {
                   if (!showAllGroups) {
@@ -912,7 +772,7 @@ const LeadershipPage = ({ navigate }) => {
                 }}
               >
                 {showAllGroups ? 'My Group Only' : 'All Groups'}
-              </button> */}
+              </button>
               
               <button 
                 className={`view-control-btn ${viewMode === 'hierarchy' ? 'active' : ''}`}
@@ -928,13 +788,6 @@ const LeadershipPage = ({ navigate }) => {
                 title={showAllGroups ? "Projects view not available when viewing all groups" : ""}
               >
                 Group By Projects
-              </button>
-              
-              <button 
-                className={`view-control-btn ${viewMode === 'table' ? 'active' : ''}`}
-                onClick={() => setViewMode('table')}
-              >
-                All Staff
               </button>
             </div>
           </div>
@@ -993,13 +846,6 @@ const LeadershipPage = ({ navigate }) => {
                     />
                   ))}
                 </>
-              ) : viewMode === 'table' ? (
-                <StaffTableView 
-                  weekStartDate={weekStartDate}
-                  weekEndDate={weekEndDate}
-                  formatter={formatter}
-                  formatPercent={formatPercent}
-                />
               ) : (
                 <ProjectsTableView 
                   teamData={teamData}
