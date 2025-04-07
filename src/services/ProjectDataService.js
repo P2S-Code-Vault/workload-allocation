@@ -216,6 +216,7 @@ static cacheData(key, data, ttlMs) {
   }
 }
 
+
 static pruneCache() {
   try {
     // Find all cache entries
@@ -262,7 +263,7 @@ static async saveResourceAllocation(data) {
     if (!data.email || !data.project_number || !data.hours) {
       throw new Error("Missing required allocation data: email, project_number, and hours are required");
     }
-    
+  
     // Try to get project details from CSV if available
     let projectDetails = null;
     try {
@@ -447,7 +448,10 @@ static async saveResourceAllocation(data) {
       
       // Remove matched keys
       console.log(`Clearing ${keysToRemove.length} cached items matching pattern: ${pattern}`);
-      keysToRemove.forEach(key => localStorage.removeItem(key));
+      keysToRemove.forEach(key => {
+        console.log(`Removing cache key: ${key}`);
+        localStorage.removeItem(key);
+      });
     } catch (error) {
       console.warn(`Error clearing cache with pattern ${pattern}:`, error);
     }

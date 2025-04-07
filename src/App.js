@@ -9,7 +9,7 @@ import Login from './components/Login';
 import PMPage from './components/PMPage';
 import LeadershipPage from './components/LeadershipPage';
 import format from 'date-fns/format';
-import { startOfWeek, endOfWeek } from 'date-fns';
+import { startOfWeek, endOfWeek, addWeeks } from 'date-fns';
 import API_CONFIG from './services/apiConfig';
 
 // Header Component
@@ -213,7 +213,6 @@ const MainContent = () => {
   };
 
   // Handle week change
-  // In the handleWeekChange function in MainContent
   const handleWeekChange = useCallback((startDate, endDate) => {
     console.log("Week changed in MainContent:", {
       startDate: format(startDate, 'yyyy-MM-dd'),
@@ -221,19 +220,32 @@ const MainContent = () => {
     });
     
     // Clear cached allocations to ensure fresh data when switching weeks
-    ProjectDataService.clearCacheWithPattern('allocations_');
+    try {
+      ProjectDataService.clearCacheWithPattern('allocations_');
+    } catch (e) {
+      console.warn("Failed to clear allocations cache:", e);
+    }
     
     setWeekStartDate(startDate);
     setWeekEndDate(endDate);
   }, []);
-  // const handleWeekChange = useCallback((startDate, endDate) => {
-  //   console.log("Week changed in MainContent:", {
-  //     startDate: format(startDate, 'yyyy-MM-dd'),
-  //     endDate: format(endDate, 'yyyy-MM-dd')
-  //   });
-  //   setWeekStartDate(startDate);
-  //   setWeekEndDate(endDate);
-  // }, []);
+
+  // IMPORTANT: Initialize week dates if not set by WeekPicker
+  useEffect(() => {
+    if (!weekStartDate || !weekEndDate) {
+      const today = addWeeks(new Date(), 1); // Start one week ahead
+      const startDate = startOfWeek(today, { weekStartsOn: 1 });
+      const endDate = endOfWeek(today, { weekStartsOn: 1 });
+      
+      console.log("Initializing with next week:", {
+        startDate: format(startDate, 'yyyy-MM-dd'),
+        endDate: format(endDate, 'yyyy-MM-dd')
+      });
+      
+      setWeekStartDate(startDate);
+      setWeekEndDate(endDate);
+    }
+  }, [weekStartDate, weekEndDate]);
 
   // Calculate PTO hours based on rows
   useEffect(() => {
@@ -247,23 +259,6 @@ const MainContent = () => {
     
     setPTOHolHours(ptoHours);
   }, [rows]);
-
-  // IMPORTANT: Initialize week dates if not set by WeekPicker
-  useEffect(() => {
-    if (!weekStartDate || !weekEndDate) {
-      const today = new Date();
-      const startDate = startOfWeek(today, { weekStartsOn: 1 });
-      const endDate = endOfWeek(today, { weekStartsOn: 1 });
-      
-      console.log("Initializing with current week:", {
-        startDate: format(startDate, 'yyyy-MM-dd'),
-        endDate: format(endDate, 'yyyy-MM-dd')
-      });
-      
-      setWeekStartDate(startDate);
-      setWeekEndDate(endDate);
-    }
-  }, []);
 
   // Debug the dependencies in the allocation loading effect
   useEffect(() => {
@@ -627,7 +622,7 @@ const MainContent = () => {
                     className="team-dropdown-btn"
                     onClick={() => setShowTeamDropdown(!showTeamDropdown)}
                   >
-                    Select Team Member
+                    Change
                   </button>
                   
                   {showTeamDropdown && (
@@ -640,7 +635,7 @@ const MainContent = () => {
                             onClick={() => handleTeamMemberSelect(member)}
                           >
                             <div className="member-name">{member.name}</div>
-                            <div className="member-details">{member.email}</div>
+                            {/* <div className="member-details">{member.email}</div> */}
                           </div>
                         ))
                       ) : (
@@ -651,13 +646,13 @@ const MainContent = () => {
                 </div>
               ) : (
                 <div className="managing-indicator">
-                  <span>Managing Team Member:</span>
+                  {/* <span>Team Member:</span> */}
                   <strong>{selectedTeamMember.name}</strong>
                   <button 
                     className="reset-view-btn"
                     onClick={resetToGroupLeader}
                   >
-                    Return to My View
+                    Reset
                   </button>
                 </div>
               )}
@@ -896,7 +891,8 @@ const Footer = () => {
           onMouseEnter={() => setShowAboutTooltip(true)}
           onMouseLeave={() => setShowAboutTooltip(false)}
         >
-          <span className="footer-text">About</span>
+          {/* <span className="footer-text">Version 0.4 </span> */}
+          <span className="footer-text">Version 0.4 | About</span>
           {showAboutTooltip && (
             <div className="tooltip">
               Our Resource Allocation App was developed by Nilay Nagar, Chad Peterson, and Jonathan Herrera.
@@ -918,7 +914,10 @@ const Footer = () => {
 
 // Main App Component
 function App() {
-  const [currentView, setCurrentView] = useState('resource');
+  const [currentView, setCurrentView] = useState(() => {
+    const savedView = localStorage.getItem('currentView');
+    return savedView || 'resource';
+  });
   const [userDetails, setUserDetails] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -940,6 +939,26 @@ function App() {
 
   const handleNavigate = (view) => {
     console.log(`Navigating to ${view} view`);
+    
+    // Clear any cached data that might be causing dropdowns to appear
+    if (view === 'resource') {
+      // Clear search suggestions and cached project data
+      if (window.clearSearchSuggestions) {
+        window.clearSearchSuggestions();
+      }
+      // Attempt to clear any cached dropdown states
+      try {
+        const inputs = document.querySelectorAll('input[type="text"]');
+        inputs.forEach(input => {
+          input.blur();
+        });
+      } catch (e) {
+        console.warn('Failed to clear input focus states:', e);
+      }
+    }
+    
+    // Save the current view to localStorage
+    localStorage.setItem('currentView', view);
     setCurrentView(view);
   };
 
@@ -953,8 +972,11 @@ function App() {
     setCurrentView('resource');
   };
 
+  // Update localStorage when user logs out
   const handleLogout = () => {
     UserService.logout();
+    // Clear the saved view when logging out
+    localStorage.removeItem('currentView');
     setIsLoggedIn(false);
     setUserDetails(null);
   };
