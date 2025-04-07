@@ -104,7 +104,7 @@ const GroupSelector = ({ onGroupChange, selectedGroup, groups = [] }) => {
 };
 
 const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   
   return (
     <div className="collapsible-group">
@@ -163,7 +163,7 @@ const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent }) =>
 };
 
 const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent }) => {
-  const [isExpanded, setIsExpanded] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(true);
   
   return (
     <div className="collapsible-studio">
