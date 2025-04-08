@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { FaTrash, FaSearch } from 'react-icons/fa';
+import { FaTrash } from 'react-icons/fa';
 import { ProjectDataService } from '../services/ProjectDataService';
 import { ProjectSearchService } from '../services/ProjectSearchService';
 
@@ -9,6 +9,7 @@ const TableRow = ({ row, index, updateRow, deleteRow, isLoading, currentUser }) 
   const [searchTerm, setSearchTerm] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [hasError, setHasError] = useState(false);
+  const [userInteracted, setUserInteracted] = useState(false);
   const dropdownRef = useRef(null);
   const projectInputRef = useRef(null);
 
@@ -38,7 +39,7 @@ const TableRow = ({ row, index, updateRow, deleteRow, isLoading, currentUser }) 
 
   // Perform search when searchTerm changes (with debounce)
   useEffect(() => {
-    if (!searchTerm || searchTerm.length < 2) {
+    if (!searchTerm || searchTerm.length < 2 || !userInteracted) {
       setSuggestions([]);
       setShowDropdown(false);
       return;
@@ -53,7 +54,8 @@ const TableRow = ({ row, index, updateRow, deleteRow, isLoading, currentUser }) 
         const results = await ProjectSearchService.searchProjects(searchTerm);
         
         setSuggestions(results);
-        setShowDropdown(results.length > 0);
+        // Only show dropdown if user has explicitly interacted with the field
+        setShowDropdown(results.length > 0 && userInteracted);
         setIsSearching(false);
       } catch (error) {
         console.error('Search failed:', error);
@@ -65,12 +67,13 @@ const TableRow = ({ row, index, updateRow, deleteRow, isLoading, currentUser }) 
     }, 300); // 300ms debounce for better responsiveness
 
     return () => clearTimeout(delayDebounceFn);
-  }, [searchTerm]);
+  }, [searchTerm, userInteracted]);
 
   const handleProjectNumberChange = (e) => {
     const value = e.target.value;
     updateRow(index, 'projectNumber', value);
     setSearchTerm(value);
+    setUserInteracted(true);
     
     // Clear related fields when project number changes
     if (value !== row.projectNumber) {
@@ -82,44 +85,12 @@ const TableRow = ({ row, index, updateRow, deleteRow, isLoading, currentUser }) 
     }
   };
 
-  // const handleProjectSelect = async (project) => {
-  //   try {
-  //     // Update with the selected project data
-  //     updateRow(index, 'projectNumber', project['Project Number']);
-  //     updateRow(index, 'projectName', project['Project Name']);
-  //     updateRow(index, 'milestone', project['Milestone']);
-  //     updateRow(index, 'pm', project['PM']);
-  //     updateRow(index, 'labor', project['Labor']);
-  //     updateRow(index, 'pctLaborUsed', project['Pct Labor Used']);
-  //     setShowDropdown(false);
-  //     setHasError(false);
-  //   } catch (error) {
-  //     console.error('Failed to select project:', error);
-  //     setHasError(true);
-  //   }
-  // };
-  // In handleProjectSelect function, add a cache for the selected project's data
-const handleProjectSelect = async (project) => {
-  try {
-    // Update with the selected project data
-    updateRow(index, 'projectNumber', project['Project Number']);
-    updateRow(index, 'projectName', project['Project Name']);
-    updateRow(index, 'milestone', project['Milestone']);
-    updateRow(index, 'pm', project['PM']);
-    updateRow(index, 'labor', project['Labor']);
-    updateRow(index, 'pctLaborUsed', project['Pct Labor Used']);
-    
-    // Store the complete project data in the row for use during save
-    // This ensures the selected project data is available when saving
-    updateRow(index, '_projectData', project);  // Add this line
-    
-    setShowDropdown(false);
-    setHasError(false);
-  } catch (error) {
-    console.error('Failed to select project:', error);
-    setHasError(true);
-  }
-};
+  // Modified to ensure dropdown only shows after explicit interaction
+  const handleFocus = () => {
+    if (searchTerm && searchTerm.length >= 2 && userInteracted) {
+      setShowDropdown(suggestions.length > 0);
+    }
+  };
 
   const handleKeyPress = async (e) => {
     if (e.key === 'Enter') {
@@ -128,8 +99,8 @@ const handleProjectSelect = async (project) => {
       if (showDropdown && suggestions.length > 0) {
         // If dropdown is open and has suggestions, select the first one
         handleProjectSelect(suggestions[0]);
-      } else if (row.projectNumber && row.projectNumber.length >= 3) {
-        // Otherwise try to search for the exact project
+      } else if (searchTerm && searchTerm.length >= 2) {
+        // Otherwise try to search for the term
         triggerSearch();
       }
     } else if (e.key === 'ArrowDown' && showDropdown && suggestions.length > 0) {
@@ -142,39 +113,72 @@ const handleProjectSelect = async (project) => {
   };
 
   const triggerSearch = async () => {
-    if (!row.projectNumber || row.projectNumber.length < 3) return;
+    if (!searchTerm || searchTerm.length < 2) return;
     
     try {
       setIsSearching(true);
       setHasError(false);
       
       try {
-        // First try to find the project in our CSV data
-        const project = await ProjectSearchService.getProjectDetails(row.projectNumber);
-        handleProjectSelect(project);
-        setIsSearching(false);
-      } catch (localError) {
-        // If not found in CSV, try the API as backup
-        console.log('Project not found in CSV, trying API:', localError);
+        // Search for projects that match the search term
+        const results = await ProjectSearchService.searchProjects(searchTerm);
         
-        try {
-          const milestone = await ProjectDataService.getMilestoneDetails(row.projectNumber);
-          updateRow(index, 'projectNumber', milestone.project_number);
-          updateRow(index, 'projectName', milestone.project_name);
-          updateRow(index, 'milestone', milestone.milestone_name);
-          updateRow(index, 'pm', milestone.project_manager);
-          updateRow(index, 'labor', milestone.contract_labor);
-          updateRow(index, 'pctLaborUsed', milestone.forecast_pm_labor * 100);
-          setIsSearching(false);
-        } catch (apiError) {
-          console.error('Failed to find project in CSV or API:', apiError);
-          setIsSearching(false);
-          setHasError(true);
+        if (results.length > 0) {
+          // If we found results, select the first one
+          handleProjectSelect(results[0]);
+        } else {
+          // Try the API as backup if no results in CSV
+          try {
+            const milestone = await ProjectDataService.getMilestoneDetails(searchTerm);
+            updateRow(index, 'projectNumber', milestone.project_number);
+            updateRow(index, 'projectName', milestone.project_name);
+            updateRow(index, 'milestone', milestone.milestone_name);
+            updateRow(index, 'pm', milestone.project_manager);
+            updateRow(index, 'labor', milestone.contract_labor);
+            updateRow(index, 'pctLaborUsed', milestone.forecast_pm_labor * 100);
+          } catch (apiError) {
+            console.error('Failed to find project in CSV or API:', apiError);
+            setHasError(true);
+          }
         }
+      } catch (searchError) {
+        console.error('Error searching for projects:', searchError);
+        setHasError(true);
       }
-    } catch (error) {
-      console.error('Failed to fetch project details:', error);
+      
       setIsSearching(false);
+    } catch (error) {
+      console.error('Failed to search for projects:', error);
+      setIsSearching(false);
+      setHasError(true);
+    }
+  };
+
+  const handleProjectSelect = async (project) => {
+    try {
+      // Log the raw values
+      console.log("CSV project data:", project);
+      console.log("Raw Pct Labor Used:", project['Pct Labor Used']);
+      
+      // Parse the percentage value properly
+      const pctLaborUsed = parseFloat(project['Pct Labor Used']) || 0;
+      console.log("Parsed pctLaborUsed:", pctLaborUsed);
+      
+      // Update with the selected project data
+      updateRow(index, 'projectNumber', project['Project Number']);
+      updateRow(index, 'projectName', project['Project Name']);
+      updateRow(index, 'milestone', project['Milestone']);
+      updateRow(index, 'pm', project['PM']);
+      updateRow(index, 'labor', project['Labor']);
+      updateRow(index, 'pctLaborUsed', pctLaborUsed); // Use the parsed value
+      
+      // Store the complete project data in the row for use during save
+      updateRow(index, '_projectData', project);
+      
+      setShowDropdown(false);
+      setHasError(false);
+    } catch (error) {
+      console.error('Failed to select project:', error);
       setHasError(true);
     }
   };
@@ -187,23 +191,40 @@ const handleProjectSelect = async (project) => {
   });
 
   const percentFormatter = (value) => {
-    // If the value is over 1000, assume it's been multiplied by 100 twice
-    const divisor = value > 1000 ? 10000 : 100;
-    return new Intl.NumberFormat('en-US', {
-      style: 'percent',
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    }).format(value / divisor);
+    // Add debugging
+    console.log("Formatting percentage value:", value, "Type:", typeof value);
+    
+    // Convert to number and handle invalid values
+    const numValue = parseFloat(value) || 0;
+    
+    
+    if (numValue >= 100 && numValue % 100 === 0) {
+      // Assuming these are stored as 1000 for 10%
+      return new Intl.NumberFormat('en-US', {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }).format(numValue / 10000); // Divide by 10000 to get to decimal form (0.1)
+    } else {
+      // Normal case for smaller values
+      return new Intl.NumberFormat('en-US', {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }).format(numValue / 100);
+    }
   };
 
-  // Highlight matching part of the suggestion text
   const highlightMatch = (text, query) => {
-    if (!query) return text;
+    if (!query || !text) return text;
     
     const queryLower = query.toLowerCase();
-    const index = text.toLowerCase().indexOf(queryLower);
+    const textLower = text.toLowerCase();
     
-    if (index === -1) return text;
+    // If this text doesn't contain the query, don't highlight anything
+    if (!textLower.includes(queryLower)) return text;
+    
+    const index = textLower.indexOf(queryLower);
     
     return (
       <>
@@ -221,24 +242,17 @@ const handleProjectSelect = async (project) => {
           <div className="search-input-container">
             <input
               type="text"
-              value={row.projectNumber || ''}
+              value={searchTerm}
               onChange={handleProjectNumberChange}
               onKeyDown={handleKeyPress}
-              onFocus={() => searchTerm && searchTerm.length >= 2 && setShowDropdown(suggestions.length > 0)}
-              placeholder={isLoading ? "Loading..." : "Enter project number..."}
+              onFocus={handleFocus}
+              onClick={() => setUserInteracted(true)}
+              placeholder={isLoading ? "Loading..." : "Search by number, name, or milestone..."}
               disabled={isLoading}
               ref={projectInputRef}
               className={hasError ? 'input-error' : ''}
               autoComplete="off"
             />
-            <button 
-              type="button" 
-              className="search-button" 
-              onClick={triggerSearch} 
-              disabled={isLoading || isSearching || !row.projectNumber || row.projectNumber.length < 3}
-            >
-              <FaSearch />
-            </button>
           </div>
           {isSearching && <div className="search-indicator">Searching...</div>}
           {hasError && <div className="search-error">Project not found</div>}
@@ -252,10 +266,12 @@ const handleProjectSelect = async (project) => {
                   tabIndex="0"
                   onKeyDown={(e) => e.key === 'Enter' && handleProjectSelect(project)}
                 >
-                  <div className="suggestion-project-number">
-                    {highlightMatch(project['Project Number'], searchTerm)}
+                  <div className="suggestion-project-name">
+                    {highlightMatch(project['Project Name'], searchTerm)}
                   </div>
-                  <div className="suggestion-project-name">{project['Project Name']}</div>
+                  <div className="suggestion-milestone">
+                    {highlightMatch(project['Milestone'], searchTerm)}
+                  </div>
                 </div>
               ))}
             </div>

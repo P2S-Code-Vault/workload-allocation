@@ -1,5 +1,5 @@
 /* Add these styles to your existing CSS file */
-
+/***
 .dropdown-container {
     position: relative;
     width: 100%;
@@ -98,7 +98,7 @@
     background-color: #ffebee;
   }
   
-  /* Make the dropdown scroll nicely */
+  
   .suggestions-dropdown::-webkit-scrollbar {
     width: 8px;
   }
@@ -115,7 +115,7 @@
   .suggestions-dropdown::-webkit-scrollbar-thumb:hover {
     background: #999;
   }
-  /* Add this to your existing CSS */
+ 
 
 .fallback-indicator {
     font-size: 0.75rem;
@@ -124,7 +124,169 @@
     padding-left: 2px;
   }
   
-  /* Ensure the error message and fallback indicator don't overlap */
+ 
   .search-error + .fallback-indicator {
     margin-top: 0;
-  }
+  }  */
+
+  /* TableRow.css - Updated with enhanced search dropdown styling */
+
+/* TableRow.css - Complete file with search button removed */
+
+.dropdown-container {
+  position: relative;
+  width: 100%;
+}
+
+.search-input-container {
+  display: flex;
+  width: 100%;
+}
+
+.search-input-container input {
+  flex: 1;
+  width: 100%;
+  min-width: 0;
+  border: 1px solid #ccc;
+  border-radius: 3px;
+  padding: 6px 10px;
+}
+
+.search-indicator {
+  font-size: 0.8rem;
+  color: #666;
+  margin-top: 2px;
+}
+
+.search-error {
+  font-size: 0.8rem;
+  color: #d32f2f;
+  margin-top: 2px;
+}
+
+/* Updated suggestions dropdown styling */
+.suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  width: 350px; /* Wider to accommodate more text */
+  max-height: 300px;
+  overflow-y: auto;
+  background-color: white;
+  border: 1px solid #ccc;
+  border-top: none;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+}
+
+.suggestion-item {
+  padding: 8px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.suggestion-item:hover, .suggestion-item:focus {
+  background-color: #f0f7ff; /* Slightly blue hover state */
+  outline: none;
+}
+
+.suggestion-project-number {
+  font-weight: 600;
+  color: #444;
+  margin-bottom: 2px;
+}
+
+.suggestion-project-name {
+  font-size: 0.9em;
+  color: #555;
+  margin-top: 2px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* New style for milestone display */
+.suggestion-milestone {
+  font-size: 0.85em;
+  color: #666;
+  margin-top: 2px;
+  font-style: italic;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.highlight {
+  background-color: #ffffa0; /* Brighter yellow highlight */
+  font-weight: bold;
+}
+
+.input-error {
+  border-color: #d32f2f !important;
+  background-color: #ffebee;
+}
+
+/* Make the dropdown scroll nicely */
+.suggestions-dropdown::-webkit-scrollbar {
+  width: 8px;
+}
+
+.suggestions-dropdown::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.suggestions-dropdown::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.suggestions-dropdown::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
+
+.fallback-indicator {
+  font-size: 0.75rem;
+  color: #ff9800;
+  margin-top: 2px;
+  padding-left: 2px;
+}
+
+/* Ensure the error message and fallback indicator don't overlap */
+.search-error + .fallback-indicator {
+  margin-top: 0;
+}
+
+/* Style for search placeholder */
+::placeholder {
+  font-style: italic;
+  color: #aaa;
+}
+
+/* Adjust the project number cell width to accommodate the wider dropdown */
+.project-number-cell {
+  min-width: 220px;
+  max-width: 350px;
+}
+
+/* Make sure the delete button is properly aligned */
+.delete-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  background-color: transparent;
+  border: none;
+  color: #d32f2f;
+  cursor: pointer;
+  padding: 4px;
+  transition: color 0.2s;
+}
+
+.delete-btn:hover {
+  color: #f44336;
+}
+
+/* Centered input style */
+.centered-input {
+  text-align: center;
+}
+

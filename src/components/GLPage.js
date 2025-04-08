@@ -482,7 +482,7 @@ const Header = ({ onNavigate }) => {
           className="nav-button"
           onClick={() => onNavigate('resource')}
         >
-          Resource View
+          Main Views
         </button>
         <button 
           className="nav-button"

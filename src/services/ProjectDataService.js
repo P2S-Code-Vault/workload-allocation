@@ -264,7 +264,19 @@ static pruneCache() {
 
 
   // Save a new resource allocation
+<<<<<<< HEAD
   static async saveResourceAllocation(data) {
+=======
+static async saveResourceAllocation(data) {
+  try {
+    // Validation
+    if (!data.email || !data.project_number || !data.hours) {
+      throw new Error("Missing required allocation data: email, project_number, and hours are required");
+    }
+  
+    // Try to get project details from CSV if available
+    let projectDetails = null;
+>>>>>>> 2172a93766f0286ba5e741a0773bf18fd6d6753c
     try {
       // Validation
       if (!data.email || !data.project_number || !data.hours) {
@@ -474,7 +486,10 @@ static pruneCache() {
       
       // Remove matched keys
       console.log(`Clearing ${keysToRemove.length} cached items matching pattern: ${pattern}`);
-      keysToRemove.forEach(key => localStorage.removeItem(key));
+      keysToRemove.forEach(key => {
+        console.log(`Removing cache key: ${key}`);
+        localStorage.removeItem(key);
+      });
     } catch (error) {
       console.warn(`Error clearing cache with pattern ${pattern}:`, error);
     }

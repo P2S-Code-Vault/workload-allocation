@@ -8,9 +8,8 @@ import WeekPicker from './components/WeekPicker';
 import Login from './components/Login';
 import PMPage from './components/PMPage';
 import LeadershipPage from './components/LeadershipPage';
-import GLView from './components/GLPage';
 import format from 'date-fns/format';
-import { startOfWeek, endOfWeek } from 'date-fns';
+import { startOfWeek, endOfWeek, addWeeks } from 'date-fns';
 import API_CONFIG from './services/apiConfig';
 
 // Header Component
@@ -30,7 +29,7 @@ const Header = ({ currentView,onNavigate, onLogout }) => {
           onClick={() => currentView !== 'resource' && onNavigate('resource')}
           disabled={currentView === 'resource'}
         >
-          Resource View
+          Main View
         </button>
         
         {/* PM View Button - disabled when on pm view */}
@@ -214,7 +213,6 @@ const MainContent = () => {
   };
 
   // Handle week change
-  // In the handleWeekChange function in MainContent
   const handleWeekChange = useCallback((startDate, endDate) => {
     console.log("Week changed in MainContent:", {
       startDate: format(startDate, 'yyyy-MM-dd'),
@@ -222,41 +220,24 @@ const MainContent = () => {
     });
     
     // Clear cached allocations to ensure fresh data when switching weeks
-    ProjectDataService.clearCacheWithPattern('allocations_');
+    try {
+      ProjectDataService.clearCacheWithPattern('allocations_');
+    } catch (e) {
+      console.warn("Failed to clear allocations cache:", e);
+    }
     
     setWeekStartDate(startDate);
     setWeekEndDate(endDate);
   }, []);
-  // const handleWeekChange = useCallback((startDate, endDate) => {
-  //   console.log("Week changed in MainContent:", {
-  //     startDate: format(startDate, 'yyyy-MM-dd'),
-  //     endDate: format(endDate, 'yyyy-MM-dd')
-  //   });
-  //   setWeekStartDate(startDate);
-  //   setWeekEndDate(endDate);
-  // }, []);
-
-  // Calculate PTO hours based on rows
-  useEffect(() => {
-    const ptoHours = rows.reduce((sum, row) => {
-      if (row.projectNumber?.startsWith('0000-0000-0PTO') || 
-          row.projectNumber?.startsWith('0000-0000-0HOL')) {
-        return sum + (parseFloat(row.hours) || 0);
-      }
-      return sum;
-    }, 0);
-    
-    setPTOHolHours(ptoHours);
-  }, [rows]);
 
   // IMPORTANT: Initialize week dates if not set by WeekPicker
   useEffect(() => {
     if (!weekStartDate || !weekEndDate) {
-      const today = new Date();
+      const today = addWeeks(new Date(), 1); // Start one week ahead
       const startDate = startOfWeek(today, { weekStartsOn: 1 });
       const endDate = endOfWeek(today, { weekStartsOn: 1 });
       
-      console.log("Initializing with current week:", {
+      console.log("Initializing with next week:", {
         startDate: format(startDate, 'yyyy-MM-dd'),
         endDate: format(endDate, 'yyyy-MM-dd')
       });
@@ -264,7 +245,23 @@ const MainContent = () => {
       setWeekStartDate(startDate);
       setWeekEndDate(endDate);
     }
-  }, []);
+  }, [weekStartDate, weekEndDate]);
+
+  // Calculate PTO hours based on rows
+  useEffect(() => {
+    const ptoHours = rows.reduce((sum, row) => {
+      if (row.projectNumber.startsWith('0000-0000-0PTO') || 
+        row.projectNumber.startsWith('0000-0000-0HOL') ||
+        row.projectNumber.startsWith('0000-0000-0SIC') ||
+        row.projectNumber.startsWith('0000-0000-LWOP') ||
+        row.projectNumber.startsWith('0000-0000-JURY')) {
+        return sum + (parseFloat(row.hours) || 0);
+      }
+      return sum;
+    }, 0);
+    
+    setPTOHolHours(ptoHours);
+  }, [rows]);
 
   // Debug the dependencies in the allocation loading effect
   useEffect(() => {
@@ -333,9 +330,8 @@ const MainContent = () => {
         }));
         setRows(newRows);
       } else {
-        console.log("No allocations found, initializing with empty row");
-        // Initialize with an empty row if no allocations
-        setRows([{
+        // Initialize with 5 blank rows
+        setRows([...Array(5)].map(() => ({
           resource: currentUser,
           projectNumber: '',
           projectName: '',
@@ -345,7 +341,7 @@ const MainContent = () => {
           pctLaborUsed: '',
           hours: '',
           remarks: ''
-        }]);
+        })));
       }
       
       setHasLoadedInitialData(true);
@@ -358,8 +354,8 @@ const MainContent = () => {
       console.error('Error loading allocations:', err);
       setLoadError('Failed to load data: ' + err.message);
       
-      // Initialize with an empty row even if loading fails
-      setRows([{
+      // Initialize with 5 blank rows even if loading fails
+      setRows([...Array(5)].map(() => ({
         resource: currentUser,
         projectNumber: '',
         projectName: '',
@@ -369,7 +365,7 @@ const MainContent = () => {
         pctLaborUsed: '',
         hours: '',
         remarks: ''
-      }]);
+      })));
       
       setIsLoading(false);  // Ensure we exit loading state
     });
@@ -540,6 +536,8 @@ const MainContent = () => {
   const getGroupedRows = useCallback(() => {
     const ptoRows = rows.filter(row => 
       row.projectNumber?.startsWith('0000-0000-0PTO') || 
+      row.projectNumber.startsWith('0000-0000-0SIC') ||
+      row.projectNumber.startsWith('0000-0000-JURY') ||
       row.projectNumber?.startsWith('0000-0000-0HOL')
     );
     const lwopRows = rows.filter(row =>
@@ -549,6 +547,8 @@ const MainContent = () => {
       row.projectNumber?.startsWith('0000-0000') && 
       !row.projectNumber?.startsWith('0000-0000-0PTO') && 
       !row.projectNumber?.startsWith('0000-0000-0HOL') &&
+      !row.projectNumber?.startsWith('0000-0000-0SIC') &&
+      !row.projectNumber?.startsWith('0000-0000-JURY') &&
       !row.projectNumber?.startsWith('0000-0000-LWOP')
     );
     const normalRows = rows.filter(row => 
@@ -617,9 +617,66 @@ const MainContent = () => {
         <div className="user-info-container">
           <span className="user-label">Current User:</span>
           <span className="user-name">{userDetails?.name || currentUser}</span>
+          {isGroupLeader && (
+            <div className="team-controls">
+              {!selectedTeamMember ? (
+                <div className="team-dropdown">
+                  <button 
+                    className="team-dropdown-btn"
+                    onClick={() => setShowTeamDropdown(!showTeamDropdown)}
+                  >
+                    Change
+                  </button>
+                  
+                  {showTeamDropdown && (
+                    <div className="team-dropdown-list">
+                      {teamMembers.length > 0 ? (
+                        teamMembers.map(member => (
+                          <div 
+                            key={member.id}
+                            className="team-member-option"
+                            onClick={() => handleTeamMemberSelect(member)}
+                          >
+                            <div className="member-name">{member.name}</div>
+                            {/* <div className="member-details">{member.email}</div> */}
+                          </div>
+                        ))
+                      ) : (
+                        <div className="no-team-members">No team members found</div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="managing-indicator">
+                  {/* <span>Team Member:</span> */}
+                  <strong>{selectedTeamMember.name}</strong>
+                  <button 
+                    className="reset-view-btn"
+                    onClick={resetToGroupLeader}
+                  >
+                    Reset
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
+          <div className="scheduled-hours-container">
+            <label htmlFor="scheduledHours">Scheduled Hours:</label>
+            <input
+              id="scheduledHours"
+              type="number"
+              value={scheduledHours}
+              readOnly
+              disabled
+              onChange={(e) => setScheduledHours(Number(e.target.value))}
+              min="0"
+              max="168"
+            />
+          </div>
         </div>
         {/* Add team member selector for group leaders */}
-        {isGroupLeader && (
+        {/* {isGroupLeader && (
     <div className="team-controls">
       {!selectedTeamMember ? (
         <div className="team-dropdown">
@@ -662,11 +719,8 @@ const MainContent = () => {
         </div>
       )}
     </div>
-  )}
-  
-
-          
-          <div className="scheduled-hours-container">
+  )} */}
+          {/* <div className="scheduled-hours-container">
             <label htmlFor="scheduledHours">Scheduled Hours:</label>
             <input
               id="scheduledHours"
@@ -678,7 +732,7 @@ const MainContent = () => {
               min="0"
               max="168"
             />
-          </div>
+          </div> */}
           
           {isLoading ? (
             <div className="loading-indicator">Loading data...</div>
@@ -687,13 +741,13 @@ const MainContent = () => {
               <thead>
                 <tr>
                   <th>Project No.</th>
-                  <th>Name</th>
+                  <th>Project No. & Name</th>
                   <th>Milestone</th>
-                  <th>MS PM</th>
+                  <th>Project Manager</th>
                   <th>Contract Total Labor</th>
-                  <th>% EAC Labor Used</th>
-                  <th style={{ width: '80px' }}>Planned Hours</th>
-                  <th style={{ width: '250px' }}>Remarks</th>
+                  <th>Reported % Complete</th>
+                  <th>Planned Hours</th>
+                  <th>Remarks</th>
                   <th> </th>
                 </tr>
               </thead>
@@ -840,10 +894,11 @@ const Footer = () => {
           onMouseEnter={() => setShowAboutTooltip(true)}
           onMouseLeave={() => setShowAboutTooltip(false)}
         >
-          <span className="footer-text">About</span>
+          {/* <span className="footer-text">Version 0.4 </span> */}
+          <span className="footer-text">Version 0.4 | About</span>
           {showAboutTooltip && (
             <div className="tooltip">
-              Our P2S Resource Allocation was developed by Nilay Nagar, Chad Peterson, and Jonathan Herrera.
+              Our Resource Allocation App was developed by Nilay Nagar, Chad Peterson, and Jonathan Herrera.
             </div>
           )}
         </div>
@@ -862,7 +917,10 @@ const Footer = () => {
 
 // Main App Component
 function App() {
-  const [currentView, setCurrentView] = useState('resource');
+  const [currentView, setCurrentView] = useState(() => {
+    const savedView = localStorage.getItem('currentView');
+    return savedView || 'resource';
+  });
   const [userDetails, setUserDetails] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
 
@@ -884,6 +942,26 @@ function App() {
 
   const handleNavigate = (view) => {
     console.log(`Navigating to ${view} view`);
+    
+    // Clear any cached data that might be causing dropdowns to appear
+    if (view === 'resource') {
+      // Clear search suggestions and cached project data
+      if (window.clearSearchSuggestions) {
+        window.clearSearchSuggestions();
+      }
+      // Attempt to clear any cached dropdown states
+      try {
+        const inputs = document.querySelectorAll('input[type="text"]');
+        inputs.forEach(input => {
+          input.blur();
+        });
+      } catch (e) {
+        console.warn('Failed to clear input focus states:', e);
+      }
+    }
+    
+    // Save the current view to localStorage
+    localStorage.setItem('currentView', view);
     setCurrentView(view);
   };
 
@@ -897,8 +975,11 @@ function App() {
     setCurrentView('resource');
   };
 
+  // Update localStorage when user logs out
   const handleLogout = () => {
     UserService.logout();
+    // Clear the saved view when logging out
+    localStorage.removeItem('currentView');
     setIsLoggedIn(false);
     setUserDetails(null);
   };
@@ -919,11 +1000,11 @@ return (
     />
     
     {/* Main Content - changes based on current view */}
-    <main className="main-content">
-      {currentView === 'resource' && <MainContent userDetails={userDetails} />}
-      {currentView === 'pm' && <PMPage navigate={handleNavigate} />}
-      {currentView === 'leadership' && <LeadershipPage navigate={handleNavigate} />}
-    </main>
+    {/* <main className="main-content"> */}
+    {currentView === 'resource' && <MainContent userDetails={userDetails} />}
+    {currentView === 'pm' && <PMPage navigate={handleNavigate} />}
+    {currentView === 'leadership' && <LeadershipPage navigate={handleNavigate} />}
+    {/* </main> */}
     
     {/* Shared Footer - always present */}
     <Footer />

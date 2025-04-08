@@ -1,7 +1,56 @@
 import React, { useState, useEffect, useRef } from 'react';
 import WeekPicker from './WeekPicker';
-import { format } from 'date-fns';
+import { format, addWeeks, startOfWeek, endOfWeek } from 'date-fns';
 import PMDashboardService from '../services/PMDashboardService';
+import { ProjectDataService } from '../services/ProjectDataService';
+import { FaChevronDown, FaChevronRight } from 'react-icons/fa';
+
+// CollapsibleProject component for individual project display
+const CollapsibleProject = ({ project, formatNumber, formatCurrency, formatPercent }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  return (
+    <div className="pm-group">
+      <div 
+        className="collapsible-header"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
+        <h3>{project.name} - MS {project.projectNumber ? project.projectNumber.split('-').pop() || project.projectNumber : 'N/A'
+  }</h3>
+        <div className="project-info">
+          <span>Contract Labor: {formatCurrency(project.labor)}</span>
+          <span>Total Hours: {formatNumber(project.totalHours)}</span>
+          <span>Projected Cost: {formatCurrency(project.totalCost)}</span>
+          <span>Reported % Complete: {formatPercent(project.laborUsed)}</span>
+        </div>
+      </div>
+      
+      {isExpanded && (
+        <div className="collapsible-content pm-projects">
+          <table className="summary-table resource-details">
+            <thead>
+              <tr>
+                <th>Resource</th>
+                <th>Labor Grade</th>
+                <th>Planned Hours</th>
+              </tr>
+            </thead>
+            <tbody>
+              {project.resources && project.resources.map((resource, index) => (
+                <tr key={index}>
+                  <td>{resource.name}</td>
+                  <td>{resource.laborCategory}</td>
+                  <td className="number-cell">{formatNumber(resource.hours)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const PMSelector = ({ onPMChange, selectedPM, projectManagers = [] }) => {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -68,19 +117,19 @@ const PMSelector = ({ onPMChange, selectedPM, projectManagers = [] }) => {
   return (
     <div className="user-selector">
       <div className="user-selector-container" ref={dropdownRef}>
-        <div className="current-user">
-          <span>Filter by PM:</span>
-          <strong>{selectedPM || 'All Projects'}</strong>
+        <div className="user-info-container">
+          <span className="user-label">Filter by PM:</span>
+          <strong className="user-name">{selectedPM || 'All Projects'}</strong>
           <button 
-            className="change-user-btn"
+            className="team-dropdown-btn"
             onClick={() => setShowDropdown(!showDropdown)}
           >
-            Change PM
+            Change
           </button>
         </div>
         
         {showDropdown && (
-          <div className="user-dropdown">
+          <div className="user-dropdown pm-dashboard-dropdown">
             <input
               type="text"
               placeholder="Search project manager..."
@@ -114,6 +163,66 @@ const PMSelector = ({ onPMChange, selectedPM, projectManagers = [] }) => {
   );
 };
 
+// New function to group projects by project manager
+const groupProjectsByPM = (projects) => {
+  const grouped = {};
+  
+  projects.forEach(project => {
+    const pm = project.pm || 'Unassigned';
+    
+    if (!grouped[pm]) {
+      grouped[pm] = {
+        projects: [],
+        totalLabor: 0,
+        totalHours: 0,
+        totalCost: 0
+      };
+    }
+    
+    grouped[pm].projects.push(project);
+    grouped[pm].totalLabor += project.labor || 0;
+    grouped[pm].totalHours += project.totalHours || 0;
+    grouped[pm].totalCost += project.totalCost || 0;
+  });
+  
+  return grouped;
+};
+
+// Collapsible PM Group component to display each PM and their projects
+const CollapsiblePMGroup = ({ pmName, pmData, formatNumber, formatCurrency, formatPercent }) => {
+  const [isExpanded, setIsExpanded] = useState(false);
+  
+  return (
+    <div className="pm-group">
+      <div 
+        className="collapsible-header"
+        onClick={() => setIsExpanded(!isExpanded)}
+      >
+        {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
+        <h3>{pmName}</h3>
+        <div className="project-info">
+          <span>Projects: {pmData.projects.length}</span>
+          <span>Total Contract Labor: {formatCurrency(pmData.totalLabor)}</span>
+        </div>
+      </div>
+      
+      {isExpanded && (
+        <div className="collapsible-content">
+          {pmData.projects.map(project => (
+            <CollapsibleProject
+              key={project.projectNumber}
+              project={project}
+              formatNumber={formatNumber}
+              formatCurrency={formatCurrency}
+              formatPercent={formatPercent}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
 // Main PM Page Component
 const PMPage = ({ navigate }) => {
   const [dashboardData, setDashboardData] = useState({ projects: [], summary: {} });
@@ -141,15 +250,24 @@ const PMPage = ({ navigate }) => {
       maximumFractionDigits: 0,
     }).format(value);
   };
-
   const formatPercent = (value) => {
-    // If the value is over 1000, assume it's been multiplied by 100 twice
-    const divisor = value > 1000 ? 10000 : 100;
-    return new Intl.NumberFormat('en-US', {
-      style: 'percent',
-      minimumFractionDigits: 1,
-      maximumFractionDigits: 1,
-    }).format(value / divisor);
+    // Convert to number and handle invalid values
+    const numValue = parseFloat(value) || 0;
+    
+    // Check if the value is already scaled to represent percentage directly
+    if (numValue >= 100 && numValue % 100 === 0) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }).format(numValue / 10000);
+    } else {
+      return new Intl.NumberFormat('en-US', {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }).format(numValue / 100);
+    }
   };
 
   // Load project managers on component mount
@@ -166,6 +284,19 @@ const PMPage = ({ navigate }) => {
     };
     
     loadProjectManagers();
+    
+    // Initialize with next week's dates
+    const today = addWeeks(new Date(), 1);
+    const startDate = startOfWeek(today, { weekStartsOn: 1 });
+    const endDate = endOfWeek(today, { weekStartsOn: 1 });
+    
+    console.log("PM Page - Initializing with next week:", {
+      startDate: format(startDate, 'yyyy-MM-dd'),
+      endDate: format(endDate, 'yyyy-MM-dd')
+    });
+    
+    setWeekStartDate(startDate);
+    setWeekEndDate(endDate);
   }, []);
 
   // Debug data state changes
@@ -180,6 +311,14 @@ const PMPage = ({ navigate }) => {
       startDate: format(startDate, 'yyyy-MM-dd'),
       endDate: format(endDate, 'yyyy-MM-dd')
     });
+    
+    // Clear any cached data to ensure fresh load
+    try {
+      ProjectDataService.clearCacheWithPattern('pm_dashboard_');
+    } catch (e) {
+      console.warn("Failed to clear PM dashboard cache:", e);
+    }
+    
     setWeekStartDate(startDate);
     setWeekEndDate(endDate);
     setRetryCount(0); // Reset retry counter when dates change
@@ -239,116 +378,89 @@ const PMPage = ({ navigate }) => {
   }, [weekStartDate, weekEndDate, selectedPM, retryCount]);
 
   return (
-    <div className="content-wrapper">
-      <div className="table-container">
-        <WeekPicker onWeekChange={handleWeekChange} />
-        <PMSelector 
-          onPMChange={setSelectedPM}
-          selectedPM={selectedPM}
-          projectManagers={projectManagers.map(pm => pm.name || '')}
-        />
-        <div className="pm-dashboard">
-          <h2>Project Planning Summary</h2>
-          
-          {/* Debug information - remove in production */}
-          <div style={{ 
-            padding: '5px 10px', 
-            margin: '5px 0', 
-            backgroundColor: '#f0f0f0', 
-            border: '1px solid #ddd',
-            borderRadius: '4px',
-            fontSize: '12px'
-          }}>
-            <div><strong>Debug Info:</strong></div>
-            <div>Selected PM: {selectedPM || 'All Projects'}</div>
-            <div>Data Status: {isLoading ? 'Loading' : error ? 'Error' : 'Ready'}</div>
-            <div>Projects Count: {dashboardData.projects ? dashboardData.projects.length : 0}</div>
-          </div>
-          
-          {/* Error display with retry button */}
-          {error && (
-            <div className="error-banner">
-              <p>{error}</p>
-              <button className="retry-button" onClick={handleRetry}>
-                Retry
-              </button>
+    <main className="main-content">
+      <div className="content-wrapper">
+        <div className="table-container">
+          <WeekPicker onWeekChange={handleWeekChange} />
+          <PMSelector 
+            onPMChange={setSelectedPM}
+            selectedPM={selectedPM}
+            projectManagers={projectManagers.map(pm => pm.name || '')}
+          />
+          <div className="pm-dashboard">
+            <div className='pm-dashboard-title'>Project Planning Summary</div>
+            
+            {/* Debug information - remove in production */}
+            <div style={{ 
+              padding: '5px 10px', 
+              margin: '5px 0', 
+              backgroundColor: '#f0f0f0', 
+              border: '1px solid #ddd',
+              borderRadius: '4px',
+              fontSize: '12px'
+            }}>
+              <div><strong>Debug Info:</strong></div>
+              <div>Selected PM: {selectedPM || 'All Projects'}</div>
+              <div>Data Status: {isLoading ? 'Loading' : error ? 'Error' : 'Ready'}</div>
+              <div>Projects Count: {dashboardData.projects ? dashboardData.projects.length : 0}</div>
             </div>
-          )}
-          
-          {isLoading ? (
-            <div className="loading">Loading summary data...</div>
-          ) : dashboardData.projects && dashboardData.projects.length > 0 ? (
-            // Render projects when data exists
-            dashboardData.projects.map((project) => (
-              <div key={project.projectNumber} className="project-summary">
-                <h3>
-                  {project.projectNumber} - {project.name}
-                </h3>
-                <table className="summary-table">
-                  <thead>
-                    <tr className="project-metrics">
-                      <th>Project Manager</th>
-                      <th>Contract Total Labor</th>
-                      <th>% EAC Labor Used</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr className="project-metrics">
-                      <td className="number-cell">{project.pm || 'N/A'}</td>
-                      <td className="number-cell">{formatCurrency(project.labor)}</td>
-                      <td className={`number-cell ${
-                        project.laborUsed >= 100 ? 'warning-cell' : 
-                        project.laborUsed >= 90 ? 'caution-cell' : ''
-                      }`}>
-                        {formatPercent(project.laborUsed)}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-
-                <table className="summary-table resource-details">
-                  <thead>
-                    <tr>
-                      <th>Resource</th>
-                      <th>Labor Grade</th>
-                      <th>Planned Hours</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {project.resources && project.resources.map((resource, index) => (
-                      <tr key={index}>
-                        <td>{resource.name}</td>
-                        <td>{resource.laborCategory}</td>
-                        <td className="number-cell">{formatNumber(resource.hours)}</td>
-                      </tr>
-                    ))}
-                    <tr className="total-row">
-                      <td colSpan="2"><strong style={{ textAlign: 'right', display: 'block' }}>Total Hours</strong></td>
-                      <td className="number-cell">
-                        <strong>{formatNumber(project.totalHours)}</strong>
-                      </td>
-                    </tr>
-                    <tr className="total-row">
-                      <td colSpan="2"><strong style={{ textAlign: 'right', display: 'block' }}>Projected Cost</strong></td>
-                      <td className="number-cell">
-                        <strong>{formatCurrency(project.totalCost)}</strong>
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
+            
+            {/* Error display with retry button */}
+            {error && (
+              <div className="error-banner">
+                <p>{error}</p>
+                <button className="retry-button" onClick={handleRetry}>
+                  Retry
+                </button>
               </div>
-            ))
-          ) : (
-            // Show "no projects found" message when data array is empty
-            <div className="no-data">
-              {selectedPM 
-                ? `No projects found for ${selectedPM} in the selected date range.`
-                : 'No projects found for the selected date range.'}
-            </div>
-          )}
+            )}
+            
+            {isLoading ? (
+              <div className="loading">Loading summary data...</div>
+            ) : dashboardData.projects && dashboardData.projects.length > 0 ? (
+              // When filtering by a specific PM, just show their projects
+              selectedPM ? (
+                <div className="pm-groups">
+                  {dashboardData.projects.map((project) => (
+                    <CollapsibleProject
+                      key={project.projectNumber}
+                      project={project}
+                      formatNumber={formatNumber}
+                      formatCurrency={formatCurrency}
+                      formatPercent={formatPercent}
+                    />
+                  ))}
+                </div>
+              ) : (
+                // When showing all projects, group by PM
+                <div className="pm-groups">
+                  {Object.entries(groupProjectsByPM(dashboardData.projects))
+                    .sort(([pmA], [pmB]) => pmA.localeCompare(pmB))
+                    .map(([pmName, pmData]) => (
+                      <CollapsiblePMGroup
+                        key={pmName}
+                        pmName={pmName}
+                        pmData={pmData}
+                        formatNumber={formatNumber}
+                        formatCurrency={formatCurrency}
+                        formatPercent={formatPercent}
+                      />
+                    ))
+                  }
+                </div>
+              )
+            ) : (
+              // Show "no projects found" message when data array is empty
+              <div className="no-data">
+                {selectedPM 
+                  ? `No projects found for ${selectedPM} in the selected date range.`
+                  : 'No projects found for the selected date range.'}
+              </div>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </main>
   );
 };
 

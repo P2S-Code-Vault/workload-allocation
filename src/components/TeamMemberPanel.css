@@ -31,13 +31,13 @@
   }
   
   .member-details {
-    display: flex;
-    font-size: 0.85rem;
-    color: #666;
+    /* display: flex; */
+    font-size: 0.95rem;
+    color: var(--primary-color);
   }
   
   .member-details span {
-    margin-right: 12px;
+    margin-right: 0px;
   }
   
   .member-metrics {
