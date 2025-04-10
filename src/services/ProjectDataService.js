@@ -108,13 +108,6 @@ static async getAllocations(email, startDate, endDate) {
       console.log(`Using cached allocations for ${email} from ${startDate} to ${endDate}`);
       return cachedData;
     }
-    // Try cache first
-    // const cachedData = this.getCachedData(cacheKey);
-    // if (cachedData) {
-    //   console.log(`Using cached allocations for ${email} from ${startDate} to ${endDate}`);
-    //   return cachedData;
-    // }
-    
     // Build query parameters
     const params = new URLSearchParams();
     params.append('email', email);
@@ -264,9 +257,6 @@ static pruneCache() {
 
 
   // Save a new resource allocation
-<<<<<<< HEAD
-  static async saveResourceAllocation(data) {
-=======
 static async saveResourceAllocation(data) {
   try {
     // Validation
@@ -276,87 +266,59 @@ static async saveResourceAllocation(data) {
   
     // Try to get project details from CSV if available
     let projectDetails = null;
->>>>>>> 2172a93766f0286ba5e741a0773bf18fd6d6753c
     try {
-      // Validation
-      if (!data.email || !data.project_number || !data.hours) {
-        throw new Error("Missing required allocation data: email, project_number, and hours are required");
-      }
-      
-      // Try to get project details from CSV if available
-      let projectDetails = null;
-      try {
-        if (data._projectData) {
-          // Use the stored project data if available from selection
-          projectDetails = data._projectData;
-          console.log("Using stored project data:", projectDetails);
-        } else {
-          // Otherwise try to fetch from project search service
-          projectDetails = await ProjectSearchService.getProjectDetails(data.project_number);
-          console.log("Found project details in CSV:", projectDetails);
-        }
-      } catch (e) {
-        console.log(`Project details not found in CSV for ${data.project_number}`);
-      }
-      
-      // Format the data to match backend expectations
-      const requestBody = {
-        email: data.email,
-        project_number: data.project_number,
-        hours: parseFloat(data.hours) || 0,
-        remarks: data.remarks || "",
-        week_start: data.week_start || null,
-        week_end: data.week_end || null
-      };
-      
-      // Add milestone information if available from CSV or stored data
-      if (projectDetails) {
-        requestBody.project_name = projectDetails['Project Name'] || null;
-        requestBody.milestone_name = projectDetails['Milestone'] || null;
-        requestBody.project_manager = projectDetails['PM'] || null;
-        requestBody.contract_labor = projectDetails['Labor'] || null;
-        
-        // This is the key field we need to ensure is passed correctly
-        // The value in the CSV is already the percentage value (e.g. 25.5 for 25.5%)
-        // We need to pass it as a decimal to the backend (0.255)
-        const pctLaborUsed = projectDetails['Pct Labor Used'];
-        if (pctLaborUsed !== undefined && pctLaborUsed !== null) {
-          // Convert to decimal form for storage in DB
-          requestBody.forecast_pm_labor = pctLaborUsed; // pct/100
-        }
-        
-        // Log that we're including milestone data
-        console.log(`Including milestone data from CSV for ${data.project_number}`, {
-          project_name: requestBody.project_name,
-          milestone_name: requestBody.milestone_name,
-          project_manager: requestBody.project_manager,
-          contract_labor: requestBody.contract_labor,
-          forecast_pm_labor: requestBody.forecast_pm_labor
-        });
-      }
-      
-      console.log(`Creating new allocation:`, requestBody);
-      const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.ALLOCATIONS}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(requestBody)
-      });
-      
-      if (!response.ok) {
-        const errorText = await this.handleErrorResponse(response);
-        throw new Error(`Failed to save allocation: ${errorText}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error("Error saving allocation:", error);
-      throw error;
+      projectDetails = await ProjectSearchService.getProjectDetails(data.project_number);
+      console.log("Found project details in CSV:", projectDetails);
+    } catch (e) {
+      console.log(`Project details not found in CSV for ${data.project_number}`);
     }
+    
+    // Format the data to match backend expectations
+    const requestBody = {
+      email: data.email,
+      project_number: data.project_number,
+      hours: parseFloat(data.hours) || 0,
+      remarks: data.remarks || "",
+      week_start: data.week_start || null,
+      week_end: data.week_end || null
+    };
+    
+    // Add milestone information if available from CSV
+    if (projectDetails) {
+      requestBody.project_name = projectDetails['Project Name'] || null;
+      requestBody.milestone_name = projectDetails['Milestone'] || null;
+      requestBody.project_manager = projectDetails['PM'] || null;
+      requestBody.contract_labor = projectDetails['Labor'] || null;
+      
+      // Log that we're including milestone data
+      console.log(`Including milestone data from CSV for ${data.project_number}`, {
+        project_name: requestBody.project_name,
+        milestone_name: requestBody.milestone_name,
+        project_manager: requestBody.project_manager,
+        contract_labor: requestBody.contract_labor
+      });
+    }
+    
+    console.log(`Creating new allocation:`, requestBody);
+    const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.ALLOCATIONS}`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(requestBody)
+    });
+    
+    if (!response.ok) {
+      const errorText = await this.handleErrorResponse(response);
+      throw new Error(`Failed to save allocation: ${errorText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error("Error saving allocation:", error);
+    throw error;
   }
-
- 
+}
 
   static async updateAllocation(allocationId, hours, remarks) {
     try {
