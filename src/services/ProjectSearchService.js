@@ -85,7 +85,7 @@ export class ProjectSearchService {
       console.log(`Found ${matches.length} projects matching "${searchTerm}" across project number, name, and milestone`);
       
       // Limit the results to avoid overwhelming the UI
-      return matches.slice(0, 10);
+      return matches.slice(0, 40);
     } catch (error) {
       console.error('Error searching projects:', error);
       return [];
