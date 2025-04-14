@@ -1659,3 +1659,25 @@ body {
   padding: var(--spacing-md);
   border-radius: var(--border-radius);
 }
+
+/* Available Hours section styling */
+.available-hours-section {
+  background-color: #e8f4fd;  /* Light blue background for available hours section */
+}
+
+.available-hours-total-label {
+  font-weight: 500;
+  text-align: right;
+  font-weight: bold;
+  padding: 8px;
+}
+
+.available-hours-total-hours {
+  text-align: center;
+  font-weight: 500; 
+}
+
+/* Style for the available hours in the hours summary */
+.available-hours {
+  font-weight: bold;
+}
