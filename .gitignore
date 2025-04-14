@@ -29,5 +29,3 @@ yarn-error.log*
 !/public/data/
 !/public/data/*.csv
 
-
-public/data/*
