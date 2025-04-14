@@ -543,20 +543,56 @@ const MainContent = () => {
     const lwopRows = rows.filter(row =>
       row.projectNumber?.startsWith('0000-0000-LWOP')
     );
+    //new
+    const availableHoursRows = rows.filter(row =>
+      row.availableHours || row.projectNumber?.startsWith('0000-0000-AVAIL_HOURS')
+    );
     const adminRows = rows.filter(row => 
       row.projectNumber?.startsWith('0000-0000') && 
       !row.projectNumber?.startsWith('0000-0000-0PTO') && 
       !row.projectNumber?.startsWith('0000-0000-0HOL') &&
       !row.projectNumber?.startsWith('0000-0000-0SIC') &&
       !row.projectNumber?.startsWith('0000-0000-JURY') &&
-      !row.projectNumber?.startsWith('0000-0000-LWOP')
+      !row.projectNumber?.startsWith('0000-0000-LWOP') &&
+      !row.availableHours && //new
+      !row.projectNumber?.startsWith('0000-0000-AVAIL_HOURS')  //new
     );
     const normalRows = rows.filter(row => 
       !row.projectNumber?.startsWith('0000-0000')
     );
-    return { normalRows, adminRows, ptoRows, lwopRows };
+    return { normalRows, adminRows, ptoRows, lwopRows, availableHoursRows };
   }, [rows]);
+  // const getGroupedRows = useCallback(() => {
+  //   const ptoRows = rows.filter(row => 
+  //     row.projectNumber?.startsWith('0000-0000-0PTO') || 
+  //     row.projectNumber.startsWith('0000-0000-0SIC') ||
+  //     row.projectNumber.startsWith('0000-0000-JURY') ||
+  //     row.projectNumber?.startsWith('0000-0000-0HOL')
+  //   );
+  //   const lwopRows = rows.filter(row =>
+  //     row.projectNumber?.startsWith('0000-0000-LWOP')
+  //   );
+  //   const adminRows = rows.filter(row => 
+  //     row.projectNumber?.startsWith('0000-0000') && 
+  //     !row.projectNumber?.startsWith('0000-0000-0PTO') && 
+  //     !row.projectNumber?.startsWith('0000-0000-0HOL') &&
+  //     !row.projectNumber?.startsWith('0000-0000-0SIC') &&
+  //     !row.projectNumber?.startsWith('0000-0000-JURY') &&
+  //     !row.projectNumber?.startsWith('0000-0000-LWOP')
+  //   );
+  //   const normalRows = rows.filter(row => 
+  //     !row.projectNumber?.startsWith('0000-0000')
+  //   );
+  //   return { normalRows, adminRows, ptoRows, lwopRows };
+  // }, [rows]);
 
+
+  //avail hours
+  const calculateAvailableHours = useCallback(() => {
+    return getGroupedRows().availableHoursRows.reduce((sum, row) => {
+      return sum + (parseFloat(row.hours) || 0);
+    }, 0);
+  }, [getGroupedRows]);
   // Calculate overhead hours
   const calculateOverheadHours = useCallback(() => {
     return getGroupedRows().adminRows.reduce((sum, row) => {
@@ -675,65 +711,7 @@ const MainContent = () => {
             />
           </div>
         </div>
-        {/* Add team member selector for group leaders */}
-        {/* {isGroupLeader && (
-    <div className="team-controls">
-      {!selectedTeamMember ? (
-        <div className="team-dropdown">
-          <button 
-            className="team-dropdown-btn"
-            onClick={() => setShowTeamDropdown(!showTeamDropdown)}
-          >
-            Select Team Member
-          </button>
-          
-          {showTeamDropdown && (
-            <div className="team-dropdown-list">
-              {teamMembers.length > 0 ? (
-                teamMembers.map(member => (
-                  <div 
-                    key={member.id}
-                    className="team-member-option"
-                    onClick={() => handleTeamMemberSelect(member)}
-                  >
-                    <div className="member-name">{member.name}</div>
-                    <div className="member-details">{member.email}</div>
-                  </div>
-                ))
-              ) : (
-                <div className="no-team-members">No team members found</div>
-              )}
-            </div>
-          )}
-        </div>
-      ) : (
-        <div className="managing-indicator">
-          <span>Managing team member:</span>
-          <strong>{selectedTeamMember.name}</strong>
-          <button 
-            className="reset-view-btn"
-            onClick={resetToGroupLeader}
-          >
-            Return to My View
-          </button>
-        </div>
-      )}
-    </div>
-  )} */}
-          {/* <div className="scheduled-hours-container">
-            <label htmlFor="scheduledHours">Scheduled Hours:</label>
-            <input
-              id="scheduledHours"
-              type="number"
-              value={scheduledHours}
-              readOnly
-              disabled
-              onChange={(e) => setScheduledHours(Number(e.target.value))}
-              min="0"
-              max="168"
-            />
-          </div> */}
-          
+                 
           {isLoading ? (
             <div className="loading-indicator">Loading data...</div>
           ) : (
@@ -847,6 +825,30 @@ const MainContent = () => {
                     </tr>
                   </>
                 )}
+                {/* Available Hours Rows */}
+                {groupedRows.availableHoursRows.length > 0 && (
+                    <>
+                      <tr className="group-separator available-hours-section">
+                        <td colSpan="9">Available Hours</td>
+                      </tr>
+                      {groupedRows.availableHoursRows.map((row, index) => (
+                        <TableRow
+                          key={`available-${index}-${row.id || 'new'}`}
+                          row={row}
+                          index={rows.indexOf(row)}
+                          updateRow={updateRow}
+                          deleteRow={deleteRow}
+                          isLoading={isLoading}
+                          currentUser={currentUser}
+                        />
+                      ))}
+                      <tr className="available-hours-total">
+                        <td colSpan="6" className="available-hours-total-label">Total:</td>
+                        <td className="available-hours-total-hours">{formatter.format(calculateAvailableHours())}</td>
+                        <td colSpan="2"></td>
+                      </tr>
+                    </>
+                  )}
               </tbody>
             </table>
           )}
@@ -854,6 +856,13 @@ const MainContent = () => {
           <div className="hours-summary">
             <span className="total-label">Total Hours:</span>
             <span className="total-hours">{totalHoursFormatted}</span>
+            {calculateAvailableHours() > 0 && (
+                <>
+                  <div className="ratio-separator"></div>
+                  <span className="ratio-label">Available Hours:</span>
+                  <span className="available-hours">{formatter.format(calculateAvailableHours())}</span>
+                </>
+              )}
             <div className="ratio-separator"></div>
             <span className="ratio-label">Ratio B:</span>
             <span className="ratio-value">{percentFormatter.format(calculateRatioB())}</span>

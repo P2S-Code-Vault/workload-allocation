@@ -116,29 +116,32 @@
   color: var(--primary-color);
 }
 
-/* Add studio grouping table column widths */
+/* Update column width settings to account for the new "Available Hours" column */
+
+/* Summary table column widths */
 .summary-table th:nth-child(1) { /* Studio/Team Member */
   width: 20%;
 }
 
 .summary-table th:nth-child(2) { /* Labor Category/Team Members */
-  width: 15%;
+  width: 14%;
 }
 
 .summary-table th:nth-child(3), /* Scheduled Hours */
 .summary-table th:nth-child(4), /* Direct Hours */
 .summary-table th:nth-child(5), /* PTO/HOL */
 .summary-table th:nth-child(6), /* Indirect Hours */
-.summary-table th:nth-child(7) { /* Total Hours */
-  width: 11%;
+.summary-table th:nth-child(7), /* Available Hours - NEW */
+.summary-table th:nth-child(8) { /* Total Hours */
+  width: 9%;
 }
 
-.summary-table th:nth-child(8) { /* Ratio B */
-  width: 10%;
+.summary-table th:nth-child(9) { /* Ratio B */
+  width: 8%;
 }
 
-.summary-table th:nth-child(9) { /* Details button */
-  width: 5%;
+.summary-table th:nth-child(10) { /* Details button */
+  width: 4%;
 }
 
 /* Apply same widths to table cells */
@@ -156,6 +159,12 @@
 
 .summary-table thead tr:hover th {
   background-color: var(--primary-color);
+}
+
+/* Highlight available hours with a specific styling */
+td:nth-child(7).number-cell {
+  color: #0288d1;
+  font-weight: 500;
 }
 
 /* Update user-info-container to accommodate the new buttons */
@@ -262,7 +271,7 @@
 
 .project-summary .summary-table th:nth-child(4), /* Labor Category */
 .project-summary .summary-table td:nth-child(4) {
-  width: 20%;  
+  width: 19%;  
   text-align: center;
   padding-left: 12px;
 }
@@ -271,19 +280,21 @@
 .project-summary .summary-table th:nth-child(6), /* Direct Hours */
 .project-summary .summary-table th:nth-child(7), /* PTO/HOL */
 .project-summary .summary-table th:nth-child(8), /* Indirect Hours */
-.project-summary .summary-table th:nth-child(9), /* Total Hours */
+.project-summary .summary-table th:nth-child(9), /* Available Hours - NEW */
+.project-summary .summary-table th:nth-child(10), /* Total Hours */
 .project-summary .summary-table td:nth-child(5),
 .project-summary .summary-table td:nth-child(6),
 .project-summary .summary-table td:nth-child(7),
 .project-summary .summary-table td:nth-child(8),
-.project-summary .summary-table td:nth-child(9) {
-  width: 10%;
+.project-summary .summary-table td:nth-child(9),
+.project-summary .summary-table td:nth-child(10) {
+  width: 8%;
   text-align: center;
 }
 
-.project-summary .summary-table th:nth-child(10), /* Ratio B */
-.project-summary .summary-table td:nth-child(10) {
-  width: 10%;
+.project-summary .summary-table th:nth-child(11), /* Ratio B */
+.project-summary .summary-table td:nth-child(11) {
+  width: 8%;
   text-align: center;
 }
 
@@ -482,4 +493,14 @@
 
 .projects-view-table thead tr:hover th {
   background-color: var(--primary-color);
+}
+
+/* Available Hours specific styling */
+.member-details td {
+  column-span: 10;
+}
+
+.available-hours-cell {
+  color: #0288d1;
+  font-weight: 500;
 }
