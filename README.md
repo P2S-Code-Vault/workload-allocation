@@ -1,3 +1,15 @@
+
+# Getting Started with surviving Legence policies:
+
+If, and a big if you could actually connect to a github repo and manager to pull the repo, \
+Bypass the Execution policies using powershell:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+then run the scripts and **nothing else**, close the terminal before switching tasks.
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).

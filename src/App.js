@@ -11,6 +11,8 @@ import LeadershipPage from './components/LeadershipPage';
 import format from 'date-fns/format';
 import { startOfWeek, endOfWeek, addWeeks } from 'date-fns';
 import API_CONFIG from './services/apiConfig';
+import TeamEdit from './components/teamedit';
+
 
 // Header Component
 const Header = ({ currentView,onNavigate, onLogout }) => {
@@ -49,7 +51,15 @@ const Header = ({ currentView,onNavigate, onLogout }) => {
         >
           GL View
         </button>
-        
+
+        <button 
+        className={`nav-button ${currentView === 'teamedit' ? 'disabled' : ''}`}
+        onClick={() => currentView !== 'teamedit' && onNavigate('teamedit')}
+        disabled={currentView === 'teamedit'}
+        >
+          Team Edit
+        </button>
+
         {/* Logout Button - always enabled */}
         <button 
           className="nav-button logout-button"
@@ -1013,6 +1023,7 @@ return (
     {currentView === 'resource' && <MainContent userDetails={userDetails} />}
     {currentView === 'pm' && <PMPage navigate={handleNavigate} />}
     {currentView === 'leadership' && <LeadershipPage navigate={handleNavigate} />}
+    {currentView === 'teamedit' && <TeamEdit memberEmail={userDetails?.email} />}
     {/* </main> */}
     
     {/* Shared Footer - always present */}
@@ -1021,5 +1032,5 @@ return (
   </div>
 );
 }
-
+export { MainContent }; 
 export default App;
