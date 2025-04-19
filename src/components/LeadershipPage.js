@@ -1709,7 +1709,7 @@ const LeadershipPage = ({ navigate }) => {
                             <td className="number-cell">{formatter.format(data.directHours)}</td>
                             <td className="number-cell">{formatter.format(data.ptoHours)}</td>
                             <td className="number-cell">{formatter.format(data.overheadHours)}</td>
-                            <td className="number-cell">{formatter.format(data.availableHours)}</td>
+                            <td className="number-cell">{formatter.format(data.availableHours||0)}</td>
                             <td className="number-cell"><strong>{formatter.format(data.totalHours)}</strong></td>
                             <td className="number-cell"><strong>{formatPercent(data.ratioB)}</strong></td>
                           </tr>
