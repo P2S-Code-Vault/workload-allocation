@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect, useRef } from 'react';
 import { UserService } from '../services/UserService';
 import { GLTeamService } from '../services/GLTeamService';
@@ -102,7 +101,7 @@ const GroupSelector = ({ onGroupChange, selectedGroup, groups = [] }) => {
   );
 };
 
-const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent }) => {
+const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent, navigate }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   
   return (
@@ -155,6 +154,7 @@ const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent }) =>
               studioData={studioData}
               formatter={formatter}
               formatPercent={formatPercent}
+              navigate={navigate} // Pass navigate prop
             />
           ))}
         </div>
@@ -163,7 +163,7 @@ const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent }) =>
   );
 };
 
-const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent }) => {
+const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent, navigate }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   
   return (
@@ -201,6 +201,7 @@ const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent }) => 
                   member={member}
                   formatter={formatter}
                   formatPercent={formatPercent}
+                  navigate={navigate} // Pass navigate prop
                 />
               ))}
           </tbody>
@@ -210,7 +211,7 @@ const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent }) => 
   );
 };
 
-const CollapsibleMember = ({ member, formatter, formatPercent }) => {
+const CollapsibleMember = ({ member, formatter, formatPercent, navigate }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
   const sortedRows = [...(member.rows || [])].sort((a, b) => 
@@ -220,7 +221,12 @@ const CollapsibleMember = ({ member, formatter, formatPercent }) => {
   return (
     <>
       <tr>
-        <td>{member.name}</td>
+        <td>
+          <button className="member-name-btn"
+            onClick={() => navigate('teamedit', { email: member.email })}>
+            {member.name}
+          </button>
+        </td>
         <td>{member.laborCategory}</td>
         <td className="number-cell">
           {formatter.format(Number(member.scheduledHours) || 40)}
@@ -864,6 +870,7 @@ const LeadershipPage = ({ navigate }) => {
                       managerData={managerData}
                       formatter={formatter}
                       formatPercent={formatPercent}
+                      navigate={navigate} // Pass navigate prop
                     />
                   ))}
                 </>

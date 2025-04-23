@@ -959,16 +959,14 @@ function App() {
     checkLoginStatus();
   }, []);
 
-  const handleNavigate = (view) => {
-    console.log(`Navigating to ${view} view`);
-    
+  const handleNavigate = (view, params = {}) => {
+    console.log(`Navigating to ${view} view`, params);
+  
     // Clear any cached data that might be causing dropdowns to appear
     if (view === 'resource') {
-      // Clear search suggestions and cached project data
       if (window.clearSearchSuggestions) {
         window.clearSearchSuggestions();
       }
-      // Attempt to clear any cached dropdown states
       try {
         const inputs = document.querySelectorAll('input[type="text"]');
         inputs.forEach(input => {
@@ -978,10 +976,15 @@ function App() {
         console.warn('Failed to clear input focus states:', e);
       }
     }
-    
+  
     // Save the current view to localStorage
     localStorage.setItem('currentView', view);
     setCurrentView(view);
+  
+    // Handle additional parameters for specific views
+    if (view === 'teamedit' && params.email) {
+      setUserDetails(prev => ({ ...prev, selectedEmail: params.email }));
+    }
   };
 
   const handleLogin = (name, email, scheduledHours) => {
