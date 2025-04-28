@@ -161,11 +161,6 @@
   background-color: var(--primary-color);
 }
 
-/* Highlight available hours with a specific styling */
-td:nth-child(7).number-cell {
-  color: #0288d1;
-  font-weight: 500;
-}
 
 /* Update user-info-container to accommodate the new buttons */
 .user-info-container {

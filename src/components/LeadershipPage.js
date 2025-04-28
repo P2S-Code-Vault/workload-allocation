@@ -344,22 +344,46 @@ const ProjectsTableView = ({ teamData, formatter }) => {
   };
 
   const formatLaborUsed = (value) => {
-    const numValue = parseFloat(value) || 0;
+    // Add debugging
+    console.log("Formatting percentage value:", value, "Type:", typeof value);
     
-    if (numValue >= 100 && numValue % 100 === 0) {
-      return new Intl.NumberFormat('en-US', {
-        style: 'percent',
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1,
-      }).format(numValue / 10000);
-    } else {
-      return new Intl.NumberFormat('en-US', {
-        style: 'percent',
-        minimumFractionDigits: 1,
-        maximumFractionDigits: 1,
-      }).format(numValue / 100);
+    // Convert to number and handle invalid values
+    const numValue = parseFloat(value) || 0;
+    console.log("Parsed percentage value:", numValue);
+    
+    // Case 1: Values like 9639 (should be 96.39%)
+    if (numValue > 100 && numValue % 1 === 0) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'percent',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(numValue / 10000);
     }
-  };
+    // Case 2: Values like 78 (should be 78.00%)
+    else if (numValue >= 1 && numValue <= 100) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'percent',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(numValue / 100);
+    }
+    // Case 3: Values like 0.78 (already in decimal form, should be 78.00%)
+    else if (numValue > 0 && numValue < 1) {
+        return new Intl.NumberFormat('en-US', {
+            style: 'percent',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(numValue);
+    }
+    // Default case: just format as percentage with 2 decimal places
+    else {
+        return new Intl.NumberFormat('en-US', {
+            style: 'percent',
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+        }).format(numValue / 100);
+    }
+};
   
   if (projectsData.length === 0) {
     return <div className="no-data-message">No project data available.</div>;
@@ -375,7 +399,7 @@ const ProjectsTableView = ({ teamData, formatter }) => {
             <th>Project Name</th>
             <th>Project Manager</th>
             <th>Contract Total Labor</th>
-            <th>Reported % Complete</th>
+            <th>% EAC Labor Used </th>
             <th>Total Hours</th>
             <th>Team Members</th>
             <th>Remarks</th>
@@ -854,7 +878,7 @@ const LeadershipPage = ({ navigate }) => {
                             <td className="number-cell">{formatter.format(data.directHours)}</td>
                             <td className="number-cell">{formatter.format(data.ptoHours)}</td>
                             <td className="number-cell">{formatter.format(data.overheadHours)}</td>
-                            <td className="number-cell">{formatter.format(data.availableHours)}</td>
+                            <td className="number-cell">{formatter.format(data.availableHours||0)}</td>
                             <td className="number-cell"><strong>{formatter.format(data.totalHours)}</strong></td>
                             <td className="number-cell"><strong>{formatPercent(data.ratioB)}</strong></td>
                           </tr>

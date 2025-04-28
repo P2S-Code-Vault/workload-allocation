@@ -733,7 +733,7 @@ const MainContent = () => {
                   <th>Milestone</th>
                   <th>Project Manager</th>
                   <th>Contract Total Labor</th>
-                  <th>Reported % Complete</th>
+                  <th>% EAC Labor Used</th>
                   <th>Planned Hours</th>
                   <th>Remarks</th>
                   <th> </th>

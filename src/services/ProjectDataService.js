@@ -257,6 +257,69 @@ static pruneCache() {
 
 
   // Save a new resource allocation
+// static async saveResourceAllocation(data) {
+//   try {
+//     // Validation
+//     if (!data.email || !data.project_number || !data.hours) {
+//       throw new Error("Missing required allocation data: email, project_number, and hours are required");
+//     }
+  
+//     // Try to get project details from CSV if available
+//     let projectDetails = null;
+//     try {
+//       projectDetails = await ProjectSearchService.getProjectDetails(data.project_number);
+//       console.log("Found project details in CSV:", projectDetails);
+//     } catch (e) {
+//       console.log(`Project details not found in CSV for ${data.project_number}`);
+//     }
+    
+//     // Format the data to match backend expectations
+//     const requestBody = {
+//       email: data.email,
+//       project_number: data.project_number,
+//       hours: parseFloat(data.hours) || 0,
+//       remarks: data.remarks || "",
+//       week_start: data.week_start || null,
+//       week_end: data.week_end || null
+//     };
+    
+//     // Add milestone information if available from CSV
+//     if (projectDetails) {
+//       requestBody.project_name = projectDetails['Project Name'] || null;
+//       requestBody.milestone_name = projectDetails['Milestone'] || null;
+//       requestBody.project_manager = projectDetails['PM'] || null;
+//       requestBody.contract_labor = projectDetails['Labor'] || null;
+      
+//       // Log that we're including milestone data
+//       console.log(`Including milestone data from CSV for ${data.project_number}`, {
+//         project_name: requestBody.project_name,
+//         milestone_name: requestBody.milestone_name,
+//         project_manager: requestBody.project_manager,
+//         contract_labor: requestBody.contract_labor
+//       });
+//     }
+    
+//     console.log(`Creating new allocation:`, requestBody);
+//     const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.ALLOCATIONS}`, {
+//       method: "POST",
+//       headers: {
+//         "Content-Type": "application/json"
+//       },
+//       body: JSON.stringify(requestBody)
+//     });
+    
+//     if (!response.ok) {
+//       const errorText = await this.handleErrorResponse(response);
+//       throw new Error(`Failed to save allocation: ${errorText}`);
+//     }
+    
+//     return await response.json();
+//   } catch (error) {
+//     console.error("Error saving allocation:", error);
+//     throw error;
+//   }
+// }
+
 static async saveResourceAllocation(data) {
   try {
     // Validation
@@ -290,12 +353,23 @@ static async saveResourceAllocation(data) {
       requestBody.project_manager = projectDetails['PM'] || null;
       requestBody.contract_labor = projectDetails['Labor'] || null;
       
+      // Add percentage labor used value if available
+      if (projectDetails['Pct Labor Used'] !== undefined) {
+        const pctValue = parseFloat(projectDetails['Pct Labor Used']);
+        if (!isNaN(pctValue)) {
+          // Convert percentage to decimal for storage (e.g., 96.39 -> 0.9639)
+          requestBody.pct_labor_used = pctValue / 100;
+          console.log(`Including Pct Labor Used: ${pctValue}% -> ${requestBody.pct_labor_used}`);
+        }
+      }
+      
       // Log that we're including milestone data
       console.log(`Including milestone data from CSV for ${data.project_number}`, {
         project_name: requestBody.project_name,
         milestone_name: requestBody.milestone_name,
         project_manager: requestBody.project_manager,
-        contract_labor: requestBody.contract_labor
+        contract_labor: requestBody.contract_labor,
+        pct_labor_used: requestBody.pct_labor_used
       });
     }
     

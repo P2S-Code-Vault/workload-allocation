@@ -234,7 +234,7 @@ body {
 .resource-table th,
 .resource-table td {
   padding: 4px;
-  text-align: left;
+  
   border: 1px solid var(--border-color);
 }
 
@@ -1662,7 +1662,7 @@ body {
 
 /* Available Hours section styling */
 .available-hours-section {
-  background-color: #e8f4fd;  /* Light blue background for available hours section */
+  background-color: var(--background-gray);
 }
 
 .available-hours-total-label {
@@ -1674,7 +1674,7 @@ body {
 
 .available-hours-total-hours {
   text-align: center;
-  font-weight: 500; 
+  font-weight: bold; 
 }
 
 /* Style for the available hours in the hours summary */

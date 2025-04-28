@@ -70,22 +70,7 @@ const TeamMemberPanel = ({ member, allocations, onUpdate, disabled }) => {
       }).format(numValue / 100);
     }
   };
-  // const formatPercent = value => {
-  //   return new Intl.NumberFormat('en-US', {
-  //     style: 'percent',
-  //     minimumFractionDigits: 1,
-  //     maximumFractionDigits: 1,
-  //   }).format(value / 100);
-  // };
-  
-  // const formatPercent = value => {
-  //   return new Intl.NumberFormat('en-US', {
-  //     style: 'percent',
-  //     minimumFractionDigits: 1,
-  //     maximumFractionDigits: 1
-  //   }).format(value);
-  // };
-  
+    
   const handleEdit = (alloc) => {
     setEditingId(alloc.ra_id);
     setEditValues({
