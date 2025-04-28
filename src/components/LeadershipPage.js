@@ -223,13 +223,13 @@ const CollapsibleMember = ({ member, formatter, formatPercent, navigate }) => {
       <tr>
         <td>
           <button className="member-name-btn"
-            onClick={() => navigate('teamedit', { email: member.email })}>
+            onClick={() => navigate('teamedit', { member })}>
             {member.name}
           </button>
         </td>
         <td>{member.laborCategory}</td>
         <td className="number-cell">
-          {formatter.format(Number(member.scheduledHours) || 40)}
+          {formatter.format(member.scheduledHours || 40)}
         </td>
         <td className="number-cell">{formatter.format(member.directHours)}</td>
         <td className="number-cell">{formatter.format(member.ptoHours)}</td>
@@ -440,7 +440,6 @@ const ProjectsTableView = ({ teamData, formatter }) => {
 const LeadershipPage = ({ navigate }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedLeader, setSelectedLeader] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('');
   const [teamData, setTeamData] = useState({});
   const [weekStartDate, setWeekStartDate] = useState(null);

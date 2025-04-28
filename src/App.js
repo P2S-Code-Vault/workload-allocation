@@ -52,13 +52,13 @@ const Header = ({ currentView,onNavigate, onLogout }) => {
           GL View
         </button>
 
-        <button 
+        {/* <button 
         className={`nav-button ${currentView === 'teamedit' ? 'disabled' : ''}`}
         onClick={() => currentView !== 'teamedit' && onNavigate('teamedit')}
         disabled={currentView === 'teamedit'}
         >
           Team Edit
-        </button>
+        </button> */}
 
         {/* Logout Button - always enabled */}
         <button 
@@ -201,6 +201,14 @@ const MainContent = () => {
     // This will trigger the useEffect that loads allocations
     setCurrentUser(member.email);
   };
+
+  // Expose handleTeamMemberSelect globally
+  useEffect(() => {
+    window.handleTeamMemberSelect = handleTeamMemberSelect;
+    return () => {
+      delete window.handleTeamMemberSelect;
+    };
+  }, []);
 
   const resetToGroupLeader = () => {
     console.log("Resetting to group leader view");
@@ -572,30 +580,6 @@ const MainContent = () => {
     );
     return { normalRows, adminRows, ptoRows, lwopRows, availableHoursRows };
   }, [rows]);
-  // const getGroupedRows = useCallback(() => {
-  //   const ptoRows = rows.filter(row => 
-  //     row.projectNumber?.startsWith('0000-0000-0PTO') || 
-  //     row.projectNumber.startsWith('0000-0000-0SIC') ||
-  //     row.projectNumber.startsWith('0000-0000-JURY') ||
-  //     row.projectNumber?.startsWith('0000-0000-0HOL')
-  //   );
-  //   const lwopRows = rows.filter(row =>
-  //     row.projectNumber?.startsWith('0000-0000-LWOP')
-  //   );
-  //   const adminRows = rows.filter(row => 
-  //     row.projectNumber?.startsWith('0000-0000') && 
-  //     !row.projectNumber?.startsWith('0000-0000-0PTO') && 
-  //     !row.projectNumber?.startsWith('0000-0000-0HOL') &&
-  //     !row.projectNumber?.startsWith('0000-0000-0SIC') &&
-  //     !row.projectNumber?.startsWith('0000-0000-JURY') &&
-  //     !row.projectNumber?.startsWith('0000-0000-LWOP')
-  //   );
-  //   const normalRows = rows.filter(row => 
-  //     !row.projectNumber?.startsWith('0000-0000')
-  //   );
-  //   return { normalRows, adminRows, ptoRows, lwopRows };
-  // }, [rows]);
-
 
   //avail hours
   const calculateAvailableHours = useCallback(() => {
@@ -942,6 +926,8 @@ function App() {
   });
   const [userDetails, setUserDetails] = useState(null);
   const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [currentUser, setCurrentUser] = useState(''); // Define currentUser and setCurrentUser
+  const [selectedUser, setSelectedUser] = useState(null); // New state for selected user
 
   // Check if user is logged in on mount
   useEffect(() => {
@@ -982,8 +968,9 @@ function App() {
     setCurrentView(view);
   
     // Handle additional parameters for specific views
-    if (view === 'teamedit' && params.email) {
-      setUserDetails(prev => ({ ...prev, selectedEmail: params.email }));
+    if (view === 'teamedit' && params.member) {
+      console.log("Setting selected user for TeamEdit:", params.member);
+      setSelectedUser(params.member); // Set the selected user
     }
   };
 
@@ -1023,11 +1010,15 @@ return (
     
     {/* Main Content - changes based on current view */}
     {/* <main className="main-content"> */}
-    {currentView === 'resource' && <MainContent userDetails={userDetails} />}
+    {currentView === 'resource' && <MainContent userDetails={userDetails} currentUser={currentUser} setCurrentUser={setCurrentUser} />}
     {currentView === 'pm' && <PMPage navigate={handleNavigate} />}
     {currentView === 'leadership' && <LeadershipPage navigate={handleNavigate} />}
-    {currentView === 'teamedit' && <TeamEdit memberEmail={userDetails?.email} />}
-    {/* </main> */}
+    {currentView === 'teamedit' && (
+      <>
+        {console.log("Rendering TeamEdit with selectedUser:", selectedUser)}
+        <TeamEdit selectedUser={selectedUser} navigate={handleNavigate} /> {/* Pass navigate */}
+      </>
+    )}
     
     {/* Shared Footer - always present */}
     <Footer />
