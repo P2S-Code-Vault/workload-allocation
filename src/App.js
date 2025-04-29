@@ -10,6 +10,7 @@ import PMPage from './components/PMPage';
 import LeadershipPage from './components/LeadershipPage';
 import format from 'date-fns/format';
 import { startOfWeek, endOfWeek, addWeeks } from 'date-fns';
+import TeamMemberSelector from './components/TeamMemberSelector';
 import API_CONFIG from './services/apiConfig';
 
 // Header Component
@@ -80,6 +81,27 @@ const MainContent = () => {
   const [teamMembers, setTeamMembers] = useState([]);
   const [selectedTeamMember, setSelectedTeamMember] = useState(null);
   const [showTeamDropdown, setShowTeamDropdown] = useState(false);
+  const [isLoadingTeamMembers, setIsLoadingTeamMembers] = useState(false);
+  const [teamMembersError, setTeamMembersError] = useState(null);
+
+
+  useEffect(() => {
+    if (currentUser) {
+      fetchSameGroupMembers();
+    }
+  }, [currentUser]);
+
+  useEffect(() => {
+    // Initialize allocatingForUser with the current user's email
+    if (currentUser) {
+      localStorage.setItem('allocatingForUser', currentUser);
+    }
+    
+    // Clean up when component unmounts
+    return () => {
+      localStorage.removeItem('allocatingForUser');
+    };
+  }, [currentUser]);
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -117,101 +139,74 @@ const MainContent = () => {
       // Check if user is a group leader
       setIsGroupLeader(details.isGroupManager || false);
       
-      // If the user is a group leader, fetch their team members
-      if (details.isGroupManager) {
-        fetchTeamMembers(details.email);
-      }
+      
     } else {
       console.warn("No valid user details found");
     }
   }, []);
 
-  const fetchTeamMembers = async (email) => {
+  const fetchSameGroupMembers = async () => {
     try {
-      // First check the status directly
-      const statusUrl = `${API_CONFIG.BASE_URL}/gl/check-status?email=${encodeURIComponent(email)}`;
-      console.log(`Checking GL status from: ${statusUrl}`);
+      setIsLoadingTeamMembers(true);
+      setTeamMembersError(null);
       
-      const statusResponse = await fetch(statusUrl);
-      const statusData = await statusResponse.json();
+      const result = await ProjectDataService.getUsersInSameGroup(currentUser);
+      setTeamMembers(result.members || []);
       
-      console.log("GL status check:", statusData);
-      
-      // Update group leader status based on direct check
-      if (statusData.is_group_manager) {
-        setIsGroupLeader(true);
-        
-        // Now fetch team members
-        const apiUrl = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_TEAM_MEMBERS}?group_manager_email=${encodeURIComponent(email)}`;
-        console.log(`Fetching team members from: ${apiUrl}`);
-        
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-          throw new Error(`Failed to fetch team members: ${response.status}`);
-        }
-        
-        const data = await response.json();
-        console.log("Team members data:", data);
-        
-        if (data && data.members && data.members.length > 0) {
-          // Log scheduled hours for each team member
-          data.members.forEach(member => {
-            console.log(`Team member: ${member.name}, Scheduled hours: ${member.hrs_worked_per_week}`);
-          });
-          
-          setTeamMembers(data.members);
-        } else {
-          console.log("No team members found, but user is a group leader");
-        }
-      } else {
-        console.log("User is not a group leader according to direct database check");
-        setIsGroupLeader(false);
-      }
+      setIsLoadingTeamMembers(false);
     } catch (error) {
-      console.error("Error checking group leader status or fetching team members:", error);
+      console.error('Error fetching same group members:', error);
+      setTeamMembersError('Failed to load team members');
+      setIsLoadingTeamMembers(false);
     }
   };
 
-  const handleTeamMemberSelect = (member) => {
-    console.log(`Selected team member: ${member.name}, ${member.email}, Hours: ${member.hrs_worked_per_week}`);
-    setSelectedTeamMember(member);
-    
-    // Reset states for the new team member
-    setRows([]);
-    setLoadError(null);
-    setHasLoadedInitialData(false);
-    
-    if (member.hrs_worked_per_week !== null && member.hrs_worked_per_week !== undefined) {
-      const hours = Number(member.hrs_worked_per_week);
-      console.log(`Setting scheduled hours to: ${hours} (type: ${typeof hours})`);
-      setScheduledHours(hours);
-    } else {
-      setScheduledHours(40); // Default if not available
-    }
-    // This will trigger the useEffect that loads allocations
-    setCurrentUser(member.email);
-  };
+  
+  // Add this handler for team member selection
+const handleTeamMemberSelect = (member) => {
+  console.log(`Selected team member: ${member.name}, ${member.email}, Hours: ${member.hrs_worked_per_week}`);
+  setSelectedTeamMember(member);
 
-  const resetToGroupLeader = () => {
-    console.log("Resetting to group leader view");
-    setSelectedTeamMember(null);
-    
-    // Reset states
-    setRows([]);
-    setLoadError(null);
-    setHasLoadedInitialData(false);
-    
-    // Reset scheduled hours to the group leader's hours
-    if (userDetails && userDetails.scheduledHours !== null && userDetails.scheduledHours !== undefined) {
-      setScheduledHours(userDetails.scheduledHours);
-    } else {
-      setScheduledHours(40);
-    }
-    
-    // Set current user back to the group leader
-    setCurrentUser(userDetails.email);
-  };
+  localStorage.setItem('allocatingForUser', member.email);
+  console.log(`Set allocatingForUser in localStorage to: ${member.email}`);
+  // Reset states for the new team member
+  setRows([]);
+  setLoadError(null);
+  setHasLoadedInitialData(false);
+  
+  if (member.hrs_worked_per_week !== null && member.hrs_worked_per_week !== undefined) {
+    const hours = Number(member.hrs_worked_per_week);
+    console.log(`Setting scheduled hours to: ${hours} (type: ${typeof hours})`);
+    setScheduledHours(hours);
+  } else {
+    setScheduledHours(40); // Default if not available
+  }
+  // This will trigger the useEffect that loads allocations
+  setCurrentUser(member.email);
+};
 
+// Add this handler for resetting to the original user
+const resetToCurrentUser = () => {
+  console.log("Resetting to current user view");
+  setSelectedTeamMember(null);
+  console.log("Resetting to current user view");
+  // Reset states
+  setRows([]);
+  setLoadError(null);
+  setHasLoadedInitialData(false);
+  
+  // Reset scheduled hours to the original user's hours
+  if (userDetails && userDetails.scheduledHours !== null && userDetails.scheduledHours !== undefined) {
+    setScheduledHours(userDetails.scheduledHours);
+  } else {
+    setScheduledHours(40);
+  }
+  
+  // Set current user back to the original user
+  setCurrentUser(userDetails.email);
+  localStorage.setItem('allocatingForUser', userDetails.email);
+};
+  
   // Handle week change
   const handleWeekChange = useCallback((startDate, endDate) => {
     console.log("Week changed in MainContent:", {
@@ -562,31 +557,8 @@ const MainContent = () => {
     );
     return { normalRows, adminRows, ptoRows, lwopRows, availableHoursRows };
   }, [rows]);
-  // const getGroupedRows = useCallback(() => {
-  //   const ptoRows = rows.filter(row => 
-  //     row.projectNumber?.startsWith('0000-0000-0PTO') || 
-  //     row.projectNumber.startsWith('0000-0000-0SIC') ||
-  //     row.projectNumber.startsWith('0000-0000-JURY') ||
-  //     row.projectNumber?.startsWith('0000-0000-0HOL')
-  //   );
-  //   const lwopRows = rows.filter(row =>
-  //     row.projectNumber?.startsWith('0000-0000-LWOP')
-  //   );
-  //   const adminRows = rows.filter(row => 
-  //     row.projectNumber?.startsWith('0000-0000') && 
-  //     !row.projectNumber?.startsWith('0000-0000-0PTO') && 
-  //     !row.projectNumber?.startsWith('0000-0000-0HOL') &&
-  //     !row.projectNumber?.startsWith('0000-0000-0SIC') &&
-  //     !row.projectNumber?.startsWith('0000-0000-JURY') &&
-  //     !row.projectNumber?.startsWith('0000-0000-LWOP')
-  //   );
-  //   const normalRows = rows.filter(row => 
-  //     !row.projectNumber?.startsWith('0000-0000')
-  //   );
-  //   return { normalRows, adminRows, ptoRows, lwopRows };
-  // }, [rows]);
-
-
+  
+  
   //avail hours
   const calculateAvailableHours = useCallback(() => {
     return getGroupedRows().availableHoursRows.reduce((sum, row) => {
@@ -653,50 +625,15 @@ const MainContent = () => {
         <div className="user-info-container">
           <span className="user-label">Current User:</span>
           <span className="user-name">{userDetails?.name || currentUser}</span>
-          {isGroupLeader && (
-            <div className="team-controls">
-              {!selectedTeamMember ? (
-                <div className="team-dropdown">
-                  <button 
-                    className="team-dropdown-btn"
-                    onClick={() => setShowTeamDropdown(!showTeamDropdown)}
-                  >
-                    Change
-                  </button>
-                  
-                  {showTeamDropdown && (
-                    <div className="team-dropdown-list">
-                      {teamMembers.length > 0 ? (
-                        teamMembers.map(member => (
-                          <div 
-                            key={member.id}
-                            className="team-member-option"
-                            onClick={() => handleTeamMemberSelect(member)}
-                          >
-                            <div className="member-name">{member.name}</div>
-                            {/* <div className="member-details">{member.email}</div> */}
-                          </div>
-                        ))
-                      ) : (
-                        <div className="no-team-members">No team members found</div>
-                      )}
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="managing-indicator">
-                  {/* <span>Team Member:</span> */}
-                  <strong>{selectedTeamMember.name}</strong>
-                  <button 
-                    className="reset-view-btn"
-                    onClick={resetToGroupLeader}
-                  >
-                    Reset
-                  </button>
-                </div>
-              )}
-            </div>
-          )}
+            <TeamMemberSelector 
+              currentUser={currentUser}
+              teamMembers={teamMembers}
+              isLoading={isLoadingTeamMembers}
+              error={teamMembersError}
+              selectedMember={selectedTeamMember}
+              onSelectTeamMember={handleTeamMemberSelect}
+              onReset={resetToCurrentUser}
+            />
           <div className="scheduled-hours-container">
             <label htmlFor="scheduledHours">Scheduled Hours:</label>
             <input
