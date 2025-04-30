@@ -17,7 +17,8 @@ const API_CONFIG = {
       GL_ALL_STAFF: '/gl/all-staff',
       USER_GROUP_INFO: '/users/group-info',
       USERS_BY_GROUP_MANAGER: '/users/by-group-manager',
-      CONTACTS_SEARCH: '/contacts/search'
+      CONTACTS_SEARCH: '/contacts/search',
+      USERS_SAME_GROUP: '/users/same-group'
     },
     
     // HTTP status codes
