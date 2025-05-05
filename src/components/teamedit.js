@@ -173,8 +173,8 @@ const TeamEdit = ({ selectedUser, navigate }) => {
       const results = await Promise.all(savePromises.filter(Boolean));
       console.log("Save results:", results);
 
-      // Redirect to LeadershipPage on successful save
-      navigate('leadership');
+      // Redirect to LeadershipPage with a refresh parameter
+      navigate('leadership', { refresh: true });
     } catch (error) {
       console.error("Error saving allocations:", error);
       setLoadError("Failed to save allocations. Please try again.");

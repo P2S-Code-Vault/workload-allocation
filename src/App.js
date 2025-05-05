@@ -9,7 +9,7 @@ import Login from './components/Login';
 import PMPage from './components/PMPage';
 import LeadershipPage from './components/LeadershipPage';
 import format from 'date-fns/format';
-import { startOfWeek, endOfWeek, addWeeks } from 'date-fns';
+import { startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns';
 import TeamMemberSelector from './components/TeamMemberSelector';
 import API_CONFIG from './services/apiConfig';
 import TeamEdit from './components/teamedit';
@@ -622,19 +622,67 @@ const resetToCurrentUser = () => {
   // Get grouped rows once instead of calling multiple times
   const groupedRows = getGroupedRows();
 
+  const copyPreviousWeekAllocations = async () => {
+    try {
+      setIsLoading(true);
+      setLoadError(null);
+
+      const previousWeekStart = startOfWeek(subWeeks(weekStartDate, 1), { weekStartsOn: 1 });
+      const previousWeekEnd = endOfWeek(subWeeks(weekEndDate, 1), { weekStartsOn: 1 });
+
+      console.log("Copying allocations from previous week:", {
+        startDate: format(previousWeekStart, 'yyyy-MM-dd'),
+        endDate: format(previousWeekEnd, 'yyyy-MM-dd'),
+      });
+
+      const previousAllocations = await ProjectDataService.getAllocations(
+        currentUser,
+        format(previousWeekStart, 'yyyy-MM-dd'),
+        format(previousWeekEnd, 'yyyy-MM-dd')
+      );
+
+      if (previousAllocations && previousAllocations.length > 0) {
+        const newRows = previousAllocations.map((allocation) => ({
+          resource: currentUser,
+          projectNumber: allocation.proj_id || allocation.project_number,
+          projectName: allocation.project_name || '',
+          milestone: allocation.milestone_name || '',
+          pm: allocation.project_manager || '',
+          labor: allocation.contract_labor || 0,
+          pctLaborUsed: (allocation.forecast_pm_labor || 0) * 100,
+          hours: allocation.ra_hours || allocation.hours || 0,
+          remarks: allocation.ra_remarks || allocation.remarks || '',
+        }));
+
+        // Remove the 5 empty rows before adding the new rows
+        setRows((prevRows) => [
+          ...prevRows.filter((row) => row.projectNumber || row.hours), 
+          ...newRows
+        ]);
+
+        console.log("Copied previous week's allocations successfully.");
+      } else {
+        console.warn("No allocations found for the previous week.");
+      }
+    } catch (error) {
+      console.error("Error copying previous week's allocations:", error);
+      setLoadError("Failed to copy previous week's allocations.");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   return (
     <main className="main-content">
       <div className="content-wrapper">
         <div className="table-container">
           {loadError && <div className="error-banner">{loadError}</div>}
           {saveError && <div className="error-banner">{saveError}</div>}
-          {/* <WeekPicker className="week-picker" onWeekChange={handleWeekChange} /> */}
           <WeekPicker className="resource-week-picker" onWeekChange={handleWeekChange} />
 
-          {/* Add user info display here */}
-        <div className="user-info-container">
-          <span className="user-label">Current User:</span>
-          <span className="user-name">{userDetails?.name || currentUser}</span>
+          <div className="user-info-container">
+            <span className="user-label">Current User:</span>
+            <span className="user-name">{userDetails?.name || currentUser}</span>
             <TeamMemberSelector 
               currentUser={currentUser}
               teamMembers={teamMembers}
@@ -821,6 +869,13 @@ const resetToCurrentUser = () => {
             >
             Contact Support
             </button>
+            <button
+              onClick={copyPreviousWeekAllocations}
+              className="add-btn"
+              disabled={isLoading || isSaving}
+            >
+              Copy Previous Week
+            </button>
             <button onClick={addRow} className="add-btn" disabled={isSaving || isLoading}>Add Row</button>
             <button 
               onClick={handleSave} 
@@ -918,6 +973,14 @@ function App() {
   
     // Save the current view to localStorage
     localStorage.setItem('currentView', view);
+  
+    // Force refresh for LeadershipPage if navigating after TeamEdit save
+    if (view === 'leadership' && params.refresh) {
+      console.log("Forcing refresh for LeadershipPage...");
+      window.location.reload();
+      return;
+    }
+  
     setCurrentView(view);
   
     // Handle additional parameters for specific views
