@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import headerLogo from './P2S_Legence_Logo_White.png';
 import TableRow from './components/TableRow';
@@ -13,7 +13,6 @@ import { startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns';
 import TeamMemberSelector from './components/TeamMemberSelector';
 import API_CONFIG from './services/apiConfig';
 import TeamEdit from './components/teamedit';
-
 
 // Header Component
 const Header = ({ currentView,onNavigate, onLogout }) => {
@@ -74,7 +73,7 @@ const Header = ({ currentView,onNavigate, onLogout }) => {
 };
 
 // Main Content Component
-const MainContent = () => {
+const MainContent = React.forwardRef((props, ref) => {
   const [rows, setRows] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
@@ -235,20 +234,178 @@ const resetToCurrentUser = () => {
     setWeekEndDate(endDate);
   }, []);
 
+  // Track if there are unsaved changes
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Update hasUnsavedChanges whenever rows are modified
+  useEffect(() => {
+    if (hasLoadedInitialData && rows.length > 0) {
+      // Only set unsaved changes when rows are actually modified after initial load
+      if (!isLoading) {
+        setHasUnsavedChanges(true);
+      }
+    }
+  }, [rows]);
+
+  // Reset hasUnsavedChanges when data is loaded
+  useEffect(() => {
+    if (!isLoading && hasLoadedInitialData) {
+      setHasUnsavedChanges(false);
+    }
+  }, [isLoading, hasLoadedInitialData]);
+
+  // Reset unsaved changes flag after successful save
+  const handleSuccessfulSave = useCallback(() => {
+    setHasUnsavedChanges(false);
+  }, []);
+
+  // Wrap the save function to accept a callback
+  const saveWithCallback = useCallback((callback) => {
+    const originalSave = async () => {
+      try {
+        setIsSaving(true);
+        setSaveError(null);
+        
+        const savePromises = [];
+        const updatedRows = [];
+        const newRows = [];
+        
+        // Format week dates once for all operations
+        const formattedWeekStart = weekStartDate ? format(weekStartDate, 'yyyy-MM-dd') : null;
+        const formattedWeekEnd = weekEndDate ? format(weekEndDate, 'yyyy-MM-dd') : null;
+        
+        console.log("Saving with week dates:", {
+          start: formattedWeekStart,
+          end: formattedWeekEnd
+        });
+        
+        // Debug log all rows before saving
+        console.log("All rows before saving:", JSON.stringify(rows, null, 2));
+        
+        // Organize rows for saving
+        for (let row of rows) {
+          // Skip rows with no project number or hours
+          if (!row.projectNumber || !row.hours) {
+            console.log("Skipping row - missing project number or hours:", row);
+            continue;
+          }
+          
+          // Explicitly check and log row ID to debug
+          if (row.id) {
+            console.log(`Found existing row with ID: ${row.id}, Type: ${typeof row.id}`);
+            updatedRows.push(row);
+          } else {
+            console.log("New row without ID:", row);
+            newRows.push(row);
+          }
+        }
+        
+        // Process updates
+        for (let row of updatedRows) {
+          console.log(`Updating allocation with ID: ${row.id}`);
+          savePromises.push(
+            ProjectDataService.updateAllocation(row.id, row.hours, row.remarks)
+              .then(result => {
+                console.log(`Update result for ID ${row.id}:`, result);
+                return { ...result, action: 'update', id: row.id };
+              })
+              .catch(err => {
+                console.error(`Error updating allocation ${row.id}:`, err);
+                throw err;
+              })
+          );
+        }
+        
+        // Process new rows
+        for (let row of newRows) {
+          console.log(`Creating new allocation for project: ${row.projectNumber}`);
+          savePromises.push(
+            ProjectDataService.saveResourceAllocation({
+              email: currentUser,
+              project_number: row.projectNumber,
+              hours: parseFloat(row.hours) || 0,
+              remarks: row.remarks || "",
+              week_start: formattedWeekStart,
+              week_end: formattedWeekEnd,
+            })
+              .then(result => {
+                console.log(`Create result:`, result);
+                return { ...result, action: 'create' };
+              })
+              .catch(err => {
+                console.error(`Error creating allocation:`, err);
+                throw err;
+              })
+          );
+        }
+        
+        // Wait for all save operations to complete
+        if (savePromises.length > 0) {
+          const results = await Promise.all(savePromises);
+          console.log("Save operation results:", results);
+          setHasUnsavedChanges(false);
+        } else {
+          console.log("No changes to save");
+        }
+        
+        if (callback && typeof callback === 'function') {
+          callback();
+        }
+      } catch (error) {
+        console.error('Save failed:', error);
+        setSaveError('Failed to save data: ' + error.message);
+      } finally {
+        setIsSaving(false);
+      }
+    };
+
+    originalSave();
+  }, [rows, weekStartDate, weekEndDate, currentUser]);
+
   // IMPORTANT: Initialize week dates if not set by WeekPicker
   useEffect(() => {
     if (!weekStartDate || !weekEndDate) {
-      const today = addWeeks(new Date(), 1); // Start one week ahead
-      const startDate = startOfWeek(today, { weekStartsOn: 1 });
-      const endDate = endOfWeek(today, { weekStartsOn: 1 });
-      
-      console.log("Initializing with next week:", {
-        startDate: format(startDate, 'yyyy-MM-dd'),
-        endDate: format(endDate, 'yyyy-MM-dd')
-      });
-      
-      setWeekStartDate(startDate);
-      setWeekEndDate(endDate);
+      try {
+        // Try to get the date from localStorage
+        const storedDate = localStorage.getItem('selectedWeekDate');
+        let initialDate;
+        
+        if (storedDate) {
+          initialDate = new Date(storedDate);
+          if (!(initialDate instanceof Date) || isNaN(initialDate)) {
+            // Invalid date from storage, use default
+            initialDate = addWeeks(new Date(), 1);
+          }
+        } else {
+          // No stored date, use default
+          initialDate = addWeeks(new Date(), 1);
+        }
+        
+        const startDate = startOfWeek(initialDate, { weekStartsOn: 1 });
+        const endDate = endOfWeek(initialDate, { weekStartsOn: 1 });
+        
+        console.log("MainContent - Initializing with dates:", {
+          startDate: format(startDate, 'yyyy-MM-dd'),
+          endDate: format(endDate, 'yyyy-MM-dd')
+        });
+        
+        setWeekStartDate(startDate);
+        setWeekEndDate(endDate);
+      } catch (e) {
+        console.warn("Error getting dates from localStorage:", e);
+        // Fall back to next week
+        const today = addWeeks(new Date(), 1);
+        const startDate = startOfWeek(today, { weekStartsOn: 1 });
+        const endDate = endOfWeek(today, { weekStartsOn: 1 });
+        
+        console.log("Initializing with next week (after error):", {
+          startDate: format(startDate, 'yyyy-MM-dd'),
+          endDate: format(endDate, 'yyyy-MM-dd')
+        });
+        
+        setWeekStartDate(startDate);
+        setWeekEndDate(endDate);
+      }
     }
   }, [weekStartDate, weekEndDate]);
 
@@ -672,13 +829,24 @@ const resetToCurrentUser = () => {
     }
   };
 
+  // Make hasUnsavedChanges and saveWithCallback accessible via ref
+  React.useImperativeHandle(ref, () => ({
+    hasUnsavedChanges,
+    saveChanges: saveWithCallback
+  }));
+
   return (
     <main className="main-content">
       <div className="content-wrapper">
         <div className="table-container">
           {loadError && <div className="error-banner">{loadError}</div>}
           {saveError && <div className="error-banner">{saveError}</div>}
-          <WeekPicker className="resource-week-picker" onWeekChange={handleWeekChange} />
+          <WeekPicker 
+            className="resource-week-picker" 
+            onWeekChange={handleWeekChange} 
+            hasUnsavedChanges={hasUnsavedChanges}
+            onSaveChanges={saveWithCallback}
+          />
 
           <div className="user-info-container">
             <span className="user-label">Current User:</span>
@@ -878,7 +1046,7 @@ const resetToCurrentUser = () => {
             </button>
             <button onClick={addRow} className="add-btn" disabled={isSaving || isLoading}>Add Row</button>
             <button 
-              onClick={handleSave} 
+              onClick={() => saveWithCallback(handleSuccessfulSave)} 
               className="save-btn"
               disabled={isSaving || isLoading}
             >
@@ -890,7 +1058,7 @@ const resetToCurrentUser = () => {
       </div>
     </main>
   );
-};
+});
 
 // Footer Component
 const Footer = () => {
@@ -936,6 +1104,10 @@ function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [currentUser, setCurrentUser] = useState(''); // Define currentUser and setCurrentUser
   const [selectedUser, setSelectedUser] = useState(null); // New state for selected user
+  
+  // Reference to the MainContent component to check for unsaved changes
+  const mainContentRef = useRef(null);
+  const teamEditRef = useRef(null);
 
   // Check if user is logged in on mount
   useEffect(() => {
@@ -953,9 +1125,49 @@ function App() {
     checkLoginStatus();
   }, []);
 
+  // Function to check if there are unsaved changes
+  const hasUnsavedChanges = () => {
+    // Check current view and component
+    if (currentView === 'resource' && mainContentRef.current) {
+      return mainContentRef.current.hasUnsavedChanges || false;
+    } else if (currentView === 'teamedit' && teamEditRef.current) {
+      return teamEditRef.current.hasUnsavedChanges || false;
+    }
+    return false;
+  };
+
   const handleNavigate = (view, params = {}) => {
-    console.log(`Navigating to ${view} view`, params);
+    console.log(`Attempting to navigate to ${view} view`, params);
+    
+    // Skip unsaved changes check if explicitly bypassing (e.g., after save)
+    if (params.bypassConfirm) {
+      proceedWithNavigation(view, params);
+      return;
+    }
+    
+    // Check for unsaved changes before navigating
+    if (hasUnsavedChanges()) {
+      if (!window.confirm("You have unsaved changes. Press Ok to save them. Press Cancel to discard.")) {
+        // User chose not to save, proceed with navigation
+        proceedWithNavigation(view, params);
+      } else {
+        // User chose to save, call save function then navigate
+        if (currentView === 'resource' && mainContentRef.current && mainContentRef.current.saveChanges) {
+          mainContentRef.current.saveChanges(() => proceedWithNavigation(view, params));
+        } else if (currentView === 'teamedit' && teamEditRef.current && teamEditRef.current.saveChanges) {
+          teamEditRef.current.saveChanges(() => proceedWithNavigation(view, params));
+        } else {
+          // No save method available, proceed anyway
+          proceedWithNavigation(view, params);
+        }
+      }
+    } else {
+      // No unsaved changes, proceed with navigation
+      proceedWithNavigation(view, params);
+    }
+  };
   
+  const proceedWithNavigation = (view, params = {}) => {
     // Clear any cached data that might be causing dropdowns to appear
     if (view === 'resource') {
       if (window.clearSearchSuggestions) {
@@ -977,6 +1189,10 @@ function App() {
     // Force refresh for LeadershipPage if navigating after TeamEdit save
     if (view === 'leadership' && params.refresh) {
       console.log("Forcing refresh for LeadershipPage...");
+      // If coming from a save action, don't show the confirmation dialog again
+      if (params.bypassConfirm) {
+        console.log("Bypassing confirmation dialog after save");
+      }
       window.location.reload();
       return;
     }
@@ -1002,11 +1218,13 @@ function App() {
 
   // Update localStorage when user logs out
   const handleLogout = () => {
-    UserService.logout();
-    // Clear the saved view when logging out
-    localStorage.removeItem('currentView');
-    setIsLoggedIn(false);
-    setUserDetails(null);
+    if (window.confirm("Are you sure you want to log out?")) {
+      UserService.logout();
+      // Clear the saved view when logging out
+      localStorage.removeItem('currentView');
+      setIsLoggedIn(false);
+      setUserDetails(null);
+    }
   };
 
   // If not logged in, show login screen
@@ -1014,33 +1232,44 @@ function App() {
     return <Login onLogin={handleLogin} />;
   }
 
-return (
-  <div className="page-layout">
-    {/* Shared Header - always present */}
-    <Header 
-      currentView={currentView}
-      onNavigate={handleNavigate} 
-      onLogout={handleLogout}
-      userDetails={userDetails}
-    />
-    
-    {/* Main Content - changes based on current view */}
-    {/* <main className="main-content"> */}
-    {currentView === 'resource' && <MainContent userDetails={userDetails} currentUser={currentUser} setCurrentUser={setCurrentUser} />}
-    {currentView === 'pm' && <PMPage navigate={handleNavigate} />}
-    {currentView === 'leadership' && <LeadershipPage navigate={handleNavigate} />}
-    {currentView === 'teamedit' && (
-      <>
-        {console.log("Rendering TeamEdit with selectedUser:", selectedUser)}
-        <TeamEdit selectedUser={selectedUser} navigate={handleNavigate} /> {/* Pass navigate */}
-      </>
-    )}
-    
-    {/* Shared Footer - always present */}
-    <Footer />
-    
-  </div>
-);
+  return (
+    <div className="page-layout">
+      {/* Shared Header - always present */}
+      <Header 
+        currentView={currentView}
+        onNavigate={handleNavigate} 
+        onLogout={handleLogout}
+        userDetails={userDetails}
+      />
+      
+      {/* Main Content - changes based on current view */}
+      {currentView === 'resource' && (
+        <MainContent 
+          ref={mainContentRef}
+          userDetails={userDetails} 
+          currentUser={currentUser} 
+          setCurrentUser={setCurrentUser} 
+        />
+      )}
+      {currentView === 'pm' && <PMPage navigate={handleNavigate} />}
+      {currentView === 'leadership' && <LeadershipPage navigate={handleNavigate} />}
+      {currentView === 'teamedit' && (
+        <>
+          {console.log("Rendering TeamEdit with selectedUser:", selectedUser)}
+          <TeamEdit 
+            ref={teamEditRef}
+            selectedUser={selectedUser} 
+            navigate={handleNavigate} 
+          />
+        </>
+      )}
+      
+      {/* Shared Footer - always present */}
+      <Footer />
+      
+    </div>
+  );
 }
+
 export { MainContent }; 
 export default App;

@@ -8,9 +8,24 @@ import DatePicker from 'react-datepicker';
 import './WeekPicker.css';
 import "react-datepicker/dist/react-datepicker.css";
 
-const WeekPicker = ({ onWeekChange, className = '' }) => {
-  // Always initialize with next week's date
-  const [currentDate, setCurrentDate] = useState(addWeeks(new Date(), 1));
+const WeekPicker = ({ onWeekChange, className = '', hasUnsavedChanges = false, onSaveChanges = null }) => {
+  // Initialize from localStorage or default to next week's date
+  const [currentDate, setCurrentDate] = useState(() => {
+    try {
+      const storedDate = localStorage.getItem('selectedWeekDate');
+      if (storedDate) {
+        const parsedDate = new Date(storedDate);
+        if (parsedDate instanceof Date && !isNaN(parsedDate)) {
+          return parsedDate;
+        }
+      }
+    } catch (e) {
+      console.warn("Error reading date from localStorage:", e);
+    }
+    // Default to next week if no valid date in localStorage
+    return addWeeks(new Date(), 1);
+  });
+  
   const [isPickerOpen, setIsPickerOpen] = useState(false);
   
   // Calculate start and end dates based on current date
@@ -33,56 +48,62 @@ const WeekPicker = ({ onWeekChange, className = '' }) => {
     }
   }, []); // Empty dependency array - run only once on mount
 
+  // Save to localStorage whenever currentDate changes
+  useEffect(() => {
+    try {
+      localStorage.setItem('selectedWeekDate', currentDate.toISOString());
+    } catch (e) {
+      console.warn("Error saving date to localStorage:", e);
+    }
+  }, [currentDate]);
+
+  const handleWeekChange = (newDate) => {
+    // Function to handle week change with confirmation
+    if (hasUnsavedChanges && onSaveChanges) {
+      if (window.confirm("You have unsaved changes. Press Ok to save them. Press Cancel to discard.")) {
+        onSaveChanges(() => {
+          // After saving, proceed with the week change
+          setCurrentDate(newDate);
+          const newStartDate = startOfWeek(newDate, { weekStartsOn: 1 });
+          const newEndDate = endOfWeek(newDate, { weekStartsOn: 1 });
+          if (onWeekChange) {
+            onWeekChange(newStartDate, newEndDate);
+          }
+        });
+      } else {
+        // User chose not to save, just change the week
+        setCurrentDate(newDate);
+        const newStartDate = startOfWeek(newDate, { weekStartsOn: 1 });
+        const newEndDate = endOfWeek(newDate, { weekStartsOn: 1 });
+        if (onWeekChange) {
+          onWeekChange(newStartDate, newEndDate);
+        }
+      }
+    } else {
+      // No unsaved changes or no save handler, just change the week
+      setCurrentDate(newDate);
+      const newStartDate = startOfWeek(newDate, { weekStartsOn: 1 });
+      const newEndDate = endOfWeek(newDate, { weekStartsOn: 1 });
+      if (onWeekChange) {
+        onWeekChange(newStartDate, newEndDate);
+      }
+    }
+  };
+
   const handlePreviousWeek = () => {
     const newDate = subWeeks(currentDate, 1);
-    setCurrentDate(newDate);
-    
-    // Calculate new dates and notify parent
-    const newStartDate = startOfWeek(newDate, { weekStartsOn: 1 });
-    const newEndDate = endOfWeek(newDate, { weekStartsOn: 1 });
-    
-    if (onWeekChange) {
-      console.log("Week changed to previous:", {
-        startDate: format(newStartDate, 'yyyy-MM-dd'),
-        endDate: format(newEndDate, 'yyyy-MM-dd')
-      });
-      onWeekChange(newStartDate, newEndDate);
-    }
+    handleWeekChange(newDate);
   };
 
   const handleNextWeek = () => {
     const newDate = addWeeks(currentDate, 1);
-    setCurrentDate(newDate);
-    
-    // Calculate new dates and notify parent
-    const newStartDate = startOfWeek(newDate, { weekStartsOn: 1 });
-    const newEndDate = endOfWeek(newDate, { weekStartsOn: 1 });
-    
-    if (onWeekChange) {
-      console.log("Week changed to next:", {
-        startDate: format(newStartDate, 'yyyy-MM-dd'),
-        endDate: format(newEndDate, 'yyyy-MM-dd')
-      });
-      onWeekChange(newStartDate, newEndDate);
-    }
+    handleWeekChange(newDate);
   };
 
   const handleDateSelect = (date) => {
     if (date instanceof Date && !isNaN(date)) {
-      setCurrentDate(date);
       setIsPickerOpen(false);
-      
-      // Calculate new dates and notify parent
-      const newStartDate = startOfWeek(date, { weekStartsOn: 1 });
-      const newEndDate = endOfWeek(date, { weekStartsOn: 1 });
-      
-      if (onWeekChange) {
-        console.log("Week changed by date picker:", {
-          startDate: format(newStartDate, 'yyyy-MM-dd'),
-          endDate: format(newEndDate, 'yyyy-MM-dd')
-        });
-        onWeekChange(newStartDate, newEndDate);
-      }
+      handleWeekChange(date);
     }
   };
 

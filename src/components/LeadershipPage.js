@@ -432,18 +432,41 @@ const LeadershipPage = ({ navigate }) => {
       setCurrentUser(userDetails);
     }
     
-    // Initialize with next week's dates instead of current week
-    const today = addWeeks(new Date(), 1);
-    const startDate = startOfWeek(today, { weekStartsOn: 1 });
-    const endDate = endOfWeek(today, { weekStartsOn: 1 });
-    
-    console.log("Leadership Page - Initializing with next week:", {
-      startDate: format(startDate, 'yyyy-MM-dd'),
-      endDate: format(endDate, 'yyyy-MM-dd')
-    });
-    
-    setWeekStartDate(startDate);
-    setWeekEndDate(endDate);
+    // Initialize with stored week date or default to next week
+    try {
+      const storedDate = localStorage.getItem('selectedWeekDate');
+      let initialDate;
+      
+      if (storedDate) {
+        initialDate = new Date(storedDate);
+        if (!(initialDate instanceof Date) || isNaN(initialDate)) {
+          // Invalid date from storage, use default
+          initialDate = addWeeks(new Date(), 1);
+        }
+      } else {
+        // No stored date, use default
+        initialDate = addWeeks(new Date(), 1);
+      }
+      
+      const startDate = startOfWeek(initialDate, { weekStartsOn: 1 });
+      const endDate = endOfWeek(initialDate, { weekStartsOn: 1 });
+      
+      console.log("Leadership Page - Initializing with dates:", {
+        startDate: format(startDate, 'yyyy-MM-dd'),
+        endDate: format(endDate, 'yyyy-MM-dd')
+      });
+      
+      setWeekStartDate(startDate);
+      setWeekEndDate(endDate);
+    } catch (e) {
+      console.warn("Error getting dates from localStorage:", e);
+      // Fall back to next week if there's an error
+      const today = addWeeks(new Date(), 1);
+      const startDate = startOfWeek(today, { weekStartsOn: 1 });
+      const endDate = endOfWeek(today, { weekStartsOn: 1 });
+      setWeekStartDate(startDate);
+      setWeekEndDate(endDate);
+    }
     
     const fetchAllLeaders = async () => {
       try {

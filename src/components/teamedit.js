@@ -1,11 +1,11 @@
-import React, { useEffect, useState, useCallback } from 'react';
+import React, { useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
 import './TeamEdit.css';
 import { ProjectDataService } from '../services/ProjectDataService';
 import TableRow from './TableRow';
 import WeekPicker from './WeekPicker'; 
-import { format } from 'date-fns';
+import { format, startOfWeek, endOfWeek } from 'date-fns';
 
-const TeamEdit = ({ selectedUser, navigate }) => {
+const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
   const [userData, setUserData] = useState(null);
   const [rows, setRows] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -13,6 +13,8 @@ const TeamEdit = ({ selectedUser, navigate }) => {
   const [weekStartDate, setWeekStartDate] = useState(null);
   const [weekEndDate, setWeekEndDate] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [initialRowsData, setInitialRowsData] = useState('');
 
   useEffect(() => {
     if (!selectedUser) {
@@ -24,14 +26,46 @@ const TeamEdit = ({ selectedUser, navigate }) => {
 
     console.log("Selected user received in TeamEdit:", selectedUser);
 
-    // Initialize week dates if not already set
+    // Initialize week dates from localStorage or use current date as fallback
     if (!weekStartDate || !weekEndDate) {
-      const today = new Date();
-      const startDate = format(today, 'yyyy-MM-dd');
-      const endDate = format(today, 'yyyy-MM-dd');
-      console.log("Initializing week dates:", { startDate, endDate });
-      setWeekStartDate(startDate);
-      setWeekEndDate(endDate);
+      try {
+        // Try to get the date from localStorage
+        const storedDate = localStorage.getItem('selectedWeekDate');
+        let initialDate;
+        
+        if (storedDate) {
+          initialDate = new Date(storedDate);
+          if (!(initialDate instanceof Date) || isNaN(initialDate)) {
+            // Invalid date from storage, use current date
+            initialDate = new Date();
+          }
+        } else {
+          // No stored date, use current date
+          initialDate = new Date();
+        }
+        
+        const startDate = format(
+          startOfWeek(initialDate, { weekStartsOn: 1 }),
+          'yyyy-MM-dd'
+        );
+        const endDate = format(
+          endOfWeek(initialDate, { weekStartsOn: 1 }),
+          'yyyy-MM-dd'
+        );
+        
+        console.log("TeamEdit - Initializing with dates:", { startDate, endDate });
+        setWeekStartDate(startDate);
+        setWeekEndDate(endDate);
+      } catch (e) {
+        console.warn("Error getting dates from localStorage:", e);
+        // Default to current date if there's an error
+        const today = new Date();
+        const startDate = format(today, 'yyyy-MM-dd');
+        const endDate = format(today, 'yyyy-MM-dd');
+        console.log("Initializing with current date (after error):", { startDate, endDate });
+        setWeekStartDate(startDate);
+        setWeekEndDate(endDate);
+      }
     }
 
     if (selectedUser && weekStartDate && weekEndDate) {
@@ -47,10 +81,28 @@ const TeamEdit = ({ selectedUser, navigate }) => {
     }
   }, [selectedUser, weekStartDate, weekEndDate]);
 
+  useEffect(() => {
+    // Track changes when rows are modified, but only after initial loading
+    if (rows.length > 0 && !isLoading) {
+      // Create a reference to original data to detect actual changes
+      const initialRowsJSON = JSON.stringify(rows);
+      
+      // Store original data on first load
+      if (!hasUnsavedChanges) {
+        setInitialRowsData(initialRowsJSON);
+      } else {
+        // Compare current data with initial data
+        const currentRowsJSON = JSON.stringify(rows);
+        setHasUnsavedChanges(initialRowsData !== currentRowsJSON);
+      }
+    }
+  }, [rows, isLoading]);
+
   const fetchAllocations = async (email, startDate, endDate) => {
     try {
       setIsLoading(true);
       setLoadError(null);
+      setHasUnsavedChanges(false); // Reset unsaved changes flag when fetching new data
 
       console.log(`Fetching allocations for ${email} from ${startDate} to ${endDate}`);
       const data = await ProjectDataService.getAllocations(email, startDate, endDate);
@@ -72,6 +124,9 @@ const TeamEdit = ({ selectedUser, navigate }) => {
         remarks: allocation.remarks,
       }));
       setRows(processedRows);
+      
+      // Store the initial state of the rows after loading
+      setInitialRowsData(JSON.stringify(processedRows));
     } catch (error) {
       console.error("Error fetching allocations:", error);
       setLoadError("Failed to load allocations.");
@@ -93,6 +148,7 @@ const TeamEdit = ({ selectedUser, navigate }) => {
     }
   }, [userData]);
 
+  // Update addRow to mark changes
   const addRow = useCallback(() => {
     setRows(prevRows => [
       ...prevRows,
@@ -107,6 +163,7 @@ const TeamEdit = ({ selectedUser, navigate }) => {
         remarks: '',
       },
     ]);
+    setHasUnsavedChanges(true); // Explicitly mark changes on add row
   }, []);
 
   const updateRow = useCallback((index, field, value) => {
@@ -117,6 +174,7 @@ const TeamEdit = ({ selectedUser, navigate }) => {
     });
   }, []);
 
+  // Update deleteRow to mark changes
   const deleteRow = useCallback(async (index) => {
     const rowToDelete = rows[index];
 
@@ -126,6 +184,7 @@ const TeamEdit = ({ selectedUser, navigate }) => {
         await ProjectDataService.deleteAllocation(rowToDelete.id);
         setRows(prevRows => prevRows.filter((_, i) => i !== index));
         console.log(`Deleted allocation with ID: ${rowToDelete.id}`);
+        setHasUnsavedChanges(true); // Explicitly mark changes on delete row
       } catch (error) {
         console.error("Failed to delete allocation:", error);
       } finally {
@@ -133,6 +192,7 @@ const TeamEdit = ({ selectedUser, navigate }) => {
       }
     } else {
       setRows(prevRows => prevRows.filter((_, i) => i !== index));
+      setHasUnsavedChanges(true); // Explicitly mark changes on delete row
     }
   }, [rows]);
 
@@ -140,7 +200,8 @@ const TeamEdit = ({ selectedUser, navigate }) => {
     return rows.reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
   }, [rows]);
 
-  const handleSave = async () => {
+  // Wrap the save function to accept a callback
+  const saveWithCallback = async (callback) => {
     try {
       setIsSaving(true);
       setLoadError(null);
@@ -172,9 +233,16 @@ const TeamEdit = ({ selectedUser, navigate }) => {
       // Wait for all save operations to complete
       const results = await Promise.all(savePromises.filter(Boolean));
       console.log("Save results:", results);
+      
+      setHasUnsavedChanges(false);
 
-      // Redirect to LeadershipPage with a refresh parameter
-      navigate('leadership', { refresh: true });
+      if (callback && typeof callback === 'function') {
+        callback();
+      } else {
+        // Redirect to LeadershipPage with a refresh parameter
+        // Clear hasUnsavedChanges before navigating to prevent the confirmation dialog
+        navigate('leadership', { refresh: true, bypassConfirm: true });
+      }
     } catch (error) {
       console.error("Error saving allocations:", error);
       setLoadError("Failed to save allocations. Please try again.");
@@ -183,13 +251,27 @@ const TeamEdit = ({ selectedUser, navigate }) => {
     }
   };
 
+  // Make hasUnsavedChanges and saveChanges accessible via ref
+  useImperativeHandle(ref, () => ({
+    hasUnsavedChanges: () => {
+      // Check for route to leadership after save
+      const bypassing = navigate.bypassConfirm === true;
+      return bypassing ? false : hasUnsavedChanges;
+    },
+    saveChanges: saveWithCallback
+  }));
+
   if (!userData) {
     return <div>Loading user data...</div>;
   }
 
   return (
     <div className="team-edit-container">
-      <WeekPicker onWeekChange={handleWeekChange} />
+      <WeekPicker 
+        onWeekChange={handleWeekChange} 
+        hasUnsavedChanges={hasUnsavedChanges}
+        onSaveChanges={saveWithCallback}
+      />
       <div className="user-info-container">
         <span className="user-label">Team Member:</span>
         <span className="user-name">{userData.name}</span>
@@ -249,7 +331,7 @@ const TeamEdit = ({ selectedUser, navigate }) => {
       <div className="table-actions">
         <button onClick={addRow} className="add-btn" disabled={isSaving || isLoading}>Add Row</button>
         <button 
-          onClick={handleSave} 
+          onClick={() => saveWithCallback()} 
           className="save-btn" 
           disabled={isSaving || isLoading}
         >
@@ -258,6 +340,6 @@ const TeamEdit = ({ selectedUser, navigate }) => {
       </div>
     </div>
   );
-};
+});
 
 export default TeamEdit;
