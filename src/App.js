@@ -1074,7 +1074,7 @@ const Footer = () => {
           onMouseLeave={() => setShowAboutTooltip(false)}
         >
           {/* <span className="footer-text">Version 0.4 </span> */}
-          <span className="footer-text">Version 0.4 | About</span>
+          <span className="footer-text">Version 0.5 | About</span>
           {showAboutTooltip && (
             <div className="tooltip">
               Our Resource Allocation App was developed by Nilay Nagar, Chad Peterson, and Jonathan Herrera.
