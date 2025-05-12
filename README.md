@@ -1,3 +1,15 @@
+
+# Getting Started with surviving Legence policies:
+
+If, and a big if you could actually connect to a github repo and manager to pull the repo, \
+Bypass the Execution policies using powershell:
+
+```powershell
+Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+```
+then run the scripts and **nothing else**, close the terminal before switching tasks.
+
+
 # Getting Started with Create React App
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
@@ -18,7 +30,7 @@ You may also see any lint errors in the console.
 
 Launches the test runner in the interactive watch mode.\
 See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
-
+wa
 ### `npm run build`
 
 Builds the app for production to the `build` folder.\

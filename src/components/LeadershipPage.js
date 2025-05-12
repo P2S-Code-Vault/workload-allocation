@@ -101,7 +101,7 @@ const GroupSelector = ({ onGroupChange, selectedGroup, groups = [] }) => {
   );
 };
 
-const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent }) => {
+const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent, navigate }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   
   return (
@@ -154,6 +154,7 @@ const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent }) =>
               studioData={studioData}
               formatter={formatter}
               formatPercent={formatPercent}
+              navigate={navigate} // Pass navigate prop
             />
           ))}
         </div>
@@ -162,7 +163,7 @@ const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent }) =>
   );
 };
 
-const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent }) => {
+const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent, navigate }) => {
   const [isExpanded, setIsExpanded] = useState(true);
   
   return (
@@ -200,6 +201,7 @@ const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent }) => 
                   member={member}
                   formatter={formatter}
                   formatPercent={formatPercent}
+                  navigate={navigate} // Pass navigate prop
                 />
               ))}
           </tbody>
@@ -209,7 +211,7 @@ const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent }) => 
   );
 };
 
-const CollapsibleMember = ({ member, formatter, formatPercent }) => {
+const CollapsibleMember = ({ member, formatter, formatPercent, navigate }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   
   const sortedRows = [...(member.rows || [])].sort((a, b) => 
@@ -219,10 +221,15 @@ const CollapsibleMember = ({ member, formatter, formatPercent }) => {
   return (
     <>
       <tr>
-        <td>{member.name}</td>
+        <td>
+          <button className="member-name-btn"
+            onClick={() => navigate('teamedit', { member })}>
+            {member.name}
+          </button>
+        </td>
         <td>{member.laborCategory}</td>
         <td className="number-cell">
-          {formatter.format(Number(member.scheduledHours) || 40)}
+          {formatter.format(member.scheduledHours || 40)}
         </td>
         <td className="number-cell">{formatter.format(member.directHours)}</td>
         <td className="number-cell">{formatter.format(member.ptoHours)}</td>
@@ -337,46 +344,22 @@ const ProjectsTableView = ({ teamData, formatter }) => {
   };
 
   const formatLaborUsed = (value) => {
-    // Add debugging
-    console.log("Formatting percentage value:", value, "Type:", typeof value);
-    
-    // Convert to number and handle invalid values
     const numValue = parseFloat(value) || 0;
-    console.log("Parsed percentage value:", numValue);
     
-    // Case 1: Values like 9639 (should be 96.39%)
-    if (numValue > 100 && numValue % 1 === 0) {
-        return new Intl.NumberFormat('en-US', {
-            style: 'percent',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        }).format(numValue / 10000);
+    if (numValue >= 100 && numValue % 100 === 0) {
+      return new Intl.NumberFormat('en-US', {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }).format(numValue / 10000);
+    } else {
+      return new Intl.NumberFormat('en-US', {
+        style: 'percent',
+        minimumFractionDigits: 1,
+        maximumFractionDigits: 1,
+      }).format(numValue / 100);
     }
-    // Case 2: Values like 78 (should be 78.00%)
-    else if (numValue >= 1 && numValue <= 100) {
-        return new Intl.NumberFormat('en-US', {
-            style: 'percent',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        }).format(numValue / 100);
-    }
-    // Case 3: Values like 0.78 (already in decimal form, should be 78.00%)
-    else if (numValue > 0 && numValue < 1) {
-        return new Intl.NumberFormat('en-US', {
-            style: 'percent',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        }).format(numValue);
-    }
-    // Default case: just format as percentage with 2 decimal places
-    else {
-        return new Intl.NumberFormat('en-US', {
-            style: 'percent',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        }).format(numValue / 100);
-    }
-};
+  };
   
   if (projectsData.length === 0) {
     return <div className="no-data-message">No project data available.</div>;
@@ -392,7 +375,7 @@ const ProjectsTableView = ({ teamData, formatter }) => {
             <th>Project Name</th>
             <th>Project Manager</th>
             <th>Contract Total Labor</th>
-            <th>% EAC Labor Used </th>
+            <th>Reported % Complete</th>
             <th>Total Hours</th>
             <th>Team Members</th>
             <th>Remarks</th>
@@ -433,7 +416,6 @@ const ProjectsTableView = ({ teamData, formatter }) => {
 const LeadershipPage = ({ navigate }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedLeader, setSelectedLeader] = useState('');
   const [selectedGroup, setSelectedGroup] = useState('');
   const [teamData, setTeamData] = useState({});
   const [weekStartDate, setWeekStartDate] = useState(null);
@@ -450,18 +432,41 @@ const LeadershipPage = ({ navigate }) => {
       setCurrentUser(userDetails);
     }
     
-    // Initialize with next week's dates instead of current week
-    const today = addWeeks(new Date(), 1);
-    const startDate = startOfWeek(today, { weekStartsOn: 1 });
-    const endDate = endOfWeek(today, { weekStartsOn: 1 });
-    
-    console.log("Leadership Page - Initializing with next week:", {
-      startDate: format(startDate, 'yyyy-MM-dd'),
-      endDate: format(endDate, 'yyyy-MM-dd')
-    });
-    
-    setWeekStartDate(startDate);
-    setWeekEndDate(endDate);
+    // Initialize with stored week date or default to next week
+    try {
+      const storedDate = localStorage.getItem('selectedWeekDate');
+      let initialDate;
+      
+      if (storedDate) {
+        initialDate = new Date(storedDate);
+        if (!(initialDate instanceof Date) || isNaN(initialDate)) {
+          // Invalid date from storage, use default
+          initialDate = addWeeks(new Date(), 1);
+        }
+      } else {
+        // No stored date, use default
+        initialDate = addWeeks(new Date(), 1);
+      }
+      
+      const startDate = startOfWeek(initialDate, { weekStartsOn: 1 });
+      const endDate = endOfWeek(initialDate, { weekStartsOn: 1 });
+      
+      console.log("Leadership Page - Initializing with dates:", {
+        startDate: format(startDate, 'yyyy-MM-dd'),
+        endDate: format(endDate, 'yyyy-MM-dd')
+      });
+      
+      setWeekStartDate(startDate);
+      setWeekEndDate(endDate);
+    } catch (e) {
+      console.warn("Error getting dates from localStorage:", e);
+      // Fall back to next week if there's an error
+      const today = addWeeks(new Date(), 1);
+      const startDate = startOfWeek(today, { weekStartsOn: 1 });
+      const endDate = endOfWeek(today, { weekStartsOn: 1 });
+      setWeekStartDate(startDate);
+      setWeekEndDate(endDate);
+    }
     
     const fetchAllLeaders = async () => {
       try {
@@ -479,6 +484,29 @@ const LeadershipPage = ({ navigate }) => {
     
     fetchAllLeaders();
   }, []);
+  
+  useEffect(() => {
+    // Check if the page has already been refreshed or if a refresh is requested
+    const urlParams = new URLSearchParams(window.location.search);
+    const refresh = urlParams.get('refresh');
+    const hasRefreshed = sessionStorage.getItem('leadershipPageRefreshed');
+
+    if (refresh === 'true' && !hasRefreshed) {
+      console.log("Refreshing LeadershipPage after save in TeamEdit...");
+      sessionStorage.setItem('leadershipPageRefreshed', 'true');
+      urlParams.delete('refresh'); // Remove the parameter to avoid repeated refresh
+      window.history.replaceState({}, document.title, window.location.pathname);
+      window.location.reload();
+    }
+  }, []);
+
+  useEffect(() => {
+    if (!currentUser || !weekStartDate || !weekEndDate || leaders.length === 0) {
+      return;
+    }
+  
+    loadTeamData();
+  }, [currentUser, weekStartDate, weekEndDate, leaders, selectedGroup, showAllGroups]); // eslint-disable-line react-hooks/exhaustive-deps
   
   const handleWeekChange = (startDate, endDate) => {
     console.log("Week changed in LeadershipPage:", {
@@ -762,14 +790,6 @@ const LeadershipPage = ({ navigate }) => {
     }
   };
 
-  useEffect(() => {
-    if (!currentUser || !weekStartDate || !weekEndDate || leaders.length === 0) {
-      return;
-    }
-    
-    loadTeamData();
-  }, [currentUser, weekStartDate, weekEndDate, leaders, selectedGroup, showAllGroups]);  // eslint-disable-line react-hooks/exhaustive-deps
-
   const calculateRatioB = (directHours, scheduledHours, ptoHours) => {
     const denominator = scheduledHours - ptoHours;
     if (denominator <= 0) return 0;
@@ -871,7 +891,7 @@ const LeadershipPage = ({ navigate }) => {
                             <td className="number-cell">{formatter.format(data.directHours)}</td>
                             <td className="number-cell">{formatter.format(data.ptoHours)}</td>
                             <td className="number-cell">{formatter.format(data.overheadHours)}</td>
-                            <td className="number-cell">{formatter.format(data.availableHours||0)}</td>
+                            <td className="number-cell">{formatter.format(data.availableHours)}</td>
                             <td className="number-cell"><strong>{formatter.format(data.totalHours)}</strong></td>
                             <td className="number-cell"><strong>{formatPercent(data.ratioB)}</strong></td>
                           </tr>
@@ -887,6 +907,7 @@ const LeadershipPage = ({ navigate }) => {
                       managerData={managerData}
                       formatter={formatter}
                       formatPercent={formatPercent}
+                      navigate={navigate} // Pass navigate prop
                     />
                   ))}
                 </>
