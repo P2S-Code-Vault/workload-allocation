@@ -499,3 +499,114 @@
   color: #0288d1;
   font-weight: 500;
 }
+
+/* Month selector styling */
+.pm-dashboard-title {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.month-selector {
+  display: flex;
+  gap: 8px;
+  margin-right: 10px;
+}
+
+.month-selector .view-control-btn {
+  padding: 3px 10px;
+  font-size: 0.8rem;
+  min-width: 50px;
+  text-align: center;
+}
+
+/* Adjust styles for the title container */
+.pm-dashboard-title {
+  background-color: var(--white);
+  color: var(--primary-color);
+  font-weight: 500;
+  padding: 8px 16px;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  margin-bottom: 0;
+  font-size: 1.1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* Month selector styling - Updated to maintain white title and selectable buttons */
+.month-selector {
+  display: flex;
+  gap: 8px;
+  margin-right: 10px;
+}
+
+.month-selector .view-control-btn {
+  padding: 3px 10px;
+  font-size: 0.8rem;
+  min-width: 50px;
+  text-align: center;
+  background-color: white;
+  color: var(--primary-color);
+  border: 1px solid white;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.month-selector .view-control-btn.active {
+  background-color: var(--primary-light);
+  color: var(--primary-color);
+  font-weight: bold;
+  border-color: var(--primary-light);
+}
+
+.month-selector .view-control-btn:hover:not(.active) {
+  background-color: rgba(255, 255, 255, 0.8);
+}
+
+/* Enhanced Month selector styling */
+.pm-dashboard-title {
+  background-color: var(--primary-color);
+  color: white;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-top-left-radius: 4px;
+  border-top-right-radius: 4px;
+  margin-bottom: 0;
+  font-size: 1.1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.month-selector {
+  display: flex;
+  gap: 8px;
+  margin-right: 0;
+}
+
+.month-selector .view-control-btn {
+  padding: 2px 10px;
+  font-size: 0.85rem;
+  min-width: 45px;
+  text-align: center;
+  background-color: rgba(255, 255, 255, 0.2);
+  color: white;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.month-selector .view-control-btn.active {
+  background-color: white;
+  color: var(--primary-color);
+  font-weight: 600;
+  border-color: white;
+}
+
+.month-selector .view-control-btn:hover:not(.active) {
+  background-color: rgba(255, 255, 255, 0.4);
+}

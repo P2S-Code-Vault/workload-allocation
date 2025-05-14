@@ -52,7 +52,7 @@ const CollapsibleProject = ({ project, formatNumber, formatCurrency, formatPerce
   );
 };
 
-const PMSelector = ({ onPMChange, selectedPM, projectManagers = [] }) => {
+const PMSelector = ({ onPMChange, selectedPM, projectManagers = [], showAllMilestones, onToggleAllMilestones }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState('');
   const dropdownRef = useRef(null);
@@ -117,15 +117,28 @@ const PMSelector = ({ onPMChange, selectedPM, projectManagers = [] }) => {
   return (
     <div className="user-selector">
       <div className="user-selector-container" ref={dropdownRef}>
-        <div className="user-info-container">
-          <span className="user-label">Filter by PM:</span>
-          <strong className="user-name">{selectedPM || 'All Projects'}</strong>
-          <button 
-            className="team-dropdown-btn"
-            onClick={() => setShowDropdown(!showDropdown)}
-          >
-            Change
-          </button>
+        <div className="user-info-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
+          <div style={{ display: 'flex', alignItems: 'center' }}>
+            <span className="user-label">Filter by PM:</span>
+            <strong className="user-name" style={{ marginRight: '10px' }}>{selectedPM || 'All Projects'}</strong>
+            <button 
+              className="team-dropdown-btn"
+              onClick={() => setShowDropdown(!showDropdown)}
+            >
+              Change
+            </button>
+          </div>
+          <div className="toggle-container" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', paddingRight: '15px' }}>
+            <span style={{ marginRight: '8px', fontSize: '14px' }}>All Milestones</span>
+            <label className="toggle-switch">
+              <input 
+                type="checkbox"
+                checked={showAllMilestones}
+                onChange={() => onToggleAllMilestones(!showAllMilestones)}
+              />
+              <span className="toggle-slider"></span>
+            </label>
+          </div>
         </div>
         
         {showDropdown && (
@@ -233,6 +246,7 @@ const PMPage = ({ navigate }) => {
   const [weekStartDate, setWeekStartDate] = useState(null);
   const [weekEndDate, setWeekEndDate] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
+  const [showAllMilestones, setShowAllMilestones] = useState(false);
 
   // Format functions
   const formatNumber = (value) => {
@@ -407,14 +421,16 @@ const PMPage = ({ navigate }) => {
       console.log("Loading dashboard data with params:", {
         startDate: format(weekStartDate, 'yyyy-MM-dd'),
         endDate: format(weekEndDate, 'yyyy-MM-dd'),
-        selectedPM: selectedPM || 'All Projects'
+        selectedPM: selectedPM || 'All Projects',
+        showAllMilestones
       });
       
       try {
         const data = await PMDashboardService.getPMDashboardData(
           format(weekStartDate, 'yyyy-MM-dd'),
           format(weekEndDate, 'yyyy-MM-dd'),
-          selectedPM || null
+          selectedPM || null,
+          showAllMilestones
         );
         
         console.log("Dashboard data received in component:", data);
@@ -440,7 +456,7 @@ const PMPage = ({ navigate }) => {
     };
     
     loadDashboardData();
-  }, [weekStartDate, weekEndDate, selectedPM, retryCount]);
+  }, [weekStartDate, weekEndDate, selectedPM, retryCount, showAllMilestones]);
 
   return (
     <main className="main-content">
@@ -451,6 +467,8 @@ const PMPage = ({ navigate }) => {
             onPMChange={setSelectedPM}
             selectedPM={selectedPM}
             projectManagers={projectManagers.map(pm => pm.name || '')}
+            showAllMilestones={showAllMilestones}
+            onToggleAllMilestones={setShowAllMilestones}
           />
           <div className="pm-dashboard">
             <div className='pm-dashboard-title'>Project Planning Summary</div>
@@ -466,6 +484,7 @@ const PMPage = ({ navigate }) => {
             }}>
               <div><strong>Debug Info:</strong></div>
               <div>Selected PM: {selectedPM || 'All Projects'}</div>
+              <div>Show All Milestones: {showAllMilestones ? 'Yes' : 'No'}</div>
               <div>Data Status: {isLoading ? 'Loading' : error ? 'Error' : 'Ready'}</div>
               <div>Projects Count: {dashboardData.projects ? dashboardData.projects.length : 0}</div>
             </div>

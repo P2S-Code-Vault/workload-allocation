@@ -92,7 +92,12 @@ const MainContent = React.forwardRef((props, ref) => {
   const [showTeamDropdown, setShowTeamDropdown] = useState(false);
   const [isLoadingTeamMembers, setIsLoadingTeamMembers] = useState(false);
   const [teamMembersError, setTeamMembersError] = useState(null);
-
+  const [opportunityRows, setOpportunityRows] = useState([
+    // Initial 3 empty rows for demonstration
+    { opportunityNumber: '', opportunityName: '', proposalChampion: '', estimatedFee: '', remarks: '', month: '', month1: '', month2: '' },
+    { opportunityNumber: '', opportunityName: '', proposalChampion: '', estimatedFee: '', remarks: '', month: '', month1: '', month2: '' },
+    { opportunityNumber: '', opportunityName: '', proposalChampion: '', estimatedFee: '', remarks: '', month: '', month1: '', month2: '' },
+  ]);
 
   useEffect(() => {
     if (currentUser) {
@@ -835,6 +840,38 @@ const resetToCurrentUser = () => {
     saveChanges: saveWithCallback
   }));
 
+  // Add row for opportunities
+  const addOpportunityRow = useCallback(() => {
+    setOpportunityRows(prev => [
+      ...prev,
+      { opportunityNumber: '', opportunityName: '', proposalChampion: '', estimatedFee: '', remarks: '', month: '', month1: '', month2: '' }
+    ]);
+  }, []);
+
+  // Update row for opportunities
+  const updateOpportunityRow = useCallback((index, field, value) => {
+    setOpportunityRows(prev => {
+      const newRows = [...prev];
+      newRows[index][field] = value;
+      return newRows;
+    });
+  }, []);
+
+  // Delete row for opportunities
+  const deleteOpportunityRow = useCallback((index) => {
+    setOpportunityRows(prev => prev.filter((_, i) => i !== index));
+  }, []);
+
+  // Get month names based on selected week
+  const getMonthNames = () => {
+    if (!weekStartDate) return ['', '', ''];
+    const month0 = format(weekStartDate, 'MMMM yyyy');
+    const month1 = format(addWeeks(weekStartDate, 4), 'MMMM yyyy');
+    const month2 = format(addWeeks(weekStartDate, 8), 'MMMM yyyy');
+    return [month0, month1, month2];
+  };
+  const [monthCol, month1Col, month2Col] = getMonthNames();
+
   return (
     <main className="main-content">
       <div className="content-wrapper">
@@ -878,125 +915,52 @@ const resetToCurrentUser = () => {
           {isLoading ? (
             <div className="loading-indicator">Loading data...</div>
           ) : (
-            <table className="resource-table">
-              <thead>
-                <tr>
-                  <th>Project No.</th>
-                  <th>Project No. & Name</th>
-                  <th>Milestone</th>
-                  <th>Project Manager</th>
-                  <th>Contract Total Labor</th>
-                  <th>% EAC Labor Used</th>
-                  <th>Planned Hours</th>
-                  <th>Remarks</th>
-                  <th> </th>
-                </tr>
-              </thead>
-              <tbody>
-                {/* Project Rows */}
-                {groupedRows.normalRows.map((row, index) => (
-                  <TableRow
-                    key={`normal-${index}-${row.id || 'new'}`}
-                    row={row}
-                    index={rows.indexOf(row)}
-                    updateRow={updateRow}
-                    deleteRow={deleteRow}
-                    isLoading={isLoading}
-                    currentUser={currentUser}
-                  />
-                ))}
-                {/* Add Direct Hours Subtotal only if there are normal rows */}
-                {groupedRows.normalRows.length > 0 && (
-                  <tr className="direct-total">
-                    <td colSpan="6" style={{ textAlign: 'right' }} className="direct-total-label">Total:</td>
-                    <td style={{ textAlign: 'center' }} className="direct-total-hours">{formatter.format(calculateDirectHours())}</td>
-                    <td colSpan="2"></td>
+            <>
+              <table className="resource-table">
+                <thead>
+                  <tr>
+                    <th>Project No.</th>
+                    <th>Project No. & Name</th>
+                    <th>Milestone</th>
+                    <th>Project Manager</th>
+                    <th>Contract Total Labor</th>
+                    <th>% EAC Labor Used</th>
+                    <th>Planned Hours</th>
+                    <th>Remarks</th>
+                    <th> </th>
                   </tr>
-                )}
+                </thead>
+                <tbody>
+                  {/* Project Rows */}
+                  {groupedRows.normalRows.map((row, index) => (
+                    <TableRow
+                      key={`normal-${index}-${row.id || 'new'}`}
+                      row={row}
+                      index={rows.indexOf(row)}
+                      updateRow={updateRow}
+                      deleteRow={deleteRow}
+                      isLoading={isLoading}
+                      currentUser={currentUser}
+                    />
+                  ))}
+                  {/* Add Direct Hours Subtotal only if there are normal rows */}
+                  {groupedRows.normalRows.length > 0 && (
+                    <tr className="direct-total">
+                      <td colSpan="6" style={{ textAlign: 'right' }} className="direct-total-label">Total:</td>
+                      <td style={{ textAlign: 'center' }} className="direct-total-hours">{formatter.format(calculateDirectHours())}</td>
+                      <td colSpan="2"></td>
+                    </tr>
+                  )}
 
-                {/* PTO/Holiday Rows */}
-                {groupedRows.ptoRows.length > 0 && (
-                  <>
-                    <tr className="group-separator pto-section">
-                      <td colSpan="9">PTO/Holiday Time</td>
-                    </tr>
-                    {groupedRows.ptoRows.map((row, index) => (
-                      <TableRow
-                        key={`pto-${index}-${row.id || 'new'}`}
-                        row={row}
-                        index={rows.indexOf(row)}
-                        updateRow={updateRow}
-                        deleteRow={deleteRow}
-                        isLoading={isLoading}
-                        currentUser={currentUser}
-                      />
-                    ))}
-                    <tr className="pto-total">
-                      <td colSpan="6" className="pto-total-label">Total:</td>
-                      <td className="pto-total-hours">{formatter.format(calculatePTOHours())}</td>
-                      <td colSpan="2"></td>
-                    </tr>
-                  </>
-                )}
-                
-                {/* Leave Without Pay Rows */}
-                {groupedRows.lwopRows.length > 0 && (
-                  <>
-                    <tr className="group-separator lwop-section">
-                      <td colSpan="9">Leave Without Pay</td>
-                    </tr>
-                    {groupedRows.lwopRows.map((row, index) => (
-                      <TableRow
-                        key={`lwop-${index}-${row.id || 'new'}`}
-                        row={row}
-                        index={rows.indexOf(row)}
-                        updateRow={updateRow}
-                        deleteRow={deleteRow}
-                        isLoading={isLoading}
-                        currentUser={currentUser}
-                      />
-                    ))}
-                    <tr className="lwop-total">
-                      <td colSpan="6" className="lwop-total-label">Total:</td>
-                      <td className="lwop-total-hours">{formatter.format(calculateLWOPHours())}</td>
-                      <td colSpan="2"></td>
-                    </tr>
-                  </>
-                )}
-
-                {/* Administrative Rows (0000-0000) */}
-                {groupedRows.adminRows.length > 0 && (
-                  <>
-                    <tr className="group-separator">
-                      <td colSpan="9">Indirect Time</td>
-                    </tr>
-                    {groupedRows.adminRows.map((row, index) => (
-                      <TableRow
-                        key={`admin-${index}-${row.id || 'new'}`}
-                        row={row}
-                        index={rows.indexOf(row)}
-                        updateRow={updateRow}
-                        deleteRow={deleteRow}
-                        isLoading={isLoading}
-                        currentUser={currentUser}
-                      />
-                    ))}
-                    <tr className="overhead-total">
-                      <td colSpan="6" className="overhead-total-label">Total:</td>
-                      <td className="overhead-total-hours">{formatter.format(calculateOverheadHours())}</td>
-                      <td colSpan="2"></td>
-                    </tr>
-                  </>
-                )}
-                {/* Available Hours Rows */}
-                {groupedRows.availableHoursRows.length > 0 && (
+                  {/* PTO/Holiday Rows */}
+                  {groupedRows.ptoRows.length > 0 && (
                     <>
-                      <tr className="group-separator available-hours-section">
-                        <td colSpan="9">Available Hours</td>
+                      <tr className="group-separator pto-section">
+                        <td colSpan="9">PTO/Holiday Time</td>
                       </tr>
-                      {groupedRows.availableHoursRows.map((row, index) => (
+                      {groupedRows.ptoRows.map((row, index) => (
                         <TableRow
-                          key={`available-${index}-${row.id || 'new'}`}
+                          key={`pto-${index}-${row.id || 'new'}`}
                           row={row}
                           index={rows.indexOf(row)}
                           updateRow={updateRow}
@@ -1005,55 +969,234 @@ const resetToCurrentUser = () => {
                           currentUser={currentUser}
                         />
                       ))}
-                      <tr className="available-hours-total">
-                        <td colSpan="6" className="available-hours-total-label">Total:</td>
-                        <td className="available-hours-total-hours">{formatter.format(calculateAvailableHours())}</td>
+                      <tr className="pto-total">
+                        <td colSpan="6" className="pto-total-label">Total:</td>
+                        <td className="pto-total-hours">{formatter.format(calculatePTOHours())}</td>
                         <td colSpan="2"></td>
                       </tr>
                     </>
                   )}
-              </tbody>
-            </table>
+                  
+                  {/* Leave Without Pay Rows */}
+                  {groupedRows.lwopRows.length > 0 && (
+                    <>
+                      <tr className="group-separator lwop-section">
+                        <td colSpan="9">Leave Without Pay</td>
+                      </tr>
+                      {groupedRows.lwopRows.map((row, index) => (
+                        <TableRow
+                          key={`lwop-${index}-${row.id || 'new'}`}
+                          row={row}
+                          index={rows.indexOf(row)}
+                          updateRow={updateRow}
+                          deleteRow={deleteRow}
+                          isLoading={isLoading}
+                          currentUser={currentUser}
+                        />
+                      ))}
+                      <tr className="lwop-total">
+                        <td colSpan="6" className="lwop-total-label">Total:</td>
+                        <td className="lwop-total-hours">{formatter.format(calculateLWOPHours())}</td>
+                        <td colSpan="2"></td>
+                      </tr>
+                    </>
+                  )}
+
+                  {/* Administrative Rows (0000-0000) */}
+                  {groupedRows.adminRows.length > 0 && (
+                    <>
+                      <tr className="group-separator">
+                        <td colSpan="9">Indirect Time</td>
+                      </tr>
+                      {groupedRows.adminRows.map((row, index) => (
+                        <TableRow
+                          key={`admin-${index}-${row.id || 'new'}`}
+                          row={row}
+                          index={rows.indexOf(row)}
+                          updateRow={updateRow}
+                          deleteRow={deleteRow}
+                          isLoading={isLoading}
+                          currentUser={currentUser}
+                        />
+                      ))}
+                      <tr className="overhead-total">
+                        <td colSpan="6" className="overhead-total-label">Total:</td>
+                        <td className="overhead-total-hours">{formatter.format(calculateOverheadHours())}</td>
+                        <td colSpan="2"></td>
+                      </tr>
+                    </>
+                  )}
+                  {/* Available Hours Rows */}
+                  {groupedRows.availableHoursRows.length > 0 && (
+                      <>
+                        <tr className="group-separator available-hours-section">
+                          <td colSpan="9">Available Hours</td>
+                        </tr>
+                        {groupedRows.availableHoursRows.map((row, index) => (
+                          <TableRow
+                            key={`available-${index}-${row.id || 'new'}`}
+                            row={row}
+                            index={rows.indexOf(row)}
+                            updateRow={updateRow}
+                            deleteRow={deleteRow}
+                            isLoading={isLoading}
+                            currentUser={currentUser}
+                          />
+                        ))}
+                        <tr className="available-hours-total">
+                          <td colSpan="6" className="available-hours-total-label">Total:</td>
+                          <td className="available-hours-total-hours">{formatter.format(calculateAvailableHours())}</td>
+                          <td colSpan="2"></td>
+                        </tr>
+                      </>
+                    )}
+                </tbody>
+              </table>
+
+              {/* Opportunities Table */}
+              <table className="resource-table opportunities-table">
+                <thead>
+                  <tr>
+                    <th>Opportunity Number</th>
+                    <th>Opportunity Name</th>
+                    <th>Proposal Champion</th>
+                    <th>Estimated Fee Proposed</th>
+                    <th style={{ width: '110px' }}>{monthCol}</th>
+                    <th style={{ width: '110px' }}>{month1Col}</th>
+                    <th style={{ width: '110px' }}>{month2Col}</th>
+                    <th>Remarks</th>
+                    <th> </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {opportunityRows.map((row, index) => (
+                    <tr key={`opp-${index}`}>
+                      <td>
+                        <input
+                          type="text"
+                          value={row.opportunityNumber}
+                          onChange={e => updateOpportunityRow(index, 'opportunityNumber', e.target.value)}
+                          disabled={isLoading}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          value={row.opportunityName}
+                          onChange={e => updateOpportunityRow(index, 'opportunityName', e.target.value)}
+                          disabled={isLoading}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          value={row.proposalChampion}
+                          onChange={e => updateOpportunityRow(index, 'proposalChampion', e.target.value)}
+                          disabled={isLoading}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="number"
+                          value={row.estimatedFee}
+                          onChange={e => updateOpportunityRow(index, 'estimatedFee', e.target.value)}
+                          disabled={isLoading}
+                        />
+                      </td>
+                      <td style={{ width: '110px' }}>
+                        <input
+                          type="number"
+                          value={row.month}
+                          onChange={e => updateOpportunityRow(index, 'month', e.target.value)}
+                          disabled={isLoading}
+                        />
+                      </td>
+                      <td style={{ width: '110px' }}>
+                        <input
+                          type="number"
+                          value={row.month1}
+                          onChange={e => updateOpportunityRow(index, 'month1', e.target.value)}
+                          disabled={isLoading}
+                        />
+                      </td>
+                      <td style={{ width: '110px' }}>
+                        <input
+                          type="number"
+                          value={row.month2}
+                          onChange={e => updateOpportunityRow(index, 'month2', e.target.value)}
+                          disabled={isLoading}
+                        />
+                      </td>
+                      <td>
+                        <input
+                          type="text"
+                          value={row.remarks}
+                          onChange={e => updateOpportunityRow(index, 'remarks', e.target.value)}
+                          disabled={isLoading}
+                        />
+                      </td>
+                      <td>
+                        <button
+                          className="delete-btn"
+                          onClick={() => deleteOpportunityRow(index)}
+                          disabled={isLoading}
+                          type="button"
+                          aria-label="Delete Opportunity Row"
+                        >
+                          {/* Trash icon SVG, same as resource table */}
+                          <svg viewBox="0 0 448 512" width="14" height="14" fill="currentColor" aria-hidden="true"><path d="M135.2 17.7C140.2 7.4 150.6 0 162.3 0H285.7c11.7 0 22.1 7.4 27.1 17.7l17.8 38.3H432c8.8 0 16 7.2 16 16s-7.2 16-16 16h-16l-21.2 339.2c-2.6 41.2-36.7 73.8-78 73.8H131.2c-41.3 0-75.4-32.6-78-73.8L32 88H16C7.2 88 0 80.8 0 72s7.2-16 16-16h101.4l17.8-38.3zM285.7 48H162.3l-17.8 38.3c-2.2 4.7-6.9 7.7-12 7.7H48l21.2 339.2c1.7 27.2 24.2 48.8 51.9 48.8h185.8c27.7 0 50.2-21.6 51.9-48.8L400 94H315.5c-5.1 0-9.8-3-12-7.7L285.7 48z"/></svg>
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
+                  {/* Opportunities Total Row */}
+                  {opportunityRows.length > 0 && (
+                    <tr className="opportunities-total">
+                      <td colSpan="4" style={{ textAlign: 'right', fontWeight: 'bold' }} className="opportunities-total-label">Total:</td>
+                      <td style={{ textAlign: 'center', fontWeight: 'bold', width: '110px' }} className="opportunities-total-month">
+                        {formatter.format(opportunityRows.reduce((sum, row) => sum + (parseFloat(row.month) || 0), 0))}
+                      </td>
+                      <td style={{ textAlign: 'center', fontWeight: 'bold', width: '110px' }} className="opportunities-total-month1">
+                        {formatter.format(opportunityRows.reduce((sum, row) => sum + (parseFloat(row.month1) || 0), 0))}
+                      </td>
+                      <td style={{ textAlign: 'center', fontWeight: 'bold', width: '110px' }} className="opportunities-total-month2">
+                        {formatter.format(opportunityRows.reduce((sum, row) => sum + (parseFloat(row.month2) || 0), 0))}
+                      </td>
+                      <td colSpan="2"></td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+
+              <div className="hours-summary">
+                <span className="total-label">Total Hours:</span>
+                <span className="total-hours">{totalHoursFormatted}</span>
+                {calculateAvailableHours() > 0 && (
+                    <>
+                      <div className="ratio-separator"></div>
+                      <span className="ratio-label">Available Hours:</span>
+                      <span className="available-hours">{formatter.format(calculateAvailableHours())}</span>
+                    </>
+                  )}
+                <div className="ratio-separator"></div>
+                <span className="ratio-label">Ratio B:</span>
+                <span className="ratio-value">{percentFormatter.format(calculateRatioB())}</span>
+              </div>
+              <div className="table-actions">
+                <button onClick={addRow} className="add-btn" disabled={isSaving || isLoading}>Add Resource Row</button>
+                <button onClick={addOpportunityRow} className="add-btn" disabled={isSaving || isLoading}>Add Opportunity Row</button>
+                <button 
+                  onClick={() => saveWithCallback(handleSuccessfulSave)} 
+                  className="save-btn"
+                  disabled={isSaving || isLoading}
+                >
+                  {isSaving ? 'Saving...' : 'Save'}
+                </button>
+                
+              </div>
+            </>
           )}
           
-          <div className="hours-summary">
-            <span className="total-label">Total Hours:</span>
-            <span className="total-hours">{totalHoursFormatted}</span>
-            {calculateAvailableHours() > 0 && (
-                <>
-                  <div className="ratio-separator"></div>
-                  <span className="ratio-label">Available Hours:</span>
-                  <span className="available-hours">{formatter.format(calculateAvailableHours())}</span>
-                </>
-              )}
-            <div className="ratio-separator"></div>
-            <span className="ratio-label">Ratio B:</span>
-            <span className="ratio-value">{percentFormatter.format(calculateRatioB())}</span>
-          </div>
-          <div className="table-actions">
-          <button 
-              className="support-button"
-              onClick={() => window.location.href = 'mailto:jonathan.herrera@p2sinc.com'}
-            >
-            Contact Support
-            </button>
-            <button
-              onClick={copyPreviousWeekAllocations}
-              className="add-btn"
-              disabled={isLoading || isSaving}
-            >
-              Copy Previous Week
-            </button>
-            <button onClick={addRow} className="add-btn" disabled={isSaving || isLoading}>Add Row</button>
-            <button 
-              onClick={() => saveWithCallback(handleSuccessfulSave)} 
-              className="save-btn"
-              disabled={isSaving || isLoading}
-            >
-              {isSaving ? 'Saving...' : 'Save'}
-            </button>
-            
-          </div>
         </div>
       </div>
     </main>
@@ -1080,7 +1223,13 @@ const Footer = () => {
               Our Resource Allocation App was developed by Nilay Nagar, Chad Peterson, and Jonathan Herrera.
             </div>
           )}
-        </div>
+        </div>       
+        <a
+          className="footer-link"
+          href="mailto:jonathan.herrera@p2sinc.com"
+        >
+          | Contact Support
+        </a>
       </div>
 
       <div className="footer-right">
