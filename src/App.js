@@ -1220,7 +1220,7 @@ const Footer = () => {
           <span className="footer-text">Version 0.5 | About</span>
           {showAboutTooltip && (
             <div className="tooltip">
-              Our Resource Allocation App was developed by Nilay Nagar, Chad Peterson, and Jonathan Herrera.
+              Our Resource Allocation App was developed by Anvit Patil, Nilay Nagar, Chad Peterson, and Jonathan Herrera.
             </div>
           )}
         </div>       
