@@ -3,10 +3,10 @@ import API_CONFIG from './apiConfig';
 export class PMDashboardService {
   static apiBaseUrl = API_CONFIG.BASE_URL;
 
-  static async getPMDashboardData(startDate, endDate, pmName = null) {
+  static async getPMDashboardData(startDate, endDate, pmName = null, showAllMilestones = false) {
     try {
       // Create a cache key for potentially caching the results
-      const cacheKey = `pm_dashboard_${startDate || 'all'}_${endDate || 'all'}_${pmName || 'all'}`;
+      const cacheKey = `pm_dashboard_${startDate || 'all'}_${endDate || 'all'}_${pmName || 'all'}_${showAllMilestones ? 'all_milestones' : 'filtered_milestones'}`;
       
       // Build query parameters
       const params = new URLSearchParams();
@@ -22,6 +22,10 @@ export class PMDashboardService {
       if (pmName) {
         console.log(`Request filtering by PM: "${pmName}"`);
         params.append('pm_name', pmName);
+      }
+      
+      if (showAllMilestones) {
+        params.append('showAllMilestones', 'true');
       }
       
       // Log the full URL for debugging

@@ -275,8 +275,26 @@ const CollapsibleMember = ({ member, formatter, formatPercent, navigate }) => {
   );
 };
 
-const ProjectsTableView = ({ teamData, formatter }) => {
+const ProjectsTableView = ({ teamData, formatter, weekStartDate }) => {
   const [projectsData, setProjectsData] = useState([]);
+  const [selectedMonth, setSelectedMonth] = useState(0); // 0 = current month, 1 = next month, 2 = month after next
+  
+  // Get the month names based on the selected week's date
+  const monthNames = React.useMemo(() => {
+    if (!weekStartDate) return ['Jan', 'Feb', 'Mar'];
+    
+    const currentMonth = new Date(weekStartDate);
+    const nextMonth = new Date(weekStartDate);
+    nextMonth.setMonth(currentMonth.getMonth() + 1);
+    const nextNextMonth = new Date(weekStartDate);
+    nextNextMonth.setMonth(currentMonth.getMonth() + 2);
+    
+    return [
+      format(currentMonth, 'MMM'),
+      format(nextMonth, 'MMM'),
+      format(nextNextMonth, 'MMM')
+    ];
+  }, [weekStartDate]);
   
   useEffect(() => {
     const projects = [];
@@ -367,7 +385,31 @@ const ProjectsTableView = ({ teamData, formatter }) => {
   
   return (
     <div className="project-summary">
-      <div className='pm-dashboard-title'>Project Summary</div>
+      <div className='pm-dashboard-title'>
+        Project Summary
+        <div className="month-selector">
+          {/* Month selector buttons */}
+          <button 
+            className={`view-control-btn ${selectedMonth === 0 ? 'active' : ''}`}
+            onClick={() => setSelectedMonth(0)}
+          >
+            {monthNames[0]}
+          </button>
+          <button 
+            className={`view-control-btn ${selectedMonth === 1 ? 'active' : ''}`}
+            onClick={() => setSelectedMonth(1)}
+          >
+            {monthNames[1]}
+          </button>
+          <button 
+            className={`view-control-btn ${selectedMonth === 2 ? 'active' : ''}`}
+            onClick={() => setSelectedMonth(2)}
+          >
+            {monthNames[2]}
+          </button>
+          {/* TODO: Implement functionality to filter data by selected month */}
+        </div>
+      </div>
       
       <table className="summary-table projects-view-table">
         <thead>
@@ -425,6 +467,7 @@ const LeadershipPage = ({ navigate }) => {
   const [leaders, setLeaders] = useState([]);
   const [groupList, setGroupList] = useState([]);
   const [showAllGroups, setShowAllGroups] = useState(false);
+  const [selectedMonthIndex, setSelectedMonthIndex] = useState(0);
   
   useEffect(() => {
     const userDetails = UserService.getCurrentUserDetails();
@@ -808,6 +851,23 @@ const LeadershipPage = ({ navigate }) => {
     }).format(value);
   };
 
+  // Get the month names based on the selected week's date
+  const monthNames = React.useMemo(() => {
+    if (!weekStartDate) return ['Jan', 'Feb', 'Mar'];
+    
+    const currentMonth = new Date(weekStartDate);
+    const nextMonth = new Date(weekStartDate);
+    nextMonth.setMonth(currentMonth.getMonth() + 1);
+    const nextNextMonth = new Date(weekStartDate);
+    nextNextMonth.setMonth(currentMonth.getMonth() + 2);
+    
+    return [
+      format(currentMonth, 'MMM'),
+      format(nextMonth, 'MMM'),
+      format(nextNextMonth, 'MMM')
+    ];
+  }, [weekStartDate]);
+
   return (
     <div className="page-layout">
       <main className="gl-dashboard">
@@ -867,7 +927,31 @@ const LeadershipPage = ({ navigate }) => {
               {viewMode === 'hierarchy' ? (
                 <>
                   <div className="project-summary">
-                    <div className='pm-dashboard-title'>Group Summary</div>
+                    <div className='pm-dashboard-title'>
+                      Group Summary
+                      <div className="month-selector">
+                        {/* Month selector buttons */}
+                        <button 
+                          className={`view-control-btn ${selectedMonthIndex === 0 ? 'active' : ''}`}
+                          onClick={() => setSelectedMonthIndex(0)}
+                        >
+                          {monthNames[0]}
+                        </button>
+                        <button 
+                          className={`view-control-btn ${selectedMonthIndex === 1 ? 'active' : ''}`}
+                          onClick={() => setSelectedMonthIndex(1)}
+                        >
+                          {monthNames[1]}
+                        </button>
+                        <button 
+                          className={`view-control-btn ${selectedMonthIndex === 2 ? 'active' : ''}`}
+                          onClick={() => setSelectedMonthIndex(2)}
+                        >
+                          {monthNames[2]}
+                        </button>
+                        {/* TODO: Implement functionality to filter data by selected month */}
+                      </div>
+                    </div>
                     <table className="summary-table">
                       <thead>
                         <tr className="project-metrics">
@@ -915,6 +999,7 @@ const LeadershipPage = ({ navigate }) => {
                 <ProjectsTableView 
                   teamData={teamData}
                   formatter={formatter}
+                  weekStartDate={weekStartDate}
                 />
               )}
             </div>

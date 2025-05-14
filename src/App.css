@@ -154,6 +154,10 @@ body {
   width: 100%;
 }
 
+a.footer-link {
+  color: var(--white);
+  text-decoration: none;
+}
 .footer-left, .footer-right {
   display: flex;
   align-items: center;
