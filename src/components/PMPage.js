@@ -1,23 +1,32 @@
-import React, { useState, useEffect, useRef } from 'react';
-import WeekPicker from './WeekPicker';
-import { format, addWeeks, startOfWeek, endOfWeek } from 'date-fns';
-import PMDashboardService from '../services/PMDashboardService';
-import { ProjectDataService } from '../services/ProjectDataService';
-import { FaChevronDown, FaChevronRight } from 'react-icons/fa';
+import React, { useState, useEffect, useRef } from "react";
+import WeekPicker from "./WeekPicker";
+import { format, addWeeks, startOfWeek, endOfWeek } from "date-fns";
+import PMDashboardService from "../services/PMDashboardService";
+import { ProjectDataService } from "../services/ProjectDataService";
+import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 
 // CollapsibleProject component for individual project display
-const CollapsibleProject = ({ project, formatNumber, formatCurrency, formatPercent }) => {
+const CollapsibleProject = ({
+  project,
+  formatNumber,
+  formatCurrency,
+  formatPercent,
+}) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
   return (
     <div className="pm-group">
-      <div 
+      <div
         className="collapsible-header"
         onClick={() => setIsExpanded(!isExpanded)}
       >
         {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
-        <h3>{project.name} - MS {project.projectNumber ? project.projectNumber.split('-').pop() || project.projectNumber : 'N/A'
-  }</h3>
+        <h3>
+          {project.name} - MS{" "}
+          {project.projectNumber
+            ? project.projectNumber.split("-").pop() || project.projectNumber
+            : "N/A"}
+        </h3>
         <div className="project-info">
           <span>Contract Labor: {formatCurrency(project.labor)}</span>
           <span>Total Hours: {formatNumber(project.totalHours)}</span>
@@ -25,7 +34,7 @@ const CollapsibleProject = ({ project, formatNumber, formatCurrency, formatPerce
           <span>% EAC Labor Used: {formatPercent(project.laborUsed)}</span>
         </div>
       </div>
-      
+
       {isExpanded && (
         <div className="collapsible-content pm-projects">
           <table className="summary-table resource-details">
@@ -37,13 +46,16 @@ const CollapsibleProject = ({ project, formatNumber, formatCurrency, formatPerce
               </tr>
             </thead>
             <tbody>
-              {project.resources && project.resources.map((resource, index) => (
-                <tr key={index}>
-                  <td>{resource.name}</td>
-                  <td>{resource.laborCategory}</td>
-                  <td className="number-cell">{formatNumber(resource.hours)}</td>
-                </tr>
-              ))}
+              {project.resources &&
+                project.resources.map((resource, index) => (
+                  <tr key={index}>
+                    <td>{resource.name}</td>
+                    <td>{resource.laborCategory}</td>
+                    <td className="number-cell">
+                      {formatNumber(resource.hours)}
+                    </td>
+                  </tr>
+                ))}
             </tbody>
           </table>
         </div>
@@ -52,9 +64,15 @@ const CollapsibleProject = ({ project, formatNumber, formatCurrency, formatPerce
   );
 };
 
-const PMSelector = ({ onPMChange, selectedPM, projectManagers = [], showAllMilestones, onToggleAllMilestones }) => {
+const PMSelector = ({
+  onPMChange,
+  selectedPM,
+  projectManagers = [],
+  showAllMilestones,
+  onToggleAllMilestones,
+}) => {
   const [showDropdown, setShowDropdown] = useState(false);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef(null);
 
   useEffect(() => {
@@ -63,30 +81,31 @@ const PMSelector = ({ onPMChange, selectedPM, projectManagers = [], showAllMiles
         setShowDropdown(false);
       }
     };
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   // Log available PMs for debugging
   useEffect(() => {
     if (projectManagers && projectManagers.length > 0) {
-      console.log('Available Project Managers:', projectManagers);
-      
+      console.log("Available Project Managers:", projectManagers);
+
       // Check for any PMs with leading/trailing spaces
-      const pmsWithSpaces = projectManagers.filter(pm => pm !== pm.trim());
+      const pmsWithSpaces = projectManagers.filter((pm) => pm !== pm.trim());
       if (pmsWithSpaces.length > 0) {
-        console.warn('PMs with leading/trailing spaces:', pmsWithSpaces);
+        console.warn("PMs with leading/trailing spaces:", pmsWithSpaces);
       }
     }
-    
+
     if (selectedPM) {
-      console.log('Currently selected PM:', selectedPM);
+      console.log("Currently selected PM:", selectedPM);
     }
   }, [projectManagers, selectedPM]);
 
-  const filteredPMs = searchTerm 
-    ? projectManagers.filter(pm => 
-        pm.toLowerCase().includes(searchTerm.toLowerCase()))
+  const filteredPMs = searchTerm
+    ? projectManagers.filter((pm) =>
+        pm.toLowerCase().includes(searchTerm.toLowerCase())
+      )
     : projectManagers;
 
   const handlePMSelection = (pm) => {
@@ -94,15 +113,15 @@ const PMSelector = ({ onPMChange, selectedPM, projectManagers = [], showAllMiles
     const trimmedPM = pm.trim();
     console.log(`PM selected: "${pm}"`);
     console.log(`Trimmed PM name: "${trimmedPM}"`);
-    
+
     // Log character codes for debugging
     const charCodes = [];
     for (let i = 0; i < trimmedPM.length; i++) {
       charCodes.push(`${i}: '${trimmedPM[i]}' = ${trimmedPM.charCodeAt(i)}`);
     }
-    console.log('PM name character codes:');
-    console.log(charCodes.join('\n'));
-    
+    console.log("PM name character codes:");
+    console.log(charCodes.join("\n"));
+
     // Use the trimmed PM name
     onPMChange(trimmedPM);
     setShowDropdown(false);
@@ -110,28 +129,48 @@ const PMSelector = ({ onPMChange, selectedPM, projectManagers = [], showAllMiles
 
   const handleClearSelection = () => {
     console.log("Clearing PM selection");
-    onPMChange('');
+    onPMChange("");
     setShowDropdown(false);
   };
 
   return (
     <div className="user-selector">
       <div className="user-selector-container" ref={dropdownRef}>
-        <div className="user-info-container" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', width: '100%' }}>
-          <div style={{ display: 'flex', alignItems: 'center' }}>
+        <div
+          className="user-info-container"
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            width: "100%",
+          }}
+        >
+          <div style={{ display: "flex", alignItems: "center" }}>
             <span className="user-label">Filter by PM:</span>
-            <strong className="user-name" style={{ marginRight: '10px' }}>{selectedPM || 'All Projects'}</strong>
-            <button 
+            <strong className="user-name" style={{ marginRight: "10px" }}>
+              {selectedPM || "All Projects"}
+            </strong>
+            <button
               className="team-dropdown-btn"
               onClick={() => setShowDropdown(!showDropdown)}
             >
-              Change
+              Select Project Manager
             </button>
           </div>
-          <div className="toggle-container" style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', paddingRight: '15px' }}>
-            <span style={{ marginRight: '8px', fontSize: '14px' }}>All Milestones</span>
+          <div
+            className="toggle-container"
+            style={{
+              marginLeft: "auto",
+              display: "flex",
+              alignItems: "center",
+              paddingRight: "15px",
+            }}
+          >
+            <span style={{ marginRight: "8px", fontSize: "14px" }}>
+              All Milestones
+            </span>
             <label className="toggle-switch">
-              <input 
+              <input
                 type="checkbox"
                 checked={showAllMilestones}
                 onChange={() => onToggleAllMilestones(!showAllMilestones)}
@@ -140,7 +179,7 @@ const PMSelector = ({ onPMChange, selectedPM, projectManagers = [], showAllMiles
             </label>
           </div>
         </div>
-        
+
         {showDropdown && (
           <div className="user-dropdown pm-dashboard-dropdown">
             <input
@@ -151,19 +190,18 @@ const PMSelector = ({ onPMChange, selectedPM, projectManagers = [], showAllMiles
               className="user-search"
               autoFocus
             />
-            
+
             <ul className="user-list">
-              <li 
-                onClick={handleClearSelection}
-                className="user-list-item"
-              >
+              <li onClick={handleClearSelection} className="user-list-item">
                 <div className="user-name">Show All Projects</div>
               </li>
               {filteredPMs.map((pm, index) => (
-                <li 
+                <li
                   key={index}
                   onClick={() => handlePMSelection(pm)}
-                  className={`user-list-item ${selectedPM === pm ? 'selected' : ''}`}
+                  className={`user-list-item ${
+                    selectedPM === pm ? "selected" : ""
+                  }`}
                 >
                   <div className="user-name">{pm}</div>
                 </li>
@@ -179,35 +217,41 @@ const PMSelector = ({ onPMChange, selectedPM, projectManagers = [], showAllMiles
 // New function to group projects by project manager
 const groupProjectsByPM = (projects) => {
   const grouped = {};
-  
-  projects.forEach(project => {
-    const pm = project.pm || 'Unassigned';
-    
+
+  projects.forEach((project) => {
+    const pm = project.pm || "Unassigned";
+
     if (!grouped[pm]) {
       grouped[pm] = {
         projects: [],
         totalLabor: 0,
         totalHours: 0,
-        totalCost: 0
+        totalCost: 0,
       };
     }
-    
+
     grouped[pm].projects.push(project);
     grouped[pm].totalLabor += project.labor || 0;
     grouped[pm].totalHours += project.totalHours || 0;
     grouped[pm].totalCost += project.totalCost || 0;
   });
-  
+
   return grouped;
 };
 
 // Collapsible PM Group component to display each PM and their projects
-const CollapsiblePMGroup = ({ pmName, pmData, formatNumber, formatCurrency, formatPercent }) => {
+const CollapsiblePMGroup = ({
+  pmName,
+  pmData,
+  formatNumber,
+  formatCurrency,
+  formatPercent,
+}) => {
   const [isExpanded, setIsExpanded] = useState(false);
-  
+
   return (
     <div className="pm-group">
-      <div 
+      <div
         className="collapsible-header"
         onClick={() => setIsExpanded(!isExpanded)}
       >
@@ -218,10 +262,10 @@ const CollapsiblePMGroup = ({ pmName, pmData, formatNumber, formatCurrency, form
           <span>Total Contract Labor: {formatCurrency(pmData.totalLabor)}</span>
         </div>
       </div>
-      
+
       {isExpanded && (
         <div className="collapsible-content">
-          {pmData.projects.map(project => (
+          {pmData.projects.map((project) => (
             <CollapsibleProject
               key={project.projectNumber}
               project={project}
@@ -238,10 +282,13 @@ const CollapsiblePMGroup = ({ pmName, pmData, formatNumber, formatCurrency, form
 
 // Main PM Page Component
 const PMPage = ({ navigate }) => {
-  const [dashboardData, setDashboardData] = useState({ projects: [], summary: {} });
+  const [dashboardData, setDashboardData] = useState({
+    projects: [],
+    summary: {},
+  });
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [selectedPM, setSelectedPM] = useState('');
+  const [selectedPM, setSelectedPM] = useState("");
   const [projectManagers, setProjectManagers] = useState([]);
   const [weekStartDate, setWeekStartDate] = useState(null);
   const [weekEndDate, setWeekEndDate] = useState(null);
@@ -250,16 +297,16 @@ const PMPage = ({ navigate }) => {
 
   // Format functions
   const formatNumber = (value) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat("en-US", {
       minimumFractionDigits: 0,
-      maximumFractionDigits: 2
+      maximumFractionDigits: 2,
     }).format(value);
   };
 
   const formatCurrency = (value) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
+    return new Intl.NumberFormat("en-US", {
+      style: "currency",
+      currency: "USD",
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
     }).format(value);
@@ -268,48 +315,46 @@ const PMPage = ({ navigate }) => {
   const formatPercent = (value) => {
     // Add debugging
     console.log("Formatting percentage value:", value, "Type:", typeof value);
-    
+
     // Convert to number and handle invalid values
     const numValue = parseFloat(value) || 0;
     console.log("Parsed percentage value:", numValue);
-    
+
     // Case 1: Values like 9639 (should be 96.39%)
     if (numValue > 100 && numValue % 1 === 0) {
-        return new Intl.NumberFormat('en-US', {
-            style: 'percent',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        }).format(numValue / 10000);
-    }
-    
-    else if (numValue >= 1 && numValue <= 100) {
-        return new Intl.NumberFormat('en-US', {
-            style: 'percent',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        }).format(numValue / 100);
+      return new Intl.NumberFormat("en-US", {
+        style: "percent",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(numValue / 10000);
+    } else if (numValue >= 1 && numValue <= 100) {
+      return new Intl.NumberFormat("en-US", {
+        style: "percent",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(numValue / 100);
     }
     // Case 3: Values like 0.78 (already in decimal form, should be 78.00%)
     else if (numValue > 0 && numValue < 1) {
-        return new Intl.NumberFormat('en-US', {
-            style: 'percent',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        }).format(numValue);
+      return new Intl.NumberFormat("en-US", {
+        style: "percent",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(numValue);
     }
     // Default case: just format as percentage with 2 decimal places
     else {
-        return new Intl.NumberFormat('en-US', {
-            style: 'percent',
-            minimumFractionDigits: 2,
-            maximumFractionDigits: 2,
-        }).format(numValue / 100);
+      return new Intl.NumberFormat("en-US", {
+        style: "percent",
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      }).format(numValue / 100);
     }
-};
+  };
   // const formatPercent = (value) => {
   //   // Convert to number and handle invalid values
   //   const numValue = parseFloat(value) || 0;
-    
+
   //   // Check if the value is already scaled to represent percentage directly
   //   if (numValue >= 100 && numValue % 100 === 0) {
   //     return new Intl.NumberFormat('en-US', {
@@ -334,18 +379,20 @@ const PMPage = ({ navigate }) => {
         console.log("Loaded project managers:", managers);
         setProjectManagers(managers);
       } catch (err) {
-        console.error('Error loading project managers:', err);
-        setError('Failed to load project managers. Please try refreshing the page.');
+        console.error("Error loading project managers:", err);
+        setError(
+          "Failed to load project managers. Please try refreshing the page."
+        );
       }
     };
-    
+
     loadProjectManagers();
-    
+
     // Initialize with stored week date or default to next week
     try {
-      const storedDate = localStorage.getItem('selectedWeekDate');
+      const storedDate = localStorage.getItem("selectedWeekDate");
       let initialDate;
-      
+
       if (storedDate) {
         initialDate = new Date(storedDate);
         if (!(initialDate instanceof Date) || isNaN(initialDate)) {
@@ -356,15 +403,15 @@ const PMPage = ({ navigate }) => {
         // No stored date, use default
         initialDate = addWeeks(new Date(), 1);
       }
-      
+
       const startDate = startOfWeek(initialDate, { weekStartsOn: 1 });
       const endDate = endOfWeek(initialDate, { weekStartsOn: 1 });
-      
+
       console.log("PM Page - Initializing with dates:", {
-        startDate: format(startDate, 'yyyy-MM-dd'),
-        endDate: format(endDate, 'yyyy-MM-dd')
+        startDate: format(startDate, "yyyy-MM-dd"),
+        endDate: format(endDate, "yyyy-MM-dd"),
       });
-      
+
       setWeekStartDate(startDate);
       setWeekEndDate(endDate);
     } catch (e) {
@@ -381,28 +428,32 @@ const PMPage = ({ navigate }) => {
   // Debug data state changes
   useEffect(() => {
     console.log("Dashboard data in state:", dashboardData);
-    console.log(`Project count in state: ${dashboardData.projects ? dashboardData.projects.length : 0}`);
+    console.log(
+      `Project count in state: ${
+        dashboardData.projects ? dashboardData.projects.length : 0
+      }`
+    );
   }, [dashboardData]);
 
   // Handle week change
   const handleWeekChange = (startDate, endDate) => {
     console.log("PM dashboard week changed:", {
-      startDate: format(startDate, 'yyyy-MM-dd'),
-      endDate: format(endDate, 'yyyy-MM-dd')
+      startDate: format(startDate, "yyyy-MM-dd"),
+      endDate: format(endDate, "yyyy-MM-dd"),
     });
-    
+
     // Clear any cached data to ensure fresh load
     try {
-      ProjectDataService.clearCacheWithPattern('pm_dashboard_');
+      ProjectDataService.clearCacheWithPattern("pm_dashboard_");
     } catch (e) {
       console.warn("Failed to clear PM dashboard cache:", e);
     }
-    
+
     setWeekStartDate(startDate);
     setWeekEndDate(endDate);
     setRetryCount(0); // Reset retry counter when dates change
   };
-  
+
   // Handle retry button click
   const handleRetry = () => {
     setError(null);
@@ -414,47 +465,52 @@ const PMPage = ({ navigate }) => {
   useEffect(() => {
     const loadDashboardData = async () => {
       if (!weekStartDate || !weekEndDate) return;
-      
+
       setIsLoading(true);
       setError(null);
-      
+
       console.log("Loading dashboard data with params:", {
-        startDate: format(weekStartDate, 'yyyy-MM-dd'),
-        endDate: format(weekEndDate, 'yyyy-MM-dd'),
-        selectedPM: selectedPM || 'All Projects',
-        showAllMilestones
+        startDate: format(weekStartDate, "yyyy-MM-dd"),
+        endDate: format(weekEndDate, "yyyy-MM-dd"),
+        selectedPM: selectedPM || "All Projects",
+        showAllMilestones,
       });
-      
+
       try {
         const data = await PMDashboardService.getPMDashboardData(
-          format(weekStartDate, 'yyyy-MM-dd'),
-          format(weekEndDate, 'yyyy-MM-dd'),
+          format(weekStartDate, "yyyy-MM-dd"),
+          format(weekEndDate, "yyyy-MM-dd"),
           selectedPM || null,
           showAllMilestones
         );
-        
+
         console.log("Dashboard data received in component:", data);
-        console.log(`Projects count: ${data.projects ? data.projects.length : 0}`);
-        
+        console.log(
+          `Projects count: ${data.projects ? data.projects.length : 0}`
+        );
+
         // Verify data structure before setting state
         if (!data || !data.projects) {
           console.error("Received invalid data structure:", data);
-          setError('Data received from server has an unexpected format');
+          setError("Data received from server has an unexpected format");
           setDashboardData({ projects: [], summary: {} });
         } else {
           // Force state update with a new object reference
-          setDashboardData({...data});
+          setDashboardData({ ...data });
           console.log("State updated with dashboard data");
         }
       } catch (err) {
-        console.error('Error loading dashboard data:', err);
-        setError('Failed to load project data. ' + (err.message || 'Please try again later.'));
+        console.error("Error loading dashboard data:", err);
+        setError(
+          "Failed to load project data. " +
+            (err.message || "Please try again later.")
+        );
         setDashboardData({ projects: [], summary: {} });
       } finally {
         setIsLoading(false);
       }
     };
-    
+
     loadDashboardData();
   }, [weekStartDate, weekEndDate, selectedPM, retryCount, showAllMilestones]);
 
@@ -463,32 +519,41 @@ const PMPage = ({ navigate }) => {
       <div className="content-wrapper">
         <div className="table-container">
           <WeekPicker onWeekChange={handleWeekChange} />
-          <PMSelector 
+          <PMSelector
             onPMChange={setSelectedPM}
             selectedPM={selectedPM}
-            projectManagers={projectManagers.map(pm => pm.name || '')}
+            projectManagers={projectManagers.map((pm) => pm.name || "")}
             showAllMilestones={showAllMilestones}
             onToggleAllMilestones={setShowAllMilestones}
           />
           <div className="pm-dashboard">
-            <div className='pm-dashboard-title'>Project Planning Summary</div>
-            
+            <div className="pm-dashboard-title">Project Planning Summary</div>
+
             {/* Debug information - remove in production */}
-            <div style={{ 
-              padding: '5px 10px', 
-              margin: '5px 0', 
-              backgroundColor: '#f0f0f0', 
-              border: '1px solid #ddd',
-              borderRadius: '4px',
-              fontSize: '12px'
-            }}>
-              <div><strong>Debug Info:</strong></div>
-              <div>Selected PM: {selectedPM || 'All Projects'}</div>
-              <div>Show All Milestones: {showAllMilestones ? 'Yes' : 'No'}</div>
-              <div>Data Status: {isLoading ? 'Loading' : error ? 'Error' : 'Ready'}</div>
-              <div>Projects Count: {dashboardData.projects ? dashboardData.projects.length : 0}</div>
+            <div
+              style={{
+                padding: "5px 10px",
+                margin: "5px 0",
+                backgroundColor: "#f0f0f0",
+                border: "1px solid #ddd",
+                borderRadius: "4px",
+                fontSize: "12px",
+              }}
+            >
+              <div>
+                <strong>Debug Info:</strong>
+              </div>
+              <div>Selected PM: {selectedPM || "All Projects"}</div>
+              <div>Show All Milestones: {showAllMilestones ? "Yes" : "No"}</div>
+              <div>
+                Data Status: {isLoading ? "Loading" : error ? "Error" : "Ready"}
+              </div>
+              <div>
+                Projects Count:{" "}
+                {dashboardData.projects ? dashboardData.projects.length : 0}
+              </div>
             </div>
-            
+
             {/* Error display with retry button */}
             {error && (
               <div className="error-banner">
@@ -498,7 +563,7 @@ const PMPage = ({ navigate }) => {
                 </button>
               </div>
             )}
-            
+
             {isLoading ? (
               <div className="loading">Loading summary data...</div>
             ) : dashboardData.projects && dashboardData.projects.length > 0 ? (
@@ -529,16 +594,15 @@ const PMPage = ({ navigate }) => {
                         formatCurrency={formatCurrency}
                         formatPercent={formatPercent}
                       />
-                    ))
-                  }
+                    ))}
                 </div>
               )
             ) : (
               // Show "no projects found" message when data array is empty
               <div className="no-data">
-                {selectedPM 
+                {selectedPM
                   ? `No projects found for ${selectedPM} in the selected date range.`
-                  : 'No projects found for the selected date range.'}
+                  : "No projects found for the selected date range."}
               </div>
             )}
           </div>

@@ -30,3 +30,4 @@ yarn-error.log*
 !/public/data/
 !/public/data/*.csv
 
+/.github/workflows

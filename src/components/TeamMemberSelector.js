@@ -1,20 +1,28 @@
-import React, { useState, useEffect } from 'react';
-import './TeamMemberSelector.css';
-import { ProjectDataService } from '../services/ProjectDataService';
+import React, { useState, useEffect } from "react";
+import "./TeamMemberSelector.css";
+import { ProjectDataService } from "../services/ProjectDataService";
 
-const TeamMemberSelector = ({ currentUser, teamMembers, isLoading, error, onSelectTeamMember, onReset, selectedMember }) => {
+const TeamMemberSelector = ({
+  currentUser,
+  teamMembers,
+  isLoading,
+  error,
+  onSelectTeamMember,
+  onReset,
+  selectedMember,
+}) => {
   const [showDropdown, setShowDropdown] = useState(false);
 
   useEffect(() => {
     // Close dropdown when clicking outside
     const handleClickOutside = (event) => {
-      if (!event.target.closest('.team-dropdown')) {
+      if (!event.target.closest(".team-dropdown")) {
         setShowDropdown(false);
       }
     };
-    
-    document.addEventListener('mousedown', handleClickOutside);
-    return () => document.removeEventListener('mousedown', handleClickOutside);
+
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
   const handleTeamMemberSelect = (member) => {
@@ -27,18 +35,18 @@ const TeamMemberSelector = ({ currentUser, teamMembers, isLoading, error, onSele
     <div className="team-selector-container">
       {!selectedMember ? (
         <div className="team-dropdown">
-          <button 
+          <button
             className="team-dropdown-btn"
             onClick={() => setShowDropdown(!showDropdown)}
             disabled={isLoading}
           >
-            {isLoading ? 'Loading...' : 'Change'}
+            {isLoading ? "Loading..." : "Select Team member"}
           </button>
-          
+
           {showDropdown && teamMembers.length > 0 && (
             <div className="team-dropdown-list">
-              {teamMembers.map(member => (
-                <div 
+              {teamMembers.map((member) => (
+                <div
                   key={member.id}
                   className="team-member-option"
                   onClick={() => handleTeamMemberSelect(member)}
@@ -49,16 +57,13 @@ const TeamMemberSelector = ({ currentUser, teamMembers, isLoading, error, onSele
               ))}
             </div>
           )}
-          
+
           {error && <div className="error-message">{error}</div>}
         </div>
       ) : (
         <div className="managing-indicator">
           <strong>{selectedMember.name}</strong>
-          <button 
-            className="reset-view-btn"
-            onClick={onReset}
-          >
+          <button className="reset-view-btn" onClick={onReset}>
             Reset
           </button>
         </div>

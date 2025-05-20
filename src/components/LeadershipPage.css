@@ -119,11 +119,13 @@
 /* Update column width settings to account for the new "Available Hours" column */
 
 /* Summary table column widths */
-.summary-table th:nth-child(1) { /* Studio/Team Member */
+.summary-table th:nth-child(1) {
+  /* Studio/Team Member */
   width: 20%;
 }
 
-.summary-table th:nth-child(2) { /* Labor Category/Team Members */
+.summary-table th:nth-child(2) {
+  /* Labor Category/Team Members */
   width: 14%;
 }
 
@@ -132,15 +134,18 @@
 .summary-table th:nth-child(5), /* PTO/HOL */
 .summary-table th:nth-child(6), /* Indirect Hours */
 .summary-table th:nth-child(7), /* Available Hours - NEW */
-.summary-table th:nth-child(8) { /* Total Hours */
+.summary-table th:nth-child(8) {
+  /* Total Hours */
   width: 9%;
 }
 
-.summary-table th:nth-child(9) { /* Ratio B */
+.summary-table th:nth-child(9) {
+  /* Ratio B */
   width: 8%;
 }
 
-.summary-table th:nth-child(10) { /* Details button */
+.summary-table th:nth-child(10) {
+  /* Details button */
   width: 4%;
 }
 
@@ -160,7 +165,6 @@
 .summary-table thead tr:hover th {
   background-color: var(--primary-color);
 }
-
 
 /* Update user-info-container to accommodate the new buttons */
 .user-info-container {
@@ -215,7 +219,8 @@
   background-color: var(--background-gray);
 }
 
-.view-controls, .view-toggle {
+.view-controls,
+.view-toggle {
   display: none;
 }
 
@@ -252,21 +257,21 @@
 
 .project-summary .summary-table th:nth-child(2), /* Studio */
 .project-summary .summary-table td:nth-child(2) {
-  width: 5%; 
+  width: 5%;
   text-align: center;
   padding-left: 12px;
 }
 
 .project-summary .summary-table th:nth-child(3), /* Team Member */
 .project-summary .summary-table td:nth-child(3) {
-  width: 15%;  
+  width: 15%;
   text-align: center;
   padding-left: 12px;
 }
 
 .project-summary .summary-table th:nth-child(4), /* Labor Category */
 .project-summary .summary-table td:nth-child(4) {
-  width: 19%;  
+  width: 19%;
   text-align: center;
   padding-left: 12px;
 }
@@ -483,7 +488,7 @@
 }
 
 .projects-view-table td:hover {
-  background-color: inherit; 
+  background-color: inherit;
 }
 
 .projects-view-table thead tr:hover th {

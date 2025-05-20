@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { UserService } from "../services/UserService";
-import headerLogo from '../P2S_Legence_Logo_White.png';
-import './Login.css';
+import headerLogo from "../P2S_Legence_Logo_White.png";
+import "./Login.css";
 
 const Login = ({ onLogin }) => {
   // Define state variables
@@ -11,7 +11,7 @@ const Login = ({ onLogin }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+
     // Validate email
     if (!email || !email.includes("@")) {
       setError("Please enter a valid email address");
@@ -21,10 +21,10 @@ const Login = ({ onLogin }) => {
     try {
       setIsLoading(true);
       setError("");
-      
+
       // Call the login service
       const userData = await UserService.login(email);
-      
+
       // Call the parent component's onLogin function with all required data
       onLogin(userData.name, email, userData.scheduled_hours || 40);
     } catch (err) {
@@ -42,14 +42,14 @@ const Login = ({ onLogin }) => {
         <img src={headerLogo} alt="Logo" className="header-logo" />
         <h1 className="header-title">Resource Allocation</h1>
       </header>
-      
+
       <main className="main-content">
         <div className="login-container">
           <div className="login-card">
             <h2>Login</h2>
-            
+
             {error && <div className="error-banner">{error}</div>}
-            
+
             <form onSubmit={handleSubmit}>
               <div className="input-group">
                 <label htmlFor="email-input">Email</label>
@@ -63,10 +63,10 @@ const Login = ({ onLogin }) => {
                   required
                 />
               </div>
-              
-              <button 
+
+              <button
                 type="submit"
-                className="login-button" 
+                className="login-button"
                 disabled={isLoading}
               >
                 {isLoading ? "Logging in..." : "Login"}
@@ -75,19 +75,24 @@ const Login = ({ onLogin }) => {
           </div>
         </div>
       </main>
-      
+
       <footer className="footer">
         <div className="footer-left">
           <div className="tooltip-container">
             <span className="footer-text">About</span>
             <div className="tooltip">
-              Our P2S Resource Allocation was developed by Nilay Nagar, Chad Peterson, and Jonathan Herrera.
+              Our P2S Resource Allocation was developed by Nilay Nagar, Chad
+              Peterson, and Jonathan Herrera.
             </div>
           </div>
         </div>
 
         <div className="footer-right">
-          <a href="https://www.p2sinc.com" target="_blank" rel="noopener noreferrer">
+          <a
+            href="https://www.p2sinc.com"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
             www.p2sinc.com
           </a>
           <span> | © {new Date().getFullYear()} P2S All rights reserved.</span>

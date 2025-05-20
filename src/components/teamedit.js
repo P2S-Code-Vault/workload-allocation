@@ -1,9 +1,15 @@
-import React, { useEffect, useState, useCallback, forwardRef, useImperativeHandle } from 'react';
-import './TeamEdit.css';
-import { ProjectDataService } from '../services/ProjectDataService';
-import TableRow from './TableRow';
-import WeekPicker from './WeekPicker'; 
-import { format, startOfWeek, endOfWeek } from 'date-fns';
+import React, {
+  useEffect,
+  useState,
+  useCallback,
+  forwardRef,
+  useImperativeHandle,
+} from "react";
+import "./TeamEdit.css";
+import { ProjectDataService } from "../services/ProjectDataService";
+import TableRow from "./TableRow";
+import WeekPicker from "./WeekPicker";
+import { format, startOfWeek, endOfWeek } from "date-fns";
 
 const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
   const [userData, setUserData] = useState(null);
@@ -14,11 +20,13 @@ const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
   const [weekEndDate, setWeekEndDate] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [initialRowsData, setInitialRowsData] = useState('');
+  const [initialRowsData, setInitialRowsData] = useState("");
 
   useEffect(() => {
     if (!selectedUser) {
-      console.error("No selected user provided to TeamEdit. Cannot fetch data.");
+      console.error(
+        "No selected user provided to TeamEdit. Cannot fetch data."
+      );
       setLoadError("No user selected. Please navigate back and select a user.");
       setIsLoading(false);
       return;
@@ -30,9 +38,9 @@ const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
     if (!weekStartDate || !weekEndDate) {
       try {
         // Try to get the date from localStorage
-        const storedDate = localStorage.getItem('selectedWeekDate');
+        const storedDate = localStorage.getItem("selectedWeekDate");
         let initialDate;
-        
+
         if (storedDate) {
           initialDate = new Date(storedDate);
           if (!(initialDate instanceof Date) || isNaN(initialDate)) {
@@ -43,26 +51,32 @@ const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
           // No stored date, use current date
           initialDate = new Date();
         }
-        
+
         const startDate = format(
           startOfWeek(initialDate, { weekStartsOn: 1 }),
-          'yyyy-MM-dd'
+          "yyyy-MM-dd"
         );
         const endDate = format(
           endOfWeek(initialDate, { weekStartsOn: 1 }),
-          'yyyy-MM-dd'
+          "yyyy-MM-dd"
         );
-        
-        console.log("TeamEdit - Initializing with dates:", { startDate, endDate });
+
+        console.log("TeamEdit - Initializing with dates:", {
+          startDate,
+          endDate,
+        });
         setWeekStartDate(startDate);
         setWeekEndDate(endDate);
       } catch (e) {
         console.warn("Error getting dates from localStorage:", e);
         // Default to current date if there's an error
         const today = new Date();
-        const startDate = format(today, 'yyyy-MM-dd');
-        const endDate = format(today, 'yyyy-MM-dd');
-        console.log("Initializing with current date (after error):", { startDate, endDate });
+        const startDate = format(today, "yyyy-MM-dd");
+        const endDate = format(today, "yyyy-MM-dd");
+        console.log("Initializing with current date (after error):", {
+          startDate,
+          endDate,
+        });
         setWeekStartDate(startDate);
         setWeekEndDate(endDate);
       }
@@ -86,7 +100,7 @@ const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
     if (rows.length > 0 && !isLoading) {
       // Create a reference to original data to detect actual changes
       const initialRowsJSON = JSON.stringify(rows);
-      
+
       // Store original data on first load
       if (!hasUnsavedChanges) {
         setInitialRowsData(initialRowsJSON);
@@ -104,15 +118,21 @@ const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
       setLoadError(null);
       setHasUnsavedChanges(false); // Reset unsaved changes flag when fetching new data
 
-      console.log(`Fetching allocations for ${email} from ${startDate} to ${endDate}`);
-      const data = await ProjectDataService.getAllocations(email, startDate, endDate);
+      console.log(
+        `Fetching allocations for ${email} from ${startDate} to ${endDate}`
+      );
+      const data = await ProjectDataService.getAllocations(
+        email,
+        startDate,
+        endDate
+      );
 
       console.log("Received allocations:", data); // Debug log to verify data
       if (!Array.isArray(data) || data.length === 0) {
         console.warn("No allocations received or data is not an array.");
       }
 
-      const processedRows = data.map(allocation => ({
+      const processedRows = data.map((allocation) => ({
         id: allocation.ra_id,
         projectNumber: allocation.project_number,
         projectName: allocation.project_name,
@@ -124,7 +144,7 @@ const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
         remarks: allocation.remarks,
       }));
       setRows(processedRows);
-      
+
       // Store the initial state of the rows after loading
       setInitialRowsData(JSON.stringify(processedRows));
     } catch (error) {
@@ -135,39 +155,45 @@ const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
     }
   };
 
-  const handleWeekChange = useCallback((startDate, endDate) => {
-    const formattedStartDate = format(startDate, 'yyyy-MM-dd');
-    const formattedEndDate = format(endDate, 'yyyy-MM-dd');
+  const handleWeekChange = useCallback(
+    (startDate, endDate) => {
+      const formattedStartDate = format(startDate, "yyyy-MM-dd");
+      const formattedEndDate = format(endDate, "yyyy-MM-dd");
 
-    console.log("Week changed in TeamEdit:", { startDate: formattedStartDate, endDate: formattedEndDate });
-    setWeekStartDate(formattedStartDate);
-    setWeekEndDate(formattedEndDate);
+      console.log("Week changed in TeamEdit:", {
+        startDate: formattedStartDate,
+        endDate: formattedEndDate,
+      });
+      setWeekStartDate(formattedStartDate);
+      setWeekEndDate(formattedEndDate);
 
-    if (userData) {
-      fetchAllocations(userData.email, formattedStartDate, formattedEndDate);
-    }
-  }, [userData]);
+      if (userData) {
+        fetchAllocations(userData.email, formattedStartDate, formattedEndDate);
+      }
+    },
+    [userData]
+  );
 
   // Update addRow to mark changes
   const addRow = useCallback(() => {
-    setRows(prevRows => [
+    setRows((prevRows) => [
       ...prevRows,
       {
-        projectNumber: '',
-        projectName: '',
-        milestone: '',
-        pm: '',
-        labor: '',
-        pctLaborUsed: '',
-        hours: '',
-        remarks: '',
+        projectNumber: "",
+        projectName: "",
+        milestone: "",
+        pm: "",
+        labor: "",
+        pctLaborUsed: "",
+        hours: "",
+        remarks: "",
       },
     ]);
     setHasUnsavedChanges(true); // Explicitly mark changes on add row
   }, []);
 
   const updateRow = useCallback((index, field, value) => {
-    setRows(prevRows => {
+    setRows((prevRows) => {
       const newRows = [...prevRows];
       newRows[index][field] = value;
       return newRows;
@@ -175,26 +201,29 @@ const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
   }, []);
 
   // Update deleteRow to mark changes
-  const deleteRow = useCallback(async (index) => {
-    const rowToDelete = rows[index];
+  const deleteRow = useCallback(
+    async (index) => {
+      const rowToDelete = rows[index];
 
-    if (rowToDelete.id) {
-      try {
-        setIsSaving(true);
-        await ProjectDataService.deleteAllocation(rowToDelete.id);
-        setRows(prevRows => prevRows.filter((_, i) => i !== index));
-        console.log(`Deleted allocation with ID: ${rowToDelete.id}`);
+      if (rowToDelete.id) {
+        try {
+          setIsSaving(true);
+          await ProjectDataService.deleteAllocation(rowToDelete.id);
+          setRows((prevRows) => prevRows.filter((_, i) => i !== index));
+          console.log(`Deleted allocation with ID: ${rowToDelete.id}`);
+          setHasUnsavedChanges(true); // Explicitly mark changes on delete row
+        } catch (error) {
+          console.error("Failed to delete allocation:", error);
+        } finally {
+          setIsSaving(false);
+        }
+      } else {
+        setRows((prevRows) => prevRows.filter((_, i) => i !== index));
         setHasUnsavedChanges(true); // Explicitly mark changes on delete row
-      } catch (error) {
-        console.error("Failed to delete allocation:", error);
-      } finally {
-        setIsSaving(false);
       }
-    } else {
-      setRows(prevRows => prevRows.filter((_, i) => i !== index));
-      setHasUnsavedChanges(true); // Explicitly mark changes on delete row
-    }
-  }, [rows]);
+    },
+    [rows]
+  );
 
   const calculateTotalHours = useCallback(() => {
     return rows.reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
@@ -208,15 +237,22 @@ const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
 
       console.log("Saving allocations for user:", userData.email);
 
-      const savePromises = rows.map(row => {
+      const savePromises = rows.map((row) => {
         if (!row.projectNumber || !row.hours) {
-          console.warn("Skipping row with missing project number or hours:", row);
+          console.warn(
+            "Skipping row with missing project number or hours:",
+            row
+          );
           return null;
         }
 
         if (row.id) {
           // Update existing allocation
-          return ProjectDataService.updateAllocation(row.id, row.hours, row.remarks);
+          return ProjectDataService.updateAllocation(
+            row.id,
+            row.hours,
+            row.remarks
+          );
         } else {
           // Create new allocation
           return ProjectDataService.saveResourceAllocation({
@@ -233,15 +269,15 @@ const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
       // Wait for all save operations to complete
       const results = await Promise.all(savePromises.filter(Boolean));
       console.log("Save results:", results);
-      
+
       setHasUnsavedChanges(false);
 
-      if (callback && typeof callback === 'function') {
+      if (callback && typeof callback === "function") {
         callback();
       } else {
         // Redirect to LeadershipPage with a refresh parameter
         // Clear hasUnsavedChanges before navigating to prevent the confirmation dialog
-        navigate('leadership', { refresh: true, bypassConfirm: true });
+        navigate("leadership", { refresh: true, bypassConfirm: true });
       }
     } catch (error) {
       console.error("Error saving allocations:", error);
@@ -258,7 +294,7 @@ const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
       const bypassing = navigate.bypassConfirm === true;
       return bypassing ? false : hasUnsavedChanges;
     },
-    saveChanges: saveWithCallback
+    saveChanges: saveWithCallback,
   }));
 
   if (!userData) {
@@ -267,8 +303,8 @@ const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
 
   return (
     <div className="team-edit-container">
-      <WeekPicker 
-        onWeekChange={handleWeekChange} 
+      <WeekPicker
+        onWeekChange={handleWeekChange}
         hasUnsavedChanges={hasUnsavedChanges}
         onSaveChanges={saveWithCallback}
       />
@@ -289,7 +325,6 @@ const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
         </div>
       </div>
 
-      
       {isLoading ? (
         <div>Loading allocations...</div>
       ) : loadError ? (
@@ -320,7 +355,9 @@ const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
               />
             ))}
             <tr className="group-total">
-              <td colSpan="6" style={{ textAlign: 'right' }}>Total:</td>
+              <td colSpan="6" style={{ textAlign: "right" }}>
+                Total:
+              </td>
               <td>{calculateTotalHours()}</td>
               <td></td>
             </tr>
@@ -329,13 +366,19 @@ const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
       )}
 
       <div className="table-actions">
-        <button onClick={addRow} className="add-btn" disabled={isSaving || isLoading}>Add Row</button>
-        <button 
-          onClick={() => saveWithCallback()} 
-          className="save-btn" 
+        <button
+          onClick={addRow}
+          className="add-btn"
           disabled={isSaving || isLoading}
         >
-          {isSaving ? 'Saving...' : 'Save'}
+          Add Row
+        </button>
+        <button
+          onClick={() => saveWithCallback()}
+          className="save-btn"
+          disabled={isSaving || isLoading}
+        >
+          {isSaving ? "Saving..." : "Save"}
         </button>
       </div>
     </div>

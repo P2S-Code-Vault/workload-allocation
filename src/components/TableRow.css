@@ -50,7 +50,8 @@
   border-bottom: 1px solid #f0f0f0;
 }
 
-.suggestion-item:hover, .suggestion-item:focus {
+.suggestion-item:hover,
+.suggestion-item:focus {
   background-color: #f0f7ff; /* Slightly blue hover state */
   outline: none;
 }
@@ -154,4 +155,3 @@
 .centered-input {
   text-align: center;
 }
-
