@@ -30,7 +30,7 @@ const CollapsibleProject = ({
         <div className="project-info">
           <span>Contract Labor: {formatCurrency(project.labor)}</span>
           <span>Total Hours: {formatNumber(project.totalHours)}</span>
-          <span>Projected Cost: {formatCurrency(project.totalCost)}</span>
+          <span>Forecasted Cost: {formatCurrency(project.totalCost)}</span>
           <span>% EAC Labor Used: {formatPercent(project.laborUsed)}</span>
         </div>
       </div>
