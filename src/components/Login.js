@@ -40,7 +40,7 @@ const Login = ({ onLogin }) => {
     <div className="page-layout">
       <header className="header">
         <img src={headerLogo} alt="Logo" className="header-logo" />
-        <h1 className="header-title">Resource Allocation</h1>
+        <h1 className="header-title">Workload Projection</h1>
       </header>
 
       <main className="main-content">

@@ -1,5 +1,5 @@
 {
-  "name": "resource-allocation-ui",
+  "name": "workload-projection-ui",
   "version": "0.1.0",
   "private": true,
   "dependencies": {
