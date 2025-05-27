@@ -135,20 +135,20 @@
 }
 
 /* Make sure the delete button is properly aligned */
-.delete-btn {
+/* .delete-btn {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  background-color: transparent;
+  background-color: #dbdbdb;
   border: none;
   color: #d32f2f;
   cursor: pointer;
   padding: 4px;
   transition: color 0.2s;
-}
+} */
 
 .delete-btn:hover {
-  color: #f44336;
+  color: #ffffff;
 }
 
 /* Centered input style */

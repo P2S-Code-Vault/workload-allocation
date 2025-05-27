@@ -40,7 +40,7 @@ const Login = ({ onLogin }) => {
     <div className="page-layout">
       <header className="header">
         <img src={headerLogo} alt="Logo" className="header-logo" />
-        <h1 className="header-title">Resource Allocation</h1>
+        <h1 className="header-title">Workload Projection</h1>
       </header>
 
       <main className="main-content">
@@ -81,7 +81,7 @@ const Login = ({ onLogin }) => {
           <div className="tooltip-container">
             <span className="footer-text">About</span>
             <div className="tooltip">
-              Our P2S Resource Allocation was developed by Nilay Nagar, Chad
+              Our P2S Workload Projection app was developed by Anvit Patil, Nilay Nagar, Chad
               Peterson, and Jonathan Herrera.
             </div>
           </div>

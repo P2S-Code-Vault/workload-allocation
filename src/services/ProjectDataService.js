@@ -1,5 +1,4 @@
 import API_CONFIG from './apiConfig';
-import ProjectSearchService from './ProjectSearchService';
 
 export class ProjectDataService {
   static apiBaseUrl = API_CONFIG.BASE_URL;
@@ -91,86 +90,26 @@ export class ProjectDataService {
 
 static async getAllocations(email, startDate, endDate) {
   try {
-    // Validate inputs
     if (!email) {
       throw new Error("Email is required for fetching allocations");
     }
-    
-    // Create a unique cache key for this query
-    const cacheKey = `allocations_${email}_${startDate || 'current'}_${endDate || 'current'}_v2`;
-    
-    console.log(`Fetching allocations with dates: start=${startDate}, end=${endDate}`);
-    // const cacheKey = `allocations_${email}_${startDate}_${endDate}`;
-    const skipCache = (startDate && endDate);
-    const cachedData = skipCache ? null : this.getCachedData(cacheKey);
-    
-    if (cachedData) {
-      console.log(`Using cached allocations for ${email} from ${startDate} to ${endDate}`);
-      return cachedData;
-    }
-    // Build query parameters
+    // Use milestone projections batch endpoint
     const params = new URLSearchParams();
     params.append('email', email);
-    
-    if (startDate) {
-      console.log(`Adding start_date param: ${startDate}`);
-      params.append('start_date', startDate);
-    }
-    
-    if (endDate) {
-      console.log(`Adding end_date param: ${endDate}`);
-      params.append('end_date', endDate);
-    }
-    
-    // Log the full URL for debugging
-    const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.ALLOCATIONS}?${params.toString()}`;
-    console.log("Fetching allocations from URL:", url);
-    
+    if (startDate) params.append('start_date', startDate);
+    if (endDate) params.append('end_date', endDate);
+    // Always use the correct key
+    const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.MILESTONE_PROJECTIONS_BATCH}?${params.toString()}`;
     const response = await fetch(url);
-    
-    // Handle non-OK responses
     if (!response.ok) {
       const errorText = await this.handleErrorResponse(response);
-      throw new Error(`Failed to fetch allocations: ${errorText}`);
+      throw new Error(`Failed to fetch milestone projections: ${errorText}`);
     }
-    
-    // Parse response
-    const contentType = response.headers.get('content-type');
-    if (!contentType || !contentType.includes('application/json')) {
-      console.warn("Response is not JSON:", contentType);
-      const text = await response.text();
-      console.log("Response text:", text);
-      
-      if (!text || text.trim() === '') {
-        return [];
-      }
-      
-      try {
-        // Try to parse anyway
-        const data = JSON.parse(text);
-        
-        // Cache the results (1 hour expiration for allocations)
-        this.cacheData(cacheKey, data, 60 * 60 * 1000);
-        
-        return data;
-      } catch (e) {
-        console.error("Failed to parse non-JSON response:", e);
-        throw new Error("Server returned an invalid response format");
-      }
-    }
-    
     const data = await response.json();
-    console.log("Received allocations:", data);
-    
-    // Normalize data - handle both arrays and single objects
-    const normalizedData = Array.isArray(data) ? data : (data ? [data] : []);
-    
-    // Cache the results (1 hour expiration for allocations)
-    this.cacheData(cacheKey, normalizedData, 60 * 60 * 1000);
-    
-    return normalizedData;
+    // Normalize to array
+    return Array.isArray(data) ? data : (data ? [data] : []);
   } catch (error) {
-    console.error("Error fetching allocations:", error);
+    console.error("Error fetching milestone projections:", error);
     throw error;
   }
 }
@@ -256,239 +195,85 @@ static pruneCache() {
 }
 
 static async getUsersInSameGroup(email) {
-  try {
-    console.log(`Getting users in the same group as ${email}`);
-    
-    // Create a cache key for this query
-    const cacheKey = `same_group_users_${email}`;
-    
-    // Try cache first for better performance
-    const cachedResults = this.getCachedData(cacheKey);
-    if (cachedResults) {
-      console.log(`Using cached team members for ${email}`);
-      return cachedResults;
-    }
-    
-    const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.USERS_SAME_GROUP}?email=${encodeURIComponent(email)}`);
-    
-    if (!response.ok) {
-      const errorText = await this.handleErrorResponse(response);
-      throw new Error(`Error fetching users in same group: ${errorText}`);
-    }
-    
-    const result = await response.json();
-    console.log('Users in same group:', result);
-    
-    // Cache the results for 30 minutes (1,800,000 ms)
-    this.cacheData(cacheKey, result, 1800000);
-    
-    return result;
-  } catch (error) {
-    console.error('Failed to fetch users in same group:', error);
-    throw error;
-  }
+  // Endpoint not implemented yet, return empty array for now
+  console.warn('The /users/same-group endpoint is not yet implemented in the backend. Returning empty array.');
+  return [];
 }
+// static async getUsersInSameGroup(email) {
+//   try {
+//     // This endpoint is not yet available in the backend, so return an empty array or a clear error
+//     console.warn('The /users/same-group endpoint is not yet implemented in the backend. Returning empty array.');
+//     return [];
+//   } catch (error) {
+//     console.error('Failed to fetch users in same group:', error);
+//     return [];
+//   }
+// }
 
   
   static async saveResourceAllocation(data) {
     try {
-      // Validation
-      if (!data.email || !data.project_number || !data.hours) {
-        throw new Error("Missing required allocation data: email, project_number, and hours are required");
+      if (!data.email || !data.project_number) {
+        throw new Error("Missing required allocation data: email, project_number");
       }
-      
-      // Try to get project details from CSV if available
-      let projectDetails = null;
-      try {
-        projectDetails = await ProjectSearchService.getProjectDetails(data.project_number);
-        console.log("Found project details in CSV:", projectDetails);
-      } catch (e) {
-        console.log(`Project details not found in CSV for ${data.project_number}`);
-      }
-      
-      // Format the data to match backend expectations
+      // Prepare request body for milestone projection
       const requestBody = {
         email: data.email,
         project_number: data.project_number,
-        hours: parseFloat(data.hours) || 0,
         remarks: data.remarks || "",
         week_start: data.week_start || null,
-        week_end: data.week_end || null
+        week_end: data.week_end || null,
+        month: parseFloat(data.month) || 0,
+        month1: parseFloat(data.month1) || 0,
+        month2: parseFloat(data.month2) || 0
       };
-      
-      // Add modified_by if we're allocating for someone else
+      // Add modified_by if allocating for someone else
       const currentUserDetails = JSON.parse(localStorage.getItem('userDetails'));
-      const allocatingForUser = localStorage.getItem('allocatingForUser');
-      
-      console.log("Creating allocation with following details:");
-      console.log("Current user details:", currentUserDetails);
-      console.log("Current user email:", currentUserDetails?.email);
-      console.log("Current user contact_id:", currentUserDetails?.contact_id);
-      console.log("Data email:", data.email);
-      console.log("Allocating for user:", allocatingForUser);
-      
-      // Check if we're allocating for someone else
       if (currentUserDetails && currentUserDetails.email !== data.email) {
-        console.log(`Adding modified_by: ${currentUserDetails.contact_id} (${currentUserDetails.name})`);
         requestBody.modified_by = currentUserDetails.contact_id;
-      } else {
-        console.log("Not adding modified_by - user is allocating for themselves");
       }
-      
-      // Add milestone information if available from CSV
-      if (projectDetails) {
-        requestBody.project_name = projectDetails['Project Name'] || null;
-        requestBody.milestone_name = projectDetails['Milestone'] || null;
-        requestBody.project_manager = projectDetails['PM'] || null;
-        requestBody.contract_labor = projectDetails['Labor'] || null;
-        
-        // Add percentage labor used value if available
-        if (projectDetails['Pct Labor Used'] !== undefined) {
-          const pctValue = parseFloat(projectDetails['Pct Labor Used']);
-          if (!isNaN(pctValue)) {
-            // Convert percentage to decimal for storage (e.g., 96.39 -> 0.9639)
-            requestBody.pct_labor_used = pctValue / 100;
-            console.log(`Including Pct Labor Used: ${pctValue}% -> ${requestBody.pct_labor_used}`);
-          }
-        }
-        
-        // Log that we're including milestone data
-        console.log(`Including milestone data from CSV for ${data.project_number}`, {
-          project_name: requestBody.project_name,
-          milestone_name: requestBody.milestone_name,
-          project_manager: requestBody.project_manager,
-          contract_labor: requestBody.contract_labor,
-          pct_labor_used: requestBody.pct_labor_used
-        });
-      }
-      
-      // Log the final request body before sending
-      console.log("Final request body:", JSON.stringify(requestBody));
-      
-      console.log(`Creating new allocation:`, requestBody);
-      const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.ALLOCATIONS}`, {
+      const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.MILESTONE_PROJECTIONS}`, {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json"
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(requestBody)
       });
-      
       if (!response.ok) {
         const errorText = await this.handleErrorResponse(response);
-        throw new Error(`Failed to save allocation: ${errorText}`);
+        throw new Error(`Failed to save milestone projection: ${errorText}`);
       }
-      
       return await response.json();
     } catch (error) {
-      console.error("Error saving allocation:", error);
+      console.error("Error saving milestone projection:", error);
       throw error;
     }
   }
 
-   static async updateAllocation(allocationId, hours, remarks) {
+   static async updateAllocation(allocationId, month, month1, month2, remarks) {
     try {
-      // More aggressive validation and logging
-      console.log(`updateAllocation called with ID: ${allocationId}, Type: ${typeof allocationId}`);
-      
-      if (!allocationId) {
-        console.error("Missing allocation ID in updateAllocation call");
-        throw new Error("Allocation ID is required for updates");
-      }
-      
-      // Ensure the ID is properly formatted - normalize to string
-      const normalizedId = String(allocationId).replace(/[^\d]/g, '');
-      
-      if (!normalizedId) {
-        console.error(`Invalid allocation ID format: ${allocationId}`);
-        throw new Error("Invalid allocation ID format");
-      }
-      
-      console.log(`Using normalized ID: ${normalizedId}`);
-      
-      // Validate hours
-      const parsedHours = parseFloat(hours);
-      if (isNaN(parsedHours)) {
-        console.error(`Invalid hours value: ${hours}`);
-        throw new Error("Hours must be a valid number");
-      }
-      
-      // Clear any cached allocations
-      this.clearAllAllocationCache();
-      
-      // Prepare request payload
+      if (!allocationId) throw new Error("Allocation ID is required for updates");
       const payload = {
-        hours: parsedHours,
+        month: parseFloat(month) || 0,
+        month1: parseFloat(month1) || 0,
+        month2: parseFloat(month2) || 0,
         remarks: remarks || ""
       };
-      
-      // Add modified_by if we're updating for someone else
       const currentUserDetails = JSON.parse(localStorage.getItem('userDetails'));
-      const currentUserEmail = currentUserDetails?.email;
       const allocatingForUser = localStorage.getItem('allocatingForUser');
-      
-      console.log("Updating allocation with following details:");
-      console.log("Current user details:", currentUserDetails);
-      console.log("Current user email:", currentUserEmail);
-      console.log("Current user contact_id:", currentUserDetails?.contact_id);
-      console.log("Allocating for user:", allocatingForUser);
-      
-      if (currentUserDetails && currentUserEmail && allocatingForUser && currentUserEmail !== allocatingForUser) {
-        console.log(`Adding modified_by to update: ${currentUserDetails.contact_id} (${currentUserDetails.name})`);
+      if (currentUserDetails && allocatingForUser && currentUserDetails.email !== allocatingForUser) {
         payload.modified_by = currentUserDetails.contact_id;
-      } else {
-        console.log("Not adding modified_by - user is updating for themselves");
       }
-      
-      console.log(`Sending UPDATE request to: ${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.ALLOCATIONS}/${normalizedId}`);
-      console.log("With payload:", payload);
-      
-      // Make the API request with explicit content type and accept headers
-      const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.ALLOCATIONS}/${normalizedId}`, {
+      const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.MILESTONE_PROJECTION_BY_ID(allocationId)}`, {
         method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-          "Accept": "application/json"
-        },
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
         body: JSON.stringify(payload)
       });
-      
-      // Log response status and headers
-      console.log(`Update response status: ${response.status}`);
-      console.log(`Response headers:`, {
-        contentType: response.headers.get('content-type'),
-        contentLength: response.headers.get('content-length')
-      });
-      
-      // Check for errors
       if (!response.ok) {
         const errorText = await response.text();
-        console.error(`Error response from server: ${errorText}`);
-        throw new Error(`Failed to update allocation: ${errorText}`);
+        throw new Error(`Failed to update milestone projection: ${errorText}`);
       }
-      
-      // Parse the response
-      let responseData;
-      const contentType = response.headers.get('content-type');
-      
-      if (!contentType || !contentType.includes('application/json')) {
-        const text = await response.text();
-        console.log(`Non-JSON response: ${text}`);
-        
-        try {
-          responseData = JSON.parse(text);
-        } catch (e) {
-          console.log("Could not parse response as JSON, using default success response");
-          responseData = { message: "Allocation updated successfully", allocation_id: normalizedId };
-        }
-      } else {
-        responseData = await response.json();
-      }
-      
-      console.log("Update success response:", responseData);
-      return responseData;
+      return await response.json();
     } catch (error) {
-      console.error("Error in updateAllocation:", error);
+      console.error("Error updating milestone projection:", error);
       throw error;
     }
   }
@@ -614,6 +399,197 @@ static async getUsersInSameGroup(email) {
     }
   }
 
+  // Add similar methods for opportunity projections
+  static async getOpportunities(email, startDate, endDate) {
+    try {
+      if (!email) throw new Error("Email is required for fetching opportunities");
+      const params = new URLSearchParams();
+      params.append('email', email);
+      if (startDate) params.append('start_date', startDate);
+      if (endDate) params.append('end_date', endDate);
+      const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.OPPORTUNITY_PROJECTIONS_BATCH}?${params.toString()}`;
+      const response = await fetch(url);
+      if (!response.ok) {
+        const errorText = await this.handleErrorResponse(response);
+        throw new Error(`Failed to fetch opportunity projections: ${errorText}`);
+      }
+      const data = await response.json();
+      return Array.isArray(data) ? data : (data ? [data] : []);
+    } catch (error) {
+      console.error("Error fetching opportunity projections:", error);
+      throw error;
+    }
+  }
+  static async saveOpportunityProjection(data) {
+    try {
+      if (!data.email || !data.opportunity_number) {
+        throw new Error("Missing required opportunity data: email, opportunity_number");
+      }
+      const requestBody = {
+        email: data.email,
+        opportunity_number: data.opportunity_number,
+        remarks: data.remarks || "",
+        month: parseFloat(data.month) || 0,
+        month1: parseFloat(data.month1) || 0,
+        month2: parseFloat(data.month2) || 0
+      };
+      const currentUserDetails = JSON.parse(localStorage.getItem('userDetails'));
+      if (currentUserDetails && currentUserDetails.email !== data.email) {
+        requestBody.modified_by = currentUserDetails.contact_id;
+      }
+      const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.OPPORTUNITY_PROJECTIONS}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(requestBody)
+      });
+      if (!response.ok) {
+        const errorText = await this.handleErrorResponse(response);
+        throw new Error(`Failed to save opportunity projection: ${errorText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Error saving opportunity projection:", error);
+      throw error;
+    }
+  }
+  static async updateOpportunityProjection(opportunityId, month, month1, month2, remarks) {
+    try {
+      if (!opportunityId) throw new Error("Opportunity ID is required for updates");
+      const payload = {
+        month: parseFloat(month) || 0,
+        month1: parseFloat(month1) || 0,
+        month2: parseFloat(month2) || 0,
+        remarks: remarks || ""
+      };
+      const currentUserDetails = JSON.parse(localStorage.getItem('userDetails'));
+      const allocatingForUser = localStorage.getItem('allocatingForUser');
+      if (currentUserDetails && allocatingForUser && currentUserDetails.email !== allocatingForUser) {
+        payload.modified_by = currentUserDetails.contact_id;
+      }
+      const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.OPPORTUNITY_PROJECTION_BY_ID(opportunityId)}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json", "Accept": "application/json" },
+        body: JSON.stringify(payload)
+      });
+      if (!response.ok) {
+        const errorText = await response.text();
+        throw new Error(`Failed to update opportunity projection: ${errorText}`);
+      }
+      return await response.json();
+    } catch (error) {
+      console.error("Error updating opportunity projection:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Batch update milestone projections
+   * @param {Array} updates - Array of objects with { ra_id, month_hours, month_hours1, month_hours2, remarks, modified_by }
+   * @returns {Promise<Object>} BatchUpdateResponse
+   */
+  static async batchUpdateMilestoneProjections(updates) {
+    if (!Array.isArray(updates) || updates.length === 0) {
+      throw new Error("No updates provided for batch milestone projection update");
+    }
+    const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.MILESTONE_PROJECTIONS_BATCH}`;
+    const body = { allocations: updates };
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!response.ok) {
+      const errorText = await this.handleErrorResponse(response);
+      throw new Error(`Batch milestone projection update failed: ${errorText}`);
+    }
+    return await response.json();
+  }
+
+  /**
+   * Batch update opportunity projections
+   * @param {Array} updates - Array of objects with { ra_id, month_hours, month_hours1, month_hours2, remarks, modified_by }
+   * @returns {Promise<Object>} BatchUpdateResponse
+   */
+  static async batchUpdateOpportunityProjections(updates) {
+    if (!Array.isArray(updates) || updates.length === 0) {
+      throw new Error("No updates provided for batch opportunity projection update");
+    }
+    const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.OPPORTUNITY_PROJECTIONS_BATCH}`;
+    const body = { allocations: updates };
+    const response = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body)
+    });
+    if (!response.ok) {
+      const errorText = await this.handleErrorResponse(response);
+      throw new Error(`Batch opportunity projection update failed: ${errorText}`);
+    }
+    return await response.json();
+  }
+
+  // Fetch milestone projections for a user by quarter and year
+  static async getAllocationsByQuarter(email, year, quarter) {
+    if (!email || !year || !quarter) {
+      throw new Error("Missing required parameters for getAllocationsByQuarter");
+    }
+    // Step 1: Get contact_id for the email
+    const contactId = await this.getContactIdByEmail(email);
+    if (!contactId) {
+      throw new Error(`No contact_id found for email: ${email}`);
+    }
+    // Step 2: Fetch milestone projections for contact_id
+    const params = new URLSearchParams();
+    params.append('year', year);
+    params.append('quarter', quarter);
+    const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.CONTACT_MILESTONE_PROJECTIONS(contactId)}?${params.toString()}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      const errorText = await this.handleErrorResponse(response);
+      throw new Error(`Failed to fetch milestone projections: ${errorText}`);
+    }
+    const data = await response.json();
+    return Array.isArray(data) ? data : (data ? [data] : []);
+  }
+
+  // Fetch opportunity projections for a user by quarter and year
+  static async getOpportunitiesByQuarter(email, year, quarter) {
+    if (!email || !year || !quarter) {
+      throw new Error("Missing required parameters for getOpportunitiesByQuarter");
+    }
+    // Step 1: Get contact_id for the email
+    const contactId = await this.getContactIdByEmail(email);
+    if (!contactId) {
+      throw new Error(`No contact_id found for email: ${email}`);
+    }
+    // Step 2: Fetch opportunity projections for contact_id
+    const params = new URLSearchParams();
+    params.append('year', year);
+    params.append('quarter', quarter);
+    const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.CONTACT_OPPORTUNITY_PROJECTIONS(contactId)}?${params.toString()}`;
+    const response = await fetch(url);
+    if (!response.ok) {
+      const errorText = await this.handleErrorResponse(response);
+      throw new Error(`Failed to fetch opportunity projections: ${errorText}`);
+    }
+    const data = await response.json();
+    return Array.isArray(data) ? data : (data ? [data] : []);
+  }
+
+  // Helper: Get contact_id for a given email
+  static async getContactIdByEmail(email) {
+    if (!email) return null;
+    // Try /contacts/email/{email} endpoint
+    const emailUrl = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.CONTACTS}/email/${encodeURIComponent(email)}`;
+    try {
+      const response = await fetch(emailUrl);
+      if (!response.ok) return null;
+      const data = await response.json();
+      return data.contact_id || null;
+    } catch (e) {
+      return null;
+    }
+  }
 }
 
 export default ProjectDataService;

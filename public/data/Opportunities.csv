@@ -1,0 +1,586 @@
+﻿OpportunityNumber,Opportunity_Name_from_Lead__c,P2SEstimatedFeeProposed,OGroup,Probability,ProposalChampion,email
+25-0441,Weekes Community Park Renovation,NULL,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+25-0778,Newhall Park Improvements,NULL,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+24-2762,UCSB Hot Water Loop Expansion & Electricification,NULL,NULL,60,James Valiensi,james.valiensi@p2sinc.com
+25-0122,CSUN New Business Graduate School_PBK,NULL,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+25-0216,OCTA Headquarters_Gensler,NULL,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+25-0223,UCSB Engineering II Pavilion Addition/Auhll Robotic Laboratory,NULL,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+25-0384,CSUN USU Gateway Feasibility Study,NULL,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+25-0605,Impact House,NULL,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0695,Pasadena CC Presidential Suite,NULL,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0772,CSU Energy Savings Performance_Willdan,NULL,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+25-0837,CU Boulder Campus Decarb_CMTA,NULL,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+25-0866,KPFF_Port of Vancouver RFQ,NULL,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+25-1125,Tectonics SeaTac Childcare Facility Study,NULL,NULL,60,Mike Thomson,mike.thomson@p2sinc.com
+24-2564,Temecula Bike Trail Lighting,NULL,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+25-0843,Lakeview Canyon Road Improvements,NULL,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+25-0156,Manhattan Beach USD A/E Services - Little,NULL,NULL,60,Michael Dannenberg,michael.dannenberg@p2sinc.com
+25-0519,East Whittier City School District Open A/E Quals - tBP,NULL,NULL,60,Michael Dannenberg,michael.dannenberg@p2sinc.com
+25-0511,East Whittier City SD Open A/E Quals - Little (T only),NULL,NULL,60,Michael Dannenberg,michael.dannenberg@p2sinc.com
+25-0514,Hermosa Beach City School District Open A/E Quals - tBP,NULL,NULL,60,Michael Dannenberg,michael.dannenberg@p2sinc.com
+25-0516,Redondo Beach City School District Open A/E Quals - tBP,NULL,NULL,60,Michael Dannenberg,michael.dannenberg@p2sinc.com
+25-0517,Palos Verdes Peninsula USD Open A/E Quals - Little (T),NULL,NULL,60,Michael Dannenberg,michael.dannenberg@p2sinc.com
+25-0518,Hermosa Beach City SD Open A/E Quals - Little (T only),NULL,NULL,60,Michael Dannenberg,michael.dannenberg@p2sinc.com
+23-1695,"Stell, AE for Master Planning, USACE Seattle District (NWD)",0,NULL,60,Bradley Lentz,brad.lentz@p2sinc.com
+24-1474,VA PCAC Nationwide IDIQ Blue Trident,0,NULL,60,Peter Eberle,peter.eberle@p2sinc.com
+25-0345,Manhattan Beach USD Architectural Services RFQ_tBP,0,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0222,UCI Architectural Design Services On-Call_Corgan,0,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+25-0383,UCI Architectural Design Services On-Call_Lionakis,0,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+25-0385,UCI Architectural Design Services On-Call_HPI,0,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+22-2676,USACE Border Patrol MATOC,0,NULL,60,Bradley Lentz,brad.lentz@p2sinc.com
+24-2507,2024 VA VISN 22 IDIQ_Blue Trident,0,NULL,60,Kim Baker,kim.baker@p2sinc.com
+24-2518,Environmental Protection Agency (EPA) A/E IDIQ,0,NULL,60,Kim Baker,kim.baker@p2sinc.com
+25-0307,UCI Architectural Design Services On-Call_MMA,0,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+24-1245,Oceanside Unified School District OnCall_Little,0,NULL,60,Kirk Anglin,kirk.anglin@p2sinc.com
+22-1042,Hayward Area Rec & Park District On-Call,0,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+24-2570,Saddleback A/E Services,0,NULL,90,Kirk Anglin,kirk.anglin@p2sinc.com
+25-0657,RCCD Architectural Services_Lionakis,1,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0671,RCCD Architectural Services_HGA,1,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0692,RCCD Architectural Services_Gensler,1,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0693,RCCD Architectural Services_tBP,1,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0711,RCCD Architectural Services_Cannon,1,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0715,RCCD Architectural Services_MIAA,1,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0753,Cal Fire Table Mountain Training Facility - Pre-Design,1,NULL,100,Wesley McKean,wes.mckean@p2sinc.com
+25-0875,NAVFAC SW Long Range Planning A/E IDIQ,1,NULL,60,Bradley Lentz,brad.lentz@p2sinc.com
+24-2718,Azusa Pacific University Master Plan_HKS,75000,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+25-0097,WVC Math and Science Site Improvements,49200,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0150,Riverside County Office of Education,129000,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0303,Monterey PCCD Marina Education RFQ Cx,84000,NULL,60,Bryant Mercado,bryant.mercado@p2sinc.com
+25-0419,CSU Monterey Bay - Allied Health Building,52500,NULL,60,Karl von der Linden,karl.vonderlinden@p2sinc.com
+25-0622,Boeing El Segundo S30 MPL,45900,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-0717,Occidental College Facilities Yard Improvements Study,19200,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0217,City of Anaheim APU Crew Quarters Bldg RFQ,256000,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+25-0388,UCI Architectural Design Services On-Call_Gensler,1,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+25-0833,CSUEB Campus Consulting Engineer,1,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+25-1112,UCI Fire Life Safety Services,1,NULL,60,Andres Jimenez,andres.jimenez@p2sinc.com
+25-1126,"RM_Port of Everett, On-Call Marina Dock Reconstruction",100000,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+25-0088,CSU Dominguez Hills TOCA_AC Martin,1,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+25-0808,Ontario Airport PMCM Cx Tylin,1,NULL,60,Bryant Mercado,bryant.mercado@p2sinc.com
+25-1048,2025-27 Evergreen State College On-Call Electrical,1,NULL,60,Vaibhav Prasad,vaibhav.prasad@p2sinc.com
+23-2094,HPMC - Acute Care Services Replacement Hospital Cx,277100,NULL,60,Mia Guo,mia.guo@p2sinc.com
+24-0604,Montebello Park,121700,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+24-2347,Inglewood USD District Office Relocation,14500,NULL,60,Karl von der Linden,karl.vonderlinden@p2sinc.com
+25-0521,POLA Terminal Island Rail Infrastructure Improvements - DRC,65270,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+25-0804,UCLA Health Triunfo Canyon TI,350000,NULL,60,Mikhail Fuks,mikhail.fuks@p2sinc.com
+25-1039,City of Huntington Beach On Call pursuit,20000,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+24-0309,PLCOM San Pedro Feasibility Study - Tower 5 RACS,97100,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+25-0440,South Oxnard Library Site Lighting,60700,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+25-0918,Citrus Community College District CTE Building - Lionakis,194740,NULL,60,Michael Dannenberg,michael.dannenberg@p2sinc.com
+24-1065,City of Santa Monica - Memorial Park Redevelopment,406185,NULL,90,Travis Taylor,travis.taylor@p2sinc.com
+25-0455,EWCSD_AE_MSP,NULL,NULL,60,Alexander Sassoon,alex.sassoon@p2sinc.com
+25-0513,Palos Verdes Peninsula USD Open A/E Quals tBP,NULL,NULL,60,Michael Dannenberg,michael.dannenberg@p2sinc.com
+24-0425,PLCOM SP Feasibility Study - Tower 5 RACS,97100,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+25-0460,Marian RMC Bi-Plane Renovation,78950,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+25-0712,RCCD Architectural Services_LJC,1,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0940,GCH Ground Plane Exit,20895,NULL,60,Alexander Sassoon,alex.sassoon@p2sinc.com
+25-0943,DLR New Orleans Train Station Cast Breakroom,79866,NULL,60,Alexander Sassoon,alex.sassoon@p2sinc.com
+24-2569,Valhalla Memorial Park Phase 3 Mausoleum,30000,NULL,60,Alexander Sassoon,alex.sassoon@p2sinc.com
+25-0598,USC-MDR ISI Electrical Modifications,17500,NULL,60,Alexander Sassoon,alex.sassoon@p2sinc.com
+25-1153,SFMC Pharmacy CCSS,21500,NULL,60,Alexander Sassoon,alex.sassoon@p2sinc.com
+25-0805,UCLA Health Triunfo Canyon TI,350000,NULL,60,Mikhail Fuks,mikhail.fuks@p2sinc.com
+25-0290,Zero Emissions Program Project managment support,301924,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+24-3173,LACCD LAVC Data Center_AO Reed,NULL,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+24-2969,Sereno Open Space Design - Temple City,NULL,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+25-0202,Meridian Habitat Park Community Center,NULL,NULL,60,Leon Kenshalo,leon.kenshalo@p2sinc.com
+25-0699,Dublin California Parks and Recreation On-Call Services,NULL,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+24-3054,LAUSD ELAOC DB_HPI,728800,NULL,60,Scott Newman,scott.newman@p2sinc.com
+25-1037,Northrop M8 Cleanroom Room Reconfiguration,43890,NULL,60,Mateusz Szlachetka,matt.szlachetka@p2sinc.com
+25-0254,RBHS - PUSD CUP Replacement,1175440,NULL,70,Mark Richards,mark.richards@p2sinc.com
+24-1564,JBLM SOF Consolidated Rigging Facility Cx,144718,NULL,60,Alexandra Sidun,alexandra.sidun@p2sinc.com
+25-0765,Belmont Beach and Aquatics Center,50700,NULL,60,Bryant Mercado,bryant.mercado@p2sinc.com
+23-1156,HMC - San Clemente Corto Lane Beach Access Project,15950,NULL,90,Greg Alexander,greg.alexander@p2sinc.com
+25-0612,VRFA Auburn Fire Station 36 Cx,39122,NULL,60,Jake Huang,jake.huang@p2sinc.com
+24-2876,Bakersfield Memorial Hospital Masterplan Update,77500,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+25-0408,Water Facilities Authority Arc Flash Study,25000,NULL,60,Alexander Sassoon,alex.sassoon@p2sinc.com
+25-0410,Cemex Victorville - Peer Review,NULL,NULL,60,Andres Jimenez,andres.jimenez@p2sinc.com
+25-0578,Bayview Corporate Center HVAC Modernization,42500,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+25-0690,Scripps SENC Water Rationing Plan Update,34240,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+25-0998,CHMC Renovation Masterplan - MEPT Feasibility Study,44120,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+25-1076,LINC Larrabee St Senior Housing Dry Utility Consulting,54914,NULL,60,Marco Cabibbo,marco.cabibbo@p2sinc.com
+25-1265,SMMUSD Malibu Middle School Fire Alarm Replacement Study,11300,NULL,60,Alexander Hoeft,alex.hoeft@p2sinc.com
+25-0586,Stanford University Penthouse Air Handler Replacement Cx,33500,NULL,90,Dexin Kong,dexin.kong@p2sinc.com
+24-2998,Scope Add-Serv - CSUCI CD ECCEC/Gateway Infrastructure,2800,NULL,60,Steven Peterson,steven.peterson@p2sinc.com
+24-2977,BMS Sierra 1st Level Preaction,7200,NULL,90,Andres Jimenez,andres.jimenez@p2sinc.com
+25-0025,Henry Mayo Newhall Hospital - NPC-3 Seismic Upgrade,45100,NULL,60,Andres Jimenez,andres.jimenez@p2sinc.com
+24-1195,SMMC Long Beach Medical Vacuum System Replacement,71448,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+24-1193,SMMC Long Beach - ED / RF Room Equipment Replacement,36920,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+24-1363,AHSV Fluoroscopy Equipment Repl,29961,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+24-1397,CSMC Photon Counting CT Scanner,63316,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+24-1828,SMMC LB CSPD Steris V-Pro Elec Sterilizer Equip Repl,11800,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+24-1823,SMMC CT Scan Equipment Replacement,41476,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+24-1826,SMMC LB Outpatient MOB CT Scanner Replacement,39349,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+24-1824,SMMC LB CSPD Sterilizer Equip A and Replacement,89925,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+24-1825,SMMC LB CSPD Washer Equipment Replacement,55925,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+23-3111,DUSD Generator Project,25000,NULL,60,Marco Cabibbo,marco.cabibbo@p2sinc.com
+24-1852,MWD Diemer Admin Bldg HVAC Upgrades,238703,NULL,60,Mike Shen,mike.shen@p2sinc.com
+24-1874,SMMC LB CSPD Sterilizer B Equip Replacement,89925,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+24-2122,LAMC East Campus Complex SATCON Inverter Repair,2216,NULL,90,Yuzhe Liu,yuzhe.liu@p2sinc.com
+25-0917,USCG Sitka Waterfront Improvements  Cx,38415,NULL,60,Alexandra Sidun,alexandra.sidun@p2sinc.com
+25-0922,North Kitsap Service Center Cx,60860,NULL,60,Alexandra Sidun,alexandra.sidun@p2sinc.com
+24-2690,QAH Willow Brook Dry Utility Engineering,37100,NULL,60,Marco Cabibbo,marco.cabibbo@p2sinc.com
+24-3176,Commonspirit St. Joseph Medical Center Outpatient Oncology Access,62500,NULL,90,John Kosteroski,john.kosteroski@p2sinc.com
+24-0404,CSUSB Energy Study,265500,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+24-0903,Cal Poly Stenner Creek Housing Electrical Peer Review,25000,NULL,60,Steven Peterson,steven.peterson@p2sinc.com
+24-0967,Rogers H.S. Natatorium Lighting Design Review,4900,NULL,60,Leon Kenshalo,leon.kenshalo@p2sinc.com
+24-0986,CPSLO Avila Housing Complex MV Design,49500,NULL,60,Steven Peterson,steven.peterson@p2sinc.com
+24-1001,Sparks Stadium Recreation Field Lighting Replacement,13900,NULL,60,Leon Kenshalo,leon.kenshalo@p2sinc.com
+24-1002,Sparks Stadium Track Lanes  LED Lighting Replacement,11600,NULL,60,Leon Kenshalo,leon.kenshalo@p2sinc.com
+25-0754,Cal Poly Rodeo Clubhouse E&T Infrastructure,10000,NULL,60,Steven Peterson,steven.peterson@p2sinc.com
+25-1171,CPSLO Chartwells Bookstore ESR,6000,NULL,60,Steven Peterson,steven.peterson@p2sinc.com
+25-1007,Morongo CHP,1580000,NULL,60,Ivan Thomas,ivan.thomas@p2sinc.com
+25-1203,AMR L203 Blown Film,71500,NULL,60,Ivan Thomas,ivan.thomas@p2sinc.com
+24-2826,San Pedro SUD Feasibility_Boulder,50101,NULL,60,Scott Newman,scott.newman@p2sinc.com
+25-0069,OCWR Prima Landfill Admin Building,178000,NULL,60,Steven Peterson,steven.peterson@p2sinc.com
+25-0182,VA WLA Emergency Housing,57140,NULL,60,Marco Cabibbo,marco.cabibbo@p2sinc.com
+25-0826,Multicare Tacoma General Cath Lab Replacement,158766,NULL,60,Spenser Petherick,spenser.petherick@p2sinc.com
+25-0903,CPSLO Dairy Modernization ESR & MSR,16000,NULL,60,Steven Peterson,steven.peterson@p2sinc.com
+24-2172,LINC - I Street Apartments Dry Utility Consulting,50100,NULL,60,Marco Cabibbo,marco.cabibbo@p2sinc.com
+24-2466,H&N Group Refrigeration Upgrades,8600,NULL,60,Marco Cabibbo,marco.cabibbo@p2sinc.com
+24-2753,DB Fresno IRS Data Cabling Proj 4CA1530,11650,NULL,60,Marco Cabibbo,marco.cabibbo@p2sinc.com
+24-2907,McMaster Carr South AC Unit Replacement,33500,NULL,60,Ivan Thomas,ivan.thomas@p2sinc.com
+24-3066,SSU Verizon Cell Tower ESR,8000,NULL,60,Steven Peterson,steven.peterson@p2sinc.com
+25-0210,9360 No Name Uno St. Louise - Feasibility Study,42585,NULL,60,Vuk Cvetkovic,vuk.cvetkovic@p2sinc.com
+25-0308,Northrop R5 CTF UPS-3 Replacement,18830,NULL,60,Mateusz Szlachetka,matt.szlachetka@p2sinc.com
+25-0537,Riverside County Building Conference Room Renovation,7300,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+24-2358,Cypress College Central Plant Upgrades,72500,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+24-2873,LAUSD Mult-Site Parking Lot EV Chargers,68000,NULL,60,Joab Andrade,joab.andrade@p2sinc.com
+24-3144,KPFF - VA WLA Vets Garden Renovation,20350,NULL,60,Marco Cabibbo,marco.cabibbo@p2sinc.com
+25-0194,Rawlings NG M1 RWT Wind Tunnel Chiller Upgrade,7500,NULL,60,Mateusz Szlachetka,matt.szlachetka@p2sinc.com
+25-0407,LACOE Education Center HVAC Assessment,30500,NULL,60,Alexander Sassoon,alex.sassoon@p2sinc.com
+25-0625,VMC Hybrid OR Feasibility Study,23792,NULL,60,Darren Schwend,darren.schwend@p2sinc.com
+25-0666,CCP - OC WorkForce Reentry Center,120000,NULL,60,Rolando Domingo,rolando.domingo@p2sinc.com
+23-3252,San Pablo Park Project,34745,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+24-1182,CSULA Dish Wireless Equipment Upgrade ESR,6000,NULL,60,Steven Peterson,steven.peterson@p2sinc.com
+24-1425,CSULB BAC Fire Alaram System Upgrades,32500,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+24-1467,Mt. Eden Park Renovation,55700,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+24-1673,"CSULB Beachside, Atlantic and Dining Hall FA Upgrades",57500,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+22-1179,EH2S - EvergreenHealth 2 Silver Procedure Center,120323,NULL,90,Sierra Spitulski,sierra.spitulski@p2sinc.com
+23-3316,Mustang Middle Sub Transformer Replacement,89300,NULL,60,Steven Peterson,steven.peterson@p2sinc.com
+24-2988,Topanga Lagoon Visitor Services,184013,NULL,90,Marco Cabibbo,marco.cabibbo@p2sinc.com
+24-0987,CPSLO Student Success Center 12kV Design,69500,NULL,90,Steven Peterson,steven.peterson@p2sinc.com
+25-0792,SCCCD District-Wide Energy Conservation Upgrades,82500,NULL,90,Steven Peterson,steven.peterson@p2sinc.com
+25-0634,MSAS LB PSB Lift Modifications,3000,NULL,60,Alexander Sassoon,alex.sassoon@p2sinc.com
+24-3127,SDUSD Mckinley ES WSM Fire Protection,28100,NULL,60,Cesar Rodriguez,cesar.rodriguez@p2sinc.com
+24-3128,SDUSD Benchley ES WSM Fire Protection,26100,NULL,60,Cesar Rodriguez,cesar.rodriguez@p2sinc.com
+25-1221,PSPH Cath Lab 02,52800,NULL,60,Lee Swanson,lee.swanson@p2sinc.com
+24-1308,SENC CEP - Extended CA Schedule,84670,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+25-0298,USC Keck Capcity 3rd Floor CVI + Infill Building Cx,169344,NULL,60,Mia Guo,mia.guo@p2sinc.com
+25-1005,Northrop ES 905 WC476 and WC745 AHU Replacement,10000,NULL,60,Mateusz Szlachetka,matt.szlachetka@p2sinc.com
+24-1117,Upland Unified School District Group 1 Surveillance Improvements,60000,NULL,80,Steve Burman,steve.burman@p2sinc.com
+24-3053,SDUSD Mountain View ES Reroofing,18500,NULL,60,Cesar Rodriguez,cesar.rodriguez@p2sinc.com
+25-0028,City of Long Beach Homeless Services Medical Storage Building,35000,NULL,60,Michael Dannenberg,michael.dannenberg@p2sinc.com
+25-1267,PSPH Xray 3 Renovation,44000,NULL,60,Lee Swanson,lee.swanson@p2sinc.com
+24-2380,DUSD High School Shop Buildings HVAC,120000,NULL,60,Andrew Smith,andrew.smith@p2sinc.com
+24-2487,DUSD High School GYM HVAC Upgrades,100000,NULL,60,Andrew Smith,andrew.smith@p2sinc.com
+25-0696,Peninsula Pain Clinic ASC Expansion,123000,NULL,60,Darren Schwend,darren.schwend@p2sinc.com
+25-0758,LAUSD Marques Charter ES_Phase 2 New Const,877261,NULL,60,Travis Taylor,travis.taylor@p2sinc.com
+25-1016,GWC Student Services Building - President's Suite TI,67960,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+24-2621,County of San Diego As Needed Cx,1,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+24-2861,Cal Fire Southern Region Engineering,1,NULL,60,Andres Jimenez,andres.jimenez@p2sinc.com
+25-0653,RCCD Architectural Services_Struere,1,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0728,RCCD Architectural Services_HED,1,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0919,A-E Building Commissioning On Call for Spokane County Cx,1,NULL,60,Alexandra Sidun,alexandra.sidun@p2sinc.com
+24-3101,LAVC Athletic Field WBCx,95056,NULL,60,Yuzhe Liu,yuzhe.liu@p2sinc.com
+24-3141,San Diego CCD - As Needed MEP Services,0,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+25-0421,UCI Architectural Design Services On-Call_tBP,0,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+25-0848,City of Newport Beach Professional Engineering Services - KPFF,0,NULL,60,Marco Cabibbo,marco.cabibbo@p2sinc.com
+25-0952,KPFF_Port of South Whidbey On-Call,150000,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+25-1086,Diamond Bar Civic Center Sustainability Study,60342,NULL,60,Mohammad Wasif,mohammad.wasif@p2sinc.com
+24-0059,Warehouse Addition - Kansas City VAMC,30000,NULL,60,Peter Eberle,peter.eberle@p2sinc.com
+25-1087,Dignity St Joseph Parking Structure Temporary Power,18000,NULL,60,Jamie O'Bard,jamie.obard@p2sinc.com
+25-1088,Dignity St Joseph Patient Tower Temporary Power,36000,NULL,60,Jamie O'Bard,jamie.obard@p2sinc.com
+24-3035,Oakland USD McClymonds High School Modernization Cx RFQ,155703,NULL,60,Mia Guo,mia.guo@p2sinc.com
+24-3161,LBCT RSOQ for Civil Engineering and Electrical Design Services,911745,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+25-0256,SDIA SkySpark Maintenance,5168,NULL,75,Mark Richards,mark.richards@p2sinc.com
+25-0289,SSA B63 Engineering Design,256174,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+24-2424,TESC CAB Building Obsolete Breaker Replacement,6000,NULL,60,Vaibhav Prasad,vaibhav.prasad@p2sinc.com
+24-3022,WVM Geothermal  - Implementation,189900,NULL,60,Akshay Dhanapal Kumar,akshay.kumar@p2sinc.com
+23-0020,DHS USCG Nationwide AE IDIQ_ECH,0,NULL,60,Bradley Lentz,brad.lentz@p2sinc.com
+23-0026,DHS USCG Nationwide A/E IDIQ - AECOM,0,NULL,60,Bradley Lentz,brad.lentz@p2sinc.com
+23-0064,NAVFAC SW 8(a) MACC - Bristol,0,NULL,60,Bradley Lentz,brad.lentz@p2sinc.com
+23-1692,NAVFAC SW Structural IDIQ_RM,0,NULL,60,Bradley Lentz,brad.lentz@p2sinc.com
+23-2357,NAVFAC SW Civil IDIQ_HZ,0,NULL,60,Bradley Lentz,brad.lentz@p2sinc.com
+24-1255,NAVFAC Washington MEP IDIQ,0,NULL,60,Bradley Lentz,brad.lentz@p2sinc.com
+24-1483,USACE Alaska District SRM MATOC IDIQ,0,NULL,60,Mike Thomson,mike.thomson@p2sinc.com
+25-0065,City of Vista - As-Needed CM Services,0,NULL,60,Christopher Peterson,chris.peterson@p2sinc.com
+25-0647,SFUSD Cx Services,0,NULL,60,Dexin Kong,dexin.kong@p2sinc.com
+23-0776,NAVFAC EXWC Energy Efficiency Utility IDIQ,0,NULL,60,Bradley Lentz,brad.lentz@p2sinc.com
+25-1058,KPFF_ PoT Civil/Structural On-Call,0,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+24-3001,Thurston County On Call Master Planning,10000,NULL,60,Peregrin Jones,peregrin.jones@p2sinc.com
+24-3034,Orange USD A&E On Call Services,1,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+24-3076,LACCD Civil MATOC_Psomas,1,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0896,LACCD MEP Engineering Services,1,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-1090,Palos Verdes Peninsula USD - CM Services On-Call,1,NULL,60,Christopher Peterson,chris.peterson@p2sinc.com
+25-1099,Poway Unified School District_John Wyka,1,NULL,60,Kirk Anglin,kirk.anglin@p2sinc.com
+25-1146,M&N Port of Tacoma Civil Structural On-Call,1,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+24-0237,NAVFAC Mid-Atlantic MCAS Cherry Point A/E IDIQ,0,NULL,60,Bradley Lentz,brad.lentz@p2sinc.com
+24-0544,Dept of Commerce NIST A/E Planning IDIQ,0,NULL,60,Bradley Lentz,brad.lentz@p2sinc.com
+25-0941,Burbank Unified School District-On Call_JFAK,0,NULL,60,Kirk Anglin,kirk.anglin@p2sinc.com
+25-0498,City of Long Beach Space Planning on-call_John Wyka,1,NULL,60,Scott Newman,scott.newman@p2sinc.com
+25-0921,Riverside Unified School District_A/E Quals_NAC,0,NULL,60,Kirk Anglin,kirk.anglin@p2sinc.com
+25-0937,Burbank Unified School District-On Call_John Wyka Arch,0,NULL,60,Kirk Anglin,kirk.anglin@p2sinc.com
+25-0982,Burbank Unified School District_on call_houstontyner,0,NULL,60,Kirk Anglin,kirk.anglin@p2sinc.com
+25-0315,UCSB East Campus Student Housing Commissioning Services,0,NULL,60,Bryant Mercado,bryant.mercado@p2sinc.com
+25-0551,East Whittier City School District_AE_SGH Architects,0,NULL,60,Kirk Anglin,kirk.anglin@p2sinc.com
+24-2270,Holy Names HS Oakland Gym Cx,21800,NULL,60,Bryant Mercado,bryant.mercado@p2sinc.com
+24-2448,Miami Dade Civil and Probate Courthouse Cx,729600,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+24-2871,New Springtown Park,14000,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+25-0033,CSUDH Fire Alarm Network Distribution,15000,NULL,60,Steven Peterson,steven.peterson@p2sinc.com
+25-0129,Crescent and Pebbly Promenade Improvements,24700,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+25-0368,Sherman Towers - Arc Flash Study,55000,NULL,60,Emily Boss,emily.boss@p2sinc.com
+25-0509,Kaiser HNB Peds Clinic Remodel,40760,NULL,60,Vuk Cvetkovic,vuk.cvetkovic@p2sinc.com
+25-0676,UCLA Wasserman Building SPD,19850,NULL,60,Vuk Cvetkovic,vuk.cvetkovic@p2sinc.com
+25-0684,PCH Facilities Engineering Maintenance Tasks,12000,NULL,60,Lee Swanson,lee.swanson@p2sinc.com
+25-0838,UCLA RRUMC OR Light Replacement (8 -10),35000,NULL,60,Vuk Cvetkovic,vuk.cvetkovic@p2sinc.com
+23-2680,Centinela Creek Connector,18700,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+23-2792,Sepulveda Creek Bike Trail Feasibility Study,24700,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+23-2992,Oxnard College Exterior Lighting Assessment,42700,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+24-1333,Cerritos College - Food Court Renovation,58600,NULL,60,Travis Taylor,travis.taylor@p2sinc.com
+24-1506,AltaSea - T.I. - Flexlabs,36500,NULL,60,Bryant Tram,bryant.tram@p2sinc.com
+25-0902,Dignity St Joseph Parking Structure and Heliport,230196,NULL,60,Jamie O'Bard,jamie.obard@p2sinc.com
+22-2402,Oak Avenue IS Assessment,15500,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+23-1624,USD GIS - MEP,536500,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+23-2198,Chapman University - Rinker Vivarium Lighting Assessment,35129,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+23-2877,UoR PV & BESS Electrical PEER Review,10000,NULL,60,Steven Peterson,steven.peterson@p2sinc.com
+24-0176,Chapman University - Harris Hall HVAC Assessment,16500,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+24-0710,LATTC Building C4 Basement,121000,NULL,60,Kirk Anglin,kirk.anglin@p2sinc.com
+24-2229,Golden West College - MDF Relocation,202500,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+24-2685,NVH - Clean Buildings Consulting,27193,NULL,60,Darren Schwend,darren.schwend@p2sinc.com
+24-2724,Pioneer Park Feasibility Study and Design_Psomas,94400,NULL,60,Mevan Fernando,mevan.fernando@p2sinc.com
+24-2744,GoDot Wenatchee_modular apple processing skid,20000,NULL,60,Vaibhav Prasad,vaibhav.prasad@p2sinc.com
+25-0050,OVMC - Fire Alarm Horn Strobe Replacement,9950,NULL,60,Vuk Cvetkovic,vuk.cvetkovic@p2sinc.com
+25-0095,LLUMC-Clean Waste Compactors-Surgical Hospital,31100,NULL,60,Aaron Chee,aaron.chee@p2sinc.com
+25-0263,City of Banning Mountain North Zone Reservoir,42400,NULL,60,Marco Cabibbo,marco.cabibbo@p2sinc.com
+25-0333,LBCC - Bldg F - Electrical Upgrades,75000,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0549,Inglewood CTE Plaza,10400,NULL,60,Kirk Anglin,kirk.anglin@p2sinc.com
+25-0555,SBVC Student and Workforce Housing,2952970,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-1214,River Ridge Gold Club Parking Lot Reconstruction,9000,NULL,60,Mevan Fernando,mevan.fernando@p2sinc.com
+25-0272,PMB Bellevue MOB RFP NDA - Perkins & Will,900000,NULL,60,Darren Schwend,darren.schwend@p2sinc.com
+25-0928,Palomar College - P-32 Ceiling Replacement,25405,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+25-0930,Hall of Records_ DWP Coordination,61005,NULL,60,Kirk Anglin,kirk.anglin@p2sinc.com
+25-0960,SBC Fire Station 222,105375,NULL,60,Scott Newman,scott.newman@p2sinc.com
+25-0994,St. Joseph Church Santa Ana,69920,NULL,60,Michael Grace,michael.grace@p2sinc.com
+25-1015,EH Monroe Stress Echo Room,24184,NULL,60,Spenser Petherick,spenser.petherick@p2sinc.com
+25-1217,UCSB Music 1 AHU Upgrade Bldg 531 Mech Rm 1117,57295,NULL,60,Cynthia Callaway,cindy.callaway@p2sinc.com
+25-0936,USC SHS AHU-1 Replacement,87137,NULL,60,Mateusz Szlachetka,matt.szlachetka@p2sinc.com
+25-0962,MSAC Building 26 Feasibility Study,30800,NULL,60,Travis Taylor,travis.taylor@p2sinc.com
+25-0979,SBC Fire Station 222_Cx,17000,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-1106,Anaheim Public Utilities - Crew Quarters Project Cx,49500,NULL,60,Mia Guo,mia.guo@p2sinc.com
+25-1118,SBC Fire Station 302,234338,NULL,60,Scott Newman,scott.newman@p2sinc.com
+25-1123,SBC Fire Station 302_Cx,32000,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-1182,Cedars-Sinai AHU Replacement Cx,72500,NULL,60,Mia Guo,mia.guo@p2sinc.com
+25-1204,RSCCD - Relocation of Digital Media Center,132825,NULL,60,Shahpoor Khosravi,shahpoor.khosravi@p2sinc.com
+25-1294,San Pedro SUD BH Center Cx,79500,NULL,60,Bryant Mercado,bryant.mercado@p2sinc.com
+24-2775,CSUF Pollak Library - 3rd floor study,32000,NULL,60,Aaron Chee,aaron.chee@p2sinc.com
+23-1374,CSUDH Cain Library 4th flr patio,42300,NULL,60,Cynthia Callaway,cindy.callaway@p2sinc.com
+25-1122,MS Add-Serv - Pepperdine SREC Building Envelope Testing,10000,NULL,60,Jake Huang,jake.huang@p2sinc.com
+25-0791,Additional CP1 CA Phase MEPT Staffing - 9/2024 Thru 2/2025,442738,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+25-0861,SENC ACB - CA Phase B,4570657,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+25-0891,SENC ACB Conference Room Design Update,8030,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+25-0926,MSAS - LB West CDC TI - VE Redesign,8094,NULL,60,Alexander Sassoon,alex.sassoon@p2sinc.com
+25-1078,SENC ACB - Extended CA Phase -CP1,116139,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+25-0925,SENC ACB Emergency Phone and AiPhone Design Change to Zenitel,11930,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+25-0929,SENC ACB UKG Clocks Add Service,7571,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+25-1049,Savencia Cheese Washdown Hot Water System,15000,NULL,60,Rolando Domingo,rolando.domingo@p2sinc.com
+24-1606,SBVC SSB DB Project-PV Design,35000,NULL,60,Kirk Anglin,kirk.anglin@p2sinc.com
+24-1421,MS Add-Serv - Wildomar Park Power and Lighting - Phase 2,45100,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+24-1087,Harbor UCLA Outpatient HVAC_OPT TCM-462 L1 Pharmacy Changes,7500,NULL,60,Mikhail Fuks,mikhail.fuks@p2sinc.com
+24-1272,KPLAMC Condensing Unit Replacement - LCCA,21510,NULL,60,Vuk Cvetkovic,vuk.cvetkovic@p2sinc.com
+24-1429,MS Add-Serv - Navy - NBPL B548 Renovation,18597,NULL,60,Nicholas Clements,nicholas.clements@p2sinc.com
+24-1870,Arrowhead Regional Telemetry Expansion - Scope Removal,69800,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-1975,Scope Add-Serv - Seattle Central College - Student Support Center,4450,NULL,60,Nitin Rathod,nitin.rathod@p2sinc.com
+24-2030,MS Add-Serv - Santa Clarita Maintenance Yard Scope Update,286957,NULL,60,Shishir Patne,shishir.patne@p2sinc.com
+24-2115,MS Add-Serv - FS20 Heat Pump Replacement (2024-0009),6364,NULL,60,Nitin Rathod,nitin.rathod@p2sinc.com
+22-1583,MS Add-Serv - Palomar College - Athletics Phase II,7000,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+24-1677,MS Add-Serv - Saddleback PV Assessment and Design_Extended CA,12800,NULL,90,Wesley McKean,wes.mckean@p2sinc.com
+25-1013,Scope Add-Serv - OUSD Improvements at Jefferson MS,3500,NULL,60,Cesar Rodriguez,cesar.rodriguez@p2sinc.com
+25-1219,MS Add-Serv - Phase 2 for Northrop M5/R6 Humidifiers Replacement,29921,NULL,90,Mateusz Szlachetka,matt.szlachetka@p2sinc.com
+25-1262,MS Add-Serv - OMC Boiler Replacement,23500,NULL,60,Lee Swanson,lee.swanson@p2sinc.com
+24-1873,MLK Facilities Building HVAC Replacement - SD Add Service,14997,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-2194,MS Add-Serv - Dwight Murphy Park CA Services,17000,NULL,90,Gary Jewell,gary.jewell@p2sinc.com
+24-2540,MS Add-Serv - Fire Alarm Change-out of Five Buildings on Campus o,8002,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+24-2705,Harbor UCLA General Lab Architect Analyzer - Exhaust Fan ASR,9828,NULL,60,Vuk Cvetkovic,vuk.cvetkovic@p2sinc.com
+24-3147,City Of Hope Decontamination Rm Remodel - Add Service,25000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-3186,MS Add-Serv - SB County Yorba-Slaughter Utilities Feasibility Ass,48000,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+25-0856,Scope Add-Serv - IHS CTE Classroom Cx,29500,NULL,60,Mia Guo,mia.guo@p2sinc.com
+25-1014,Scope Add-Serv - Tri-City Medical Center - Decontamination Sink U,5500,NULL,60,Cesar Rodriguez,cesar.rodriguez@p2sinc.com
+25-1137,Westminster Barrier Removal RTU Upgrade,2713,NULL,60,Jessica Ghareebo,jessica.ghareebo@p2sinc.com
+25-1190,MS Add-Serv - CA Extension,85569,NULL,60,Travis Taylor,travis.taylor@p2sinc.com
+25-1220,MS Add-Serv - Redesign for Northrop M1 & M2 Zinsco Panels Repl,19872,NULL,60,Mateusz Szlachetka,matt.szlachetka@p2sinc.com
+25-1226,Scope Add-Serv - ADA Upgrades for NG Azusa B183 Security Mods,19250,NULL,60,Mateusz Szlachetka,matt.szlachetka@p2sinc.com
+25-1256,MS Add-Serv - CHW Booster Pump Design,11800,NULL,60,Travis Taylor,travis.taylor@p2sinc.com
+25-0189,Design Services,560000,NULL,60,Peregrin Jones,peregrin.jones@p2sinc.com
+25-0287,MS Add-Serv - UWMC Cathlab and IR2 Renovation,18800,NULL,60,Darren Schwend,darren.schwend@p2sinc.com
+25-1191,Scope Add-Serv - Evergreen Treatment Services (ETS) Seattle Campu,352300,NULL,90,John Kosteroski,john.kosteroski@p2sinc.com
+24-3027,MS Add-Serv - UCSB San Benito Student Housing Cx,57700,NULL,60,Bryant Mercado,bryant.mercado@p2sinc.com
+24-3196,MS Add-Serv - Benefis ASC Assessment,8000,NULL,60,Darren Schwend,darren.schwend@p2sinc.com
+25-0248,MS Add-Serv - New PM Review Comments,3150,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0393,MS Add-Serv - Suquamish Museum HVAC Assessment - CA Services,10000,NULL,75,Mike Thomson,mike.thomson@p2sinc.com
+25-0724,MS Add-Serv - San Jose Bus Chargers,750,NULL,90,James Del Monaco,james.delmonaco@p2sinc.com
+25-0884,MS Add-Serv - Camp Colman Electrical Design,47653,NULL,60,Vaibhav Prasad,vaibhav.prasad@p2sinc.com
+24-2849,MS Add-Serv - Sila Battery Manufacturing Plant ET Design,12780,NULL,60,Vaibhav Prasad,vaibhav.prasad@p2sinc.com
+25-0978,IFC and CA Services,87000,NULL,60,Peregrin Jones,peregrin.jones@p2sinc.com
+25-1030,MS Add-Serv - UW Big 10 Electrical CA,35000,NULL,60,Vaibhav Prasad,vaibhav.prasad@p2sinc.com
+24-3038,UCI ARC Lighting Controls Upgrade,35000,NULL,60,Aaron Chee,aaron.chee@p2sinc.com
+25-0241,UCI Med Surge Morgue,120000,NULL,60,Aaron Chee,aaron.chee@p2sinc.com
+25-1142,Tacoma Museum of Glass Electrical RFQ,72376,NULL,60,Vaibhav Prasad,vaibhav.prasad@p2sinc.com
+25-1305,Pepperdine CAC AHU Replacement Cx,41500,NULL,60,Bryant Mercado,bryant.mercado@p2sinc.com
+25-1307,Glendale USD Cresenta Valley HS Pool Cx,19500,NULL,60,Bryant Mercado,bryant.mercado@p2sinc.com
+24-2179,EMWD Round 5 FY24-25 9 Site AF Study,16700,NULL,60,Mark Paton,mark.paton@p2sinc.com
+24-2805,Cedars Sinai Hospital Public Space - Conference Room #2616,16999,NULL,60,Vuk Cvetkovic,vuk.cvetkovic@p2sinc.com
+24-2821,Pepperdine DAC24-RO2 Chiller and Cooling Tower Cx,37500,NULL,60,Bryant Mercado,bryant.mercado@p2sinc.com
+25-0466,St. Francis Medical Center Behavioral Health Unit Cx,62000,NULL,60,Mia Guo,mia.guo@p2sinc.com
+25-0785,Caltech HSFD and Shaikeea Lab Renovation Cx,54000,NULL,60,Bryant Mercado,bryant.mercado@p2sinc.com
+25-0862,St Columban Church Renovation,17525,NULL,60,Toranj Noroozi,toranj.noroozi@p2sinc.com
+25-0865,St Martin de Porres Church Renovation,37807,NULL,60,Toranj Noroozi,toranj.noroozi@p2sinc.com
+25-0872,Cedars Sinai Public Space Refresh - Street Level & Lower Level,59902,NULL,60,Vuk Cvetkovic,vuk.cvetkovic@p2sinc.com
+25-1296,Electric Pickle - Rancho Cucamonga Cx,22500,NULL,60,Bryant Mercado,bryant.mercado@p2sinc.com
+23-3004,VA Salt Lake City Expand Cardiology and Support Addition,50000,NULL,60,Peter Eberle,peter.eberle@p2sinc.com
+23-3135,VA Southern Nevada Diagnostic Imaging Center Expansion,35000,NULL,60,Peter Eberle,peter.eberle@p2sinc.com
+24-1513,VMC East Pavilion Cafe,40500,NULL,60,Darren Schwend,darren.schwend@p2sinc.com
+25-1222,Capital Medical Center - LINAC - Restart,85190,NULL,60,Emily Boss,emily.boss@p2sinc.com
+24-1764,MS Add-Serv - SDSU CUP - Plug Valve Replacement,10946,NULL,90,Mark Richards,mark.richards@p2sinc.com
+24-2076,MS Add-Serv - SAN BERNARDINO COURTHOUSE MODERNIZATION,17500,NULL,90,James Valiensi,james.valiensi@p2sinc.com
+24-0742,Navy NSWCCD Carderock Engineering IDIQ,0,NULL,60,Bradley Lentz,brad.lentz@p2sinc.com
+24-1451,MS Add-Serv - VA Palo Alto Microbiology Lab Renovation,NULL,NULL,80,Roland Andres,roland.andres@p2sinc.com
+24-2113,MS Add-Serv - Descanso Garden Measure W,NULL,NULL,60,Joab Andrade,joab.andrade@p2sinc.com
+24-1206,Scope Add-Serv - UCSD East Campus Loop Wayfinding Sign,4000,NULL,60,Joab Andrade,joab.andrade@p2sinc.com
+24-1190,MS Add-Serv - King County Airport FSS Building HVAC Renovation RF,46476,NULL,90,Robert Lauderdale,robert.lauderdale@p2sinc.com
+23-0003,MS Add-Serv - Palomar College - Fallbrook 40,7840,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+24-0061,Scope Add-Serv - Gardena High School Football Stadium Redesign,12000,NULL,80,Travis Taylor,travis.taylor@p2sinc.com
+24-0712,Add-Serv - CAD conversion Sewer Lift Station 136 Electrical,3671,NULL,60,Marco Cabibbo,marco.cabibbo@p2sinc.com
+24-1101,Scope Add-Serv - LLUCH OR Lockers Renovation EF Addition,5500,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+24-1796,Civil Add-Serv for Raytheon Bldg E04 EDI&RO Water Plant,720,NULL,90,Mateusz Szlachetka,matt.szlachetka@p2sinc.com
+24-1866,MS Add-Serv - CSUSB Yasuda Ctr MS-PA Renovation,8000,NULL,60,Jaime Barillas,jaime.barillas@p2sinc.com
+23-2309,GSA Sumas and Lynden WA LPOE Modernization PDS,275000,NULL,60,Peter Eberle,peter.eberle@p2sinc.com
+23-1617,Virginia Robinson Gardens,19250,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+23-2137,UCSD Price Center Bookstore Computer Sales Remodel,54250,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+23-2458,Riverside Hall of Justice - Cooling Towers Upgrade,18700,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+24-0417,Chapman University - BITCave CRAC Unit Upgrades,45000,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+24-1231,Rio Hondo College Student Housing - Basis of Design,18500,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+24-1236,"Huntington Library - ""This Land"" Garden",17300,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+24-1256,Goldenwest College MDF Relocation Feasibility Study,26500,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+24-1288,Norton Simon Museum - MEP Assessment,22500,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+24-1693,UCSD Health East Campus Medical Center - NPC-5 Evaluation,25000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-1719,Regents La Jolla CUP Upgrades,99000,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+24-1846,College Medical Center NPC-4D Compliance Design thru Plan check,114250,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-1900,College Medical Center NPC-5 Compliance Design thru Plan check,85000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-0300,UCB Birge Hall Feasibility Assessment,16700,NULL,60,Bryant Tram,bryant.tram@p2sinc.com
+24-0334,Navy - NB Kitsap Bangor UESC ECM-04 UMCS Upgrades,141680,NULL,60,Matt Long,matt.long@p2sinc.com
+24-0701,Kaiser BPH Pharmacy to None-Sterile Storage,24985,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-0947,AltaSea - T.I. - Sirens by the Sea,46836,NULL,60,Bryant Tram,bryant.tram@p2sinc.com
+24-1089,Google MFA G-Bus Charging Infrastructure,11400,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+24-1365,OCMC PCP 4th Floor Infusion Expansion,42500,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-1379,City of Artesia Botanic Gardens,132102,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+24-1552,Henry Mayo Newhall Hospital - Bulk Oxygen Replacement_c-a,66800,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-2028,Henry Mayo Newhall Hospital - OR 4 Light & Boom Replacement,14800,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-2079,Navy NASNI Coronado Oily Waste Piping,85000,NULL,60,Bradley Lentz,brad.lentz@p2sinc.com
+25-0811,Montclair Hospital Medical Center NPC-5 Compliance_RBB,137000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0810,Montclair Hospital Medical Center NPC-4D Upgrades_RBB,164000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0812,Encino Hospital Medical Center NPC-5 Compliance_RBB,135000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0813,Garden Grove Medical Center NPC-5 Compliance_RBB,148000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0815,Encino Hospital Medical Center NPC-5 Compliance_Stantec,135000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0814,Montclair Hospital Medical Center NPC-5 Compliance_Stantec,137000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0816,Montclair Hospital Medical Center NPC-4D Upgrades_Stantec,164000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0820,La Palma Intercommunity Hospital NPC-5 Compliance_HO,138000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0817,La Palma Intercommunity Hospital NPC-4D Upgrades_ HO,172000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0818,West Anaheim Medical Center NPC-4D Upgrades_HO,144000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0821,West Anaheim Medical Center NPC-5 Compliance_HO,144000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-2740,UCI Health - Lakewood NPC-5 Compliance,165000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-3184,Sherman Oaks Medical Center NPC-5 Compliance_HO,87000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0645,Providence HCMC Central Plant_ALA,1190000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0673,OCMMC PCP Suite 1400 Remodel,38500,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0853,La Palma Intercommunity Hospital NPC-4D Upgrades_ MW,172000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0852,Garden Grove Medical Center NPC-5 Compliance_MW,148000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0850,La Palma Intercommunity Hospital NPC-5 Compliance_MW,138000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0851,West Anaheim Medical Center NPC-5 Compliance_MW,144000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0854,West Anaheim Medical Center NPC-4D Upgrades_MW,176000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0894,Kaiser LSA Edgemont Basement Workstations,11470,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0501,Saddleback Memorial CUP Cx,73000,NULL,60,Mia Guo,mia.guo@p2sinc.com
+24-2197,UCI Student Health Center Roofing & Mech Upgrades,76700,NULL,60,Virag Shah,virag.shah@p2sinc.com
+24-2493,Montclair Civic Center Renovation,118400,NULL,60,Daniel Ihlenfeldt,daniel.ihlenfeldt@p2sinc.com
+24-2645,UCI Tunnel Panel Replacement Design #3,24675,NULL,60,Virag Shah,virag.shah@p2sinc.com
+24-2641,Riverside Police Station Headquarters,588770,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+24-2642,Riverside Police Station Cx,45500,NULL,60,Bryant Mercado,bryant.mercado@p2sinc.com
+24-2646,UCI Tunnel Panel Replacement Design #2,25675,NULL,60,Virag Shah,virag.shah@p2sinc.com
+24-2785,Coronado B464 and B465 Replace HVAC and Retrofit Ventilation Cx,28600,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+24-2921,Congregational Church - Northridge MEP Assessment,10950,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+25-0273,RBHS & BHMS CUP Replacement Cx,107000,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-0318,LBCC Bldg O2 Controls Integration,16200,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0436,Relativity Space Spine MDF Expansion,31000,NULL,60,Timothy Kampen,tim.kampen@p2sinc.com
+25-0463,GWC Administration Demo,50105,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+25-0669,Relativity Space Sub 5&6 Arc Flash,26200,NULL,60,Timothy Kampen,tim.kampen@p2sinc.com
+25-0882,SBCUSD Public Safety Building Cx,28900,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-0888,NGAS B120 Restoration Cx,14000,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-0909,NGAS M1 High Bay Roof RCx,18200,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-1004,Building 40 High Bay (HB-1) and HB-5 Modernizations Cx,20200,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+24-2576,Mission College Specification Update,13000,NULL,60,Akshay Dhanapal Kumar,akshay.kumar@p2sinc.com
+24-2807,Balboa Island Ferry Charging,28800,NULL,60,Mevan Fernando,mevan.fernando@p2sinc.com
+25-0629,CalFire HQ - Ione Training Facility,34200,NULL,60,Andres Jimenez,andres.jimenez@p2sinc.com
+25-0638,CalFire HQ - Ione Training Facility - Modular Buildings,77200,NULL,60,Andres Jimenez,andres.jimenez@p2sinc.com
+25-0908,March Air Reserve Base Fire Alarm Project,45840,NULL,60,Andres Jimenez,andres.jimenez@p2sinc.com
+24-2809,Disney Harbor 12KV Electrical New Switching Stations,635590,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+24-3031,LA Convention Center Cx,525000,NULL,60,Bryant Mercado,bryant.mercado@p2sinc.com
+25-0694,RCCD Architectural Services_Holt,1,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+24-2190,Scripps Green A31-24443 IR Bi-Plane Replacement,18000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-2617,PIH Good Samaritan Behavioral Hospital,1500000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-2687,St. Vincent BHC POB Building,1008000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-2686,"St. Vincent BHC North, South, Doheny, and CUP",4050000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-2739,UCI Health - Lakewood NPC-4D Upgrades,108000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-2938,USC Keck SPD - 3 Washer Replacement,50000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-3044,Keck Medicine of USC HC-3 Ambient Lighting,25000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-3152,Encino Hospital Medical Center NPC-5 Compliance_MW,135000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-3155,LACN Anaheim Oncology Clinic,65000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-3157,LACN Wilshire Oncology Clinic,75000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-3167,Encino Hospital Medical Center NPC-5 Compliance_HO,135000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0007,San Dimas Medical Center NPC-4D Upgrades_HO,144000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0434,St. Vincent BHC Outpatient Surgery Center,60000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0766,Henry Mayo Newhall Hospital - EmPATH Unit Design,83500,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-2830,Jackson Rancheria Microgrid,321000,NULL,60,Jaime Barillas,jaime.barillas@p2sinc.com
+24-2946,PIH Whittier DB TI,314000,NULL,60,Daniel Ihlenfeldt,daniel.ihlenfeldt@p2sinc.com
+25-0046,Monterey Modernize NPS Hall B234 Cx,104800,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-0420,KC-46A Two Bay Maintenance Hangar Cx,165300,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-0445,PHCMC-Sub-Acute HVAC Upgrade Feasibility Study,18850,NULL,60,Vuk Cvetkovic,vuk.cvetkovic@p2sinc.com
+25-0472,St Anne Catholic Church Office & Rectory,34500,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-0558,Amazon SBD1 Airflow Assessment,71100,NULL,60,Jaime Barillas,jaime.barillas@p2sinc.com
+25-0560,Camp Pendleton P2002 CLB MEU Complex Cx,122500,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-0576,POLB ZE Infrastructure and Vessel Feasibility Study - GHD,81619,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+25-0714,UCLA RRUMC OR Light Replacement (11 -23),45000,NULL,60,Vuk Cvetkovic,vuk.cvetkovic@p2sinc.com
+25-0840,Topanga Lagoon Wastewater Treatment System,332000,NULL,60,Marco Cabibbo,marco.cabibbo@p2sinc.com
+25-0986,TCNE 2nd Story Addition Cx,10300,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-1129,CVM + VCD Reno,25500,NULL,60,Scott Newman,scott.newman@p2sinc.com
+25-1162,TraPac - Power Capacity Study,53600,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+25-0252,CSUN Bookstein Hall Water-Source Heat Pump Replacement,40000,NULL,60,Jaime Barillas,jaime.barillas@p2sinc.com
+25-0874,"Cedars Sinai Public Space Refresh - Levels 6, 7 & 8",74732,NULL,60,Vuk Cvetkovic,vuk.cvetkovic@p2sinc.com
+25-0771,Monterey Peninsula College Campus Wide Security Upgrades,183400,NULL,70,Cole Bailey,cole.bailey@p2sinc.com
+24-3043,USC Verdugo Hills Hospital - NPC-3 Upgrades,30000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0106,Costa Mesa Fire Station No 2,35500,NULL,60,Bryant Mercado,bryant.mercado@p2sinc.com
+25-0126,Hollywood Bowl,60000,NULL,60,Jessica Lutz,jessica.lutz@p2sinc.com
+25-0375,TCA Toll Plaza Reuse,1,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+25-0879,POLB ZE Infrastructure and Vessel Feasibility Study - Aurora,128636,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+24-2130,UCI Health - Lakewood Emergency Power Study,35000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-2400,USC HSC campus NTT Tower Tissue Lab Study,18000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-2407,Alhambra Hospital Medical Center - NPC-5 Evaluation,50000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-2406,Alhambra Hospital Medical Center - NPC-4D Evaluation,60000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-2508,Olive View Medical Center - NPC-4D Upgrades,91740,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-2622,Garden Grove Hospital - Secured Ward Remodel,135000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0374,Claremont Colleges Mechanical and Electrical Feasibility Studies,92500,NULL,60,Jaime Barillas,jaime.barillas@p2sinc.com
+25-0670,RCCD Architectural Services_SteinbergHart,1,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+24-2150,P2802 MCRD San Diego Ambulatory Care Center Cx,117200,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+24-2847,UCD Cath Lab PIN 70 Study,3000,NULL,60,Virag Shah,virag.shah@p2sinc.com
+24-2867,Pomona College - Seaver Building Energy Assessment,23000,NULL,60,Jaime Barillas,jaime.barillas@p2sinc.com
+24-2976,RSCCD Building K Canopy FP,6500,NULL,60,Andres Jimenez,andres.jimenez@p2sinc.com
+24-3046,Keck Medicine of USC HC-2 Ortho X-Ray Equipment Upgrade,40000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0047,Camp Pendleton P0414 Ambulatory Care Center Cx,28600,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-0053,P025-MQ25 Squadron Hangar Point Mugu Naval Base Cx,92600,NULL,60,Mia Guo,mia.guo@p2sinc.com
+25-0024,Kelp Ark Backup Power Renovation,17500,NULL,60,Bryant Tram,bryant.tram@p2sinc.com
+25-0134,Emeryville Parks On-call,20700,NULL,60,Gary Jewell,gary.jewell@p2sinc.com
+24-2623,St. Vincent BHC Seton Hall Renovation,725000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+24-3014,Cascadian Levels 5 & 9 TI,257000,NULL,60,Peregrin Jones,peregrin.jones@p2sinc.com
+24-3071,24-111 Cedar House Cx,47000,NULL,60,Bryant Mercado,bryant.mercado@p2sinc.com
+25-0170,"Navy - NBK PSNS Repair/Replace Oily Waste DD4, B704",93560,NULL,60,Peter Sloane,peter.sloane@p2sinc.com
+25-0251,Whatcom County Mechanical/Elec On-call,20000,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+25-0349,Forum Mobility Pier 2 Truck Charging Study,26248,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+25-0506,UWMC NW A-Wing Floor 4-5 Renovation Cx,60779,NULL,60,Jake Huang,jake.huang@p2sinc.com
+25-0787,KPFF KCMD Pier 50 Alternatives Analysis,22152,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+25-0005,2025 WSDOT Consultant Prequalification,0,NULL,60,Kim Baker,kim.baker@p2sinc.com
+25-0630,City of Santa Rosa On-Call,0,NULL,60,Scott Newman,scott.newman@p2sinc.com
+24-2670,CUP / VA Experience,0,NULL,60,Bradley Lentz,brad.lentz@p2sinc.com
+25-1283,UC Irvine - Civil Engineering On-Call_Latitude 33,0,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+24-2630,USC NPC-4D & NPC-5 Design,1000000,NULL,60,Mikhail Fuks,mikhail.fuks@p2sinc.com
+24-3047,Keck Medicine of USC NRT Plumbing & HVAC Mod.,32000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0939,DLR Galaxy's Edge Docking Bay 7 Exterior Sign,23677,NULL,60,Alexander Sassoon,alex.sassoon@p2sinc.com
+25-1018,ICH SPD Sterilizer Replacement,30000,NULL,80,Mikhail Fuks,mikhail.fuks@p2sinc.com
+25-1073,La Palma Intercommunity Hospital NPC-5 Compliance_Stantec,138000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-1072,West Anaheim Medical Center NPC-4D Upgrades_Stantec,176000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-1070,West Anaheim Medical Center NPC-5 Compliance_Stantec,144000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-1071,La Palma Intercommunity Hospital NPC-4D Upgrades_Stantec,172000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-1074,"Boeing SB B80 AHU-5, 6, & 9 Replacement Cx",18600,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-1075,"Boeing SB B81 AHU-1 thru 4, 9 & 10 Replacement Cx",36000,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-1116,Caltech Steele Building - Flex Classroom Feasibility Study,8000,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+25-1147,Pacific HS C West Music Cx,15500,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-1160,Caltech Baxter - Ramo Auditorium Feasibility Study,9000,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+25-1164,USC BSR 103 Buffet Line Equipment Replacement,15675,NULL,60,Mateusz Szlachetka,matt.szlachetka@p2sinc.com
+24-2855,LAWA MATOC,1000,NULL,60,Karl von der Linden,karl.vonderlinden@p2sinc.com
+25-0409,San Juan Capistrano String Lighting,52000,NULL,60,Alexander Sassoon,alex.sassoon@p2sinc.com
+25-0955,Community Memorial Hospital – Ojai NPC-5 Evaluation,50000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-1195,UC Merced COB3 Cx,95000,NULL,60,Dexin Kong,dexin.kong@p2sinc.com
+25-1232,BNG SYL B727 TI Cx,14000,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-0763,Navy PSNS DD5 OWTS Recapitalization,268580,NULL,60,Mike Thomson,mike.thomson@p2sinc.com
+25-1209,JBLM SOF Consolidated Rigging Facility Cx (Contrack Watts),144718,NULL,60,Alexandra Sidun,alexandra.sidun@p2sinc.com
+25-1237,VAMC Togus B200E Cx,30000,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+25-1235,VAMC Newington EHRM Cx,39000,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com
+24-2863,MS Add-Serv - UW SoD D1 Sim Clinic Renov_ CA as Prime,45967,NULL,90,Vaibhav Prasad,vaibhav.prasad@p2sinc.com
+25-0190,MS Add-Serv - Lummi Isl Elec Upgrades Redesign,152804,NULL,60,Vaibhav Prasad,vaibhav.prasad@p2sinc.com
+25-0595,MS Add-Serv - Navy NUWC Keyport B894 Torpedo Shop Modifications,11960,NULL,75,Mike Thomson,mike.thomson@p2sinc.com
+25-1201,Scope Add-Serv - C-Tran 65th Ave Commissioning Services,7870,NULL,60,Alexandra Sidun,alexandra.sidun@p2sinc.com
+24-2287,MS Add-Serv - VA WLA Town Center Preliminary Dry Utility Consulti,153325,NULL,90,Marco Cabibbo,marco.cabibbo@p2sinc.com
+24-1861,MS Add-Serv - LAPC Child Dev Academic Facility_Control revisions,1744,NULL,60,Wesley McKean,wes.mckean@p2sinc.com
+24-2335,MS Add-Serv - Huntington Library Replacement,14500,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+24-2902,MS Add-Serv - LLUMC Security Upgrade,NULL,NULL,60,Mackenzie Cottle,mackenzie.cottle@p2sinc.com
+25-0283,DDS-PDC Water Valve Replacement at 1MG Tank,3080,NULL,60,Marco Cabibbo,marco.cabibbo@p2sinc.com
+25-0756,Scope Add-Serv - Huntington Library Replacement,11200,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+25-1002,LBCC Bldg E CCD for Bldg F FA Upgrade,26963,NULL,60,Scott Newman,scott.newman@p2sinc.com
+25-1008,Scope Add-Serv - LACC Elevator Upgrades,6000,NULL,60,Akshay Dhanapal Kumar,akshay.kumar@p2sinc.com
+25-1258,Scope Add-Serv - WVM Math and Science - Air Balance Design,10000,NULL,60,Akshay Dhanapal Kumar,akshay.kumar@p2sinc.com
+24-2356,MS Add-Serv - CSUN Brown Center Study,5500,NULL,90,Jaime Barillas,jaime.barillas@p2sinc.com
+25-0038,LATTC Building B1 Dynamometer and Electric Charging Stations,4776,NULL,60,Kirk Anglin,kirk.anglin@p2sinc.com
+25-0171,Kaiser Downey 2nd Floor SPD Remodel - Extended CA,14886,NULL,60,Vuk Cvetkovic,vuk.cvetkovic@p2sinc.com
+25-0187,MS Add-Serv - USC Norris Bulk Oxygen Replacement,60000,NULL,60,Woodrow Otis,woodrow.otis@p2sinc.com
+25-0195,MS Add-Serv - Separate Increments,29200,NULL,60,Travis Taylor,travis.taylor@p2sinc.com
+25-0367,MS Add-Serv - CSMC Taper Mammo Expansion - Reading Room Addition,3912,NULL,60,Roland Andres,roland.andres@p2sinc.com
+25-0449,Scope Add-Serv -Engineering for Plumbing and Electrical Labs,85845,NULL,60,Kirk Anglin,kirk.anglin@p2sinc.com
+25-0479,MS Add-Serv - KBP Facility Eng & Clinical Tech Remodel L3402,7025,NULL,90,Dominic Kemp,dominic.kemp@p2sinc.com
+25-0574,Kedren CV PS Security Add,7500,NULL,90,Scott Newman,scott.newman@p2sinc.com
+25-0678,Rio Hondo Supplemental Structural Services,4000,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+25-0857,Kaiser Sunset Healing Garden Task 5 through 8,30008,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-1216,Structural CA,0,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+25-1257,Scope Add-Serv - Pepperdine CAC Air Handling Units Replacement,3000,NULL,60,Akshay Dhanapal Kumar,akshay.kumar@p2sinc.com
+24-3175,MS Add-Serv - Rose Hill Memorial Park Tank 9 Power Renovation,0,NULL,60,Jagjit Singh,jack.singh@p2sinc.com
+25-0376,PIH Good Sam Hospital - ED Expansion Ph 1A Extended CA,60000,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0540,MS Add-Serv - LAC PW Stairwell Pressurization Upgrades,4052,NULL,60,Shahpoor Khosravi,shahpoor.khosravi@p2sinc.com
+25-0933,MS Add-Serv - WVM Data Center HVAC upgrade,5000,NULL,90,Akshay Dhanapal Kumar,akshay.kumar@p2sinc.com
+24-3016,Dummy Opportunity Dignity St Josephs MC Stockton Hospital Expan,6120000,NULL,100,Mikhail Fuks,mikhail.fuks@p2sinc.com
+25-0136,MS Add-Serv - UCLA NRB DEEP Energy Implementation,163350,NULL,90,Andrew Smith,andrew.smith@p2sinc.com
+25-0260,MSAS - NHMC ED West Revisions,56000,NULL,60,Alexander Sassoon,alex.sassoon@p2sinc.com
+25-0433,CA Phase Extension #2 (Close Out 08.05.2025),16800,NULL,60,Kurt Kaiser,kurt.kaiser@p2sinc.com
+25-0788,MS Add-Serv - Ontario Access Center,5500,NULL,60,Joab Andrade,joab.andrade@p2sinc.com
+25-1019,Spalding Building - Emergency Power Feasibility Study,21100,NULL,60,Greg Alexander,greg.alexander@p2sinc.com
+25-1104,MS Add-Serv - Navy NBK Bangor P-939 Launcher Processing Building,29550,NULL,60,Robert Lauderdale,robert.lauderdale@p2sinc.com
+25-0270,BMS Fume Hoods,17000,NULL,60,Andres Jimenez,andres.jimenez@p2sinc.com
+25-1295,MS Add-Serv - 1st Level Pre-action,7200,NULL,90,Andres Jimenez,andres.jimenez@p2sinc.com
+25-1128,Navy - NBK Bangor B2001 Chiller Replacement,215896,NULL,90,Bradley Lentz,brad.lentz@p2sinc.com
+25-0111,City of Santa Monica - CM Services On-Call,15000,NULL,90,Christopher Peterson,chris.peterson@p2sinc.com
+25-0117,Sweetwater UHSD - On-Call CM Services,15000,NULL,90,Christopher Peterson,chris.peterson@p2sinc.com
+25-1263,LAC CCPP Steam Boiler Redesign,43000,NULL,60,Ivan Thomas,ivan.thomas@p2sinc.com
+24-1298,SRFR Stations 32 & 81,126000,NULL,90,Peregrin Jones,peregrin.jones@p2sinc.com
+24-2321,LAUSD Sun Valley Bus Yard,414676,NULL,90,James Del Monaco,james.delmonaco@p2sinc.com
+25-0045,Coachella Bldgs TI,9000,NULL,90,Wesley McKean,wes.mckean@p2sinc.com
+25-1145,Fire Prevention Services,1,NULL,60,Marco Garay,marco.garay@p2sinc.com
+23-2003,Scope Add-Serv - Mission College - Performing Arts Center,6500,NULL,90,Aravind Batra,aravind.batra@p2sinc.com
+24-0036,Scope Add-Serv - SOCCCD Saddleback ATEP Building 1,9500,NULL,90,Aravind Batra,aravind.batra@p2sinc.com
+25-1323,Circa 1200 Unit 1625 Forensics - ASP-2,12750,NULL,100,Mark Richards,mark.richards@p2sinc.com
+24-2694,5988 Safety and Security Consulting,NULL,NULL,75,Steve Burman,steve.burman@p2sinc.com
+25-1120,Scope Add-Serv - OUSD Jefferson MS Technology Services,53400,NULL,60,Cesar Rodriguez,cesar.rodriguez@p2sinc.com
+25-0651,Scope Add-Serv - LBUSD Los Cerritos HVAC Modernization,28000,NULL,60,Johnny Lai,johnny.lai@p2sinc.com
+25-1082,Harbor UCLA MC RACS,250000,NULL,75,Mikhail Fuks,mikhail.fuks@p2sinc.com
+25-1051,MS Add-Serv - BMS Sierra TI - De-Scope L4A,NULL,NULL,100,Mark Richards,mark.richards@p2sinc.com
+25-1052,MS Add-Serv - BMS Sierra TI - Data Center Containment,NULL,NULL,100,Mark Richards,mark.richards@p2sinc.com
+25-1059,MS Add-Serv - LBUSD Washington MS,NULL,NULL,60,Kirk Anglin,kirk.anglin@p2sinc.com
+25-1077,Scope Add-Serv - WVM Math and Science - Air Balance Design,NULL,NULL,80,Akshay Dhanapal Kumar,akshay.kumar@p2sinc.com
+25-0799,Olive View Medical Center - ED CT Repl- ASR 1 E-Power,NULL,NULL,60,Chet Dik,chet.dik@p2sinc.com
+25-0795,Scope Add-Serv - Monterey Peninsula College Classroom & Welcome C,NULL,NULL,65,Cole Bailey,cole.bailey@p2sinc.com
+25-0235,MS Add-Serv - WSHP Re-Design and SNF Addition Scope,NULL,NULL,60,Jonathan Butbul,yoni.butbul@p2sinc.com
+25-1131,UCSD Supercomputer Electrical Upgrades,NULL,NULL,60,Mevan Fernando,mevan.fernando@p2sinc.com
+25-1067,CoBH EV Chargers Parking Structures,NULL,NULL,75,Nicole Balisi,nicole.balisi@p2sinc.com
+24-1916,UCLA-Downtown Campus Master Plan_HKS,NULL,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+24-3121,5880 Ford Wellpinit Pump Solar RFP24-001,NULL,NULL,60,Vaibhav Prasad,vaibhav.prasad@p2sinc.com
+24-2915,Mechanical Engineering Add Service CHLA Immunology,NULL,NULL,75,Woodrow Otis,woodrow.otis@p2sinc.com
+25-0076,Blair Field Locker Room Lighting,NULL,NULL,75,Gary Jewell,gary.jewell@p2sinc.com
+25-0503,LAWA Terminal 5 Renovation and Reconstruction,NULL,NULL,60,Bryant Mercado,bryant.mercado@p2sinc.com
+24-0362,UCSD Bulk Grid Asset Enhancements,NULL,NULL,60,Aravind Batra,aravind.batra@p2sinc.com
+24-2845,Tacoma Union Station,NULL,NULL,60,Peregrin Jones,peregrin.jones@p2sinc.com
+25-0312,KPFF_Swift BRT Green Line Southern Terminal,NULL,NULL,60,Leon Kenshalo,leon.kenshalo@p2sinc.com
+25-0685,Fox Studio Lotwide Fiber & Telecom Upgrade,NULL,NULL,60,James Del Monaco,james.delmonaco@p2sinc.com
+24-2058,UC Davis Pathology Regional Planning,NULL,NULL,60,Zoltan Mezei,zoltan.mezei@p2sinc.com
+25-0041,UCSD Cx Qualifications Package,0,NULL,60,Thaovan Nguyen,vina.nguyen@p2sinc.com

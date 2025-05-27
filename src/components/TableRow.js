@@ -10,6 +10,9 @@ const TableRow = ({
   deleteRow,
   isLoading,
   currentUser,
+  monthCol,
+  month1Col,
+  month2Col,
 }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
@@ -370,14 +373,24 @@ const TableRow = ({
         </div>
       </td>
       <td>
-        <input type="text" value={row.projectName || ""} readOnly />
+        <input
+          type="text"
+          value={
+            row.projectNumber?.startsWith("0000-0000")
+              ? row.projectName || ""
+              : row.projectNumber
+              ? `${row.projectNumber} - ${row.projectName || ""}`
+              : ""
+          }
+          readOnly
+        />
       </td>
       <td>
         <input
           type="text"
           value={
             row.projectNumber?.startsWith("0000-0000")
-              ? "-"
+              ? (row.milestone ? row.milestone : "-")
               : row.milestone || ""
           }
           readOnly
@@ -387,7 +400,9 @@ const TableRow = ({
         <input
           type="text"
           value={
-            row.projectNumber?.startsWith("0000-0000") ? "-" : row.pm || ""
+            row.projectNumber?.startsWith("0000-0000")
+              ? (row.pm ? row.pm : "-")
+              : row.pm || ""
           }
           readOnly
           className="centered-input"
@@ -398,7 +413,7 @@ const TableRow = ({
           type="text"
           value={
             row.projectNumber?.startsWith("0000-0000")
-              ? "-"
+              ? (row.labor ? formatter.format(row.labor) : "-")
               : row.labor
               ? formatter.format(row.labor)
               : ""
@@ -412,7 +427,7 @@ const TableRow = ({
           type="text"
           value={
             row.projectNumber?.startsWith("0000-0000")
-              ? "-"
+              ? (row.pctLaborUsed ? percentFormatter(row.pctLaborUsed) : "-")
               : row.pctLaborUsed
               ? percentFormatter(row.pctLaborUsed)
               : ""
@@ -421,16 +436,38 @@ const TableRow = ({
           className="centered-input"
         />
       </td>
-      <td>
+      {/* Month columns for hours */}
+      <td style={{ width: "110px" }}>
         <input
           type="number"
-          value={row.hours || ""}
-          onChange={(e) =>
-            updateRow(index, "hours", Math.max(0, e.target.value))
-          }
+          value={row.month || ""}
+          onChange={(e) => updateRow(index, "month", e.target.value)}
           min="0"
           step="0.5"
           placeholder="0"
+          disabled={isLoading}
+        />
+      </td>
+      <td style={{ width: "110px" }}>
+        <input
+          type="number"
+          value={row.month1 || ""}
+          onChange={(e) => updateRow(index, "month1", e.target.value)}
+          min="0"
+          step="0.5"
+          placeholder="0"
+          disabled={isLoading}
+        />
+      </td>
+      <td style={{ width: "110px" }}>
+        <input
+          type="number"
+          value={row.month2 || ""}
+          onChange={(e) => updateRow(index, "month2", e.target.value)}
+          min="0"
+          step="0.5"
+          placeholder="0"
+          disabled={isLoading}
         />
       </td>
       <td>

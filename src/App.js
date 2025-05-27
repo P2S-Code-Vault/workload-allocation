@@ -4,16 +4,16 @@ import headerLogo from "./P2S_Legence_Logo_White.png";
 import TableRow from "./components/TableRow";
 import { ProjectDataService } from "./services/ProjectDataService";
 import { UserService } from "./services/UserService";
-import WeekPicker from "./components/WeekPicker";
+import QuarterPicker from "./components/QuarterPicker";
 import Login from "./components/Login";
 import PMPage from "./components/PMPage";
 import LeadershipPage from "./components/LeadershipPage";
 import format from "date-fns/format";
-import { startOfWeek, endOfWeek, addWeeks, subWeeks, addMonths } from "date-fns";
 import TeamMemberSelector from "./components/TeamMemberSelector";
-import API_CONFIG from "./services/apiConfig";
 import TeamEdit from "./components/teamedit";
 import { FaTrash } from "react-icons/fa"; // <-- Add this import
+import { loadMilestonesFromCSV } from "./utils/csvParser";
+import OpportunityRow from "./components/OpportunityRow";
 
 // Header Component
 const Header = ({ currentView, onNavigate, onLogout }) => {
@@ -88,14 +88,11 @@ const MainContent = React.forwardRef((props, ref) => {
   const [isSaving, setIsSaving] = useState(false);
   const [saveError, setSaveError] = useState(null);
   const [scheduledHours, setScheduledHours] = useState(40);
-  const [ptoHolHours, setPTOHolHours] = useState(0);
-  const [weekStartDate, setWeekStartDate] = useState(null);
-  const [weekEndDate, setWeekEndDate] = useState(null);
+  const [selectedQuarter, setSelectedQuarter] = useState(null);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
-  const [isGroupLeader, setIsGroupLeader] = useState(false);
   const [teamMembers, setTeamMembers] = useState([]);
   const [selectedTeamMember, setSelectedTeamMember] = useState(null);
-  const [showTeamDropdown, setShowTeamDropdown] = useState(false);
   const [isLoadingTeamMembers, setIsLoadingTeamMembers] = useState(false);
   const [teamMembersError, setTeamMembersError] = useState(null);
   const [opportunityRows, setOpportunityRows] = useState([
@@ -132,11 +129,65 @@ const MainContent = React.forwardRef((props, ref) => {
     },
   ]);
 
+  // --- QUARTER MONTHS LOGIC ---
+  // Returns [month0, month1, month2] as full month names for the selected quarter/year
+  function getQuarterMonthNames(quarter, year) {
+    let months;
+    switch (String(quarter)) {
+      case '1':
+      case 'Q1':
+        months = [0, 1, 2]; // Jan, Feb, Mar
+        break;
+      case '2':
+      case 'Q2':
+        months = [3, 4, 5]; // Apr, May, Jun
+        break;
+      case '3':
+      case 'Q3':
+        months = [6, 7, 8]; // Jul, Aug, Sep
+        break;
+      case '4':
+      case 'Q4':
+        months = [9, 10, 11]; // Oct, Nov, Dec
+        break;
+      default:
+        months = [0, 1, 2];
+    }
+    return months.map((m) => format(new Date(year, m, 1), "MMMM"));
+  }
+
+  // State for month column headers
+  const [monthCol, setMonthCol] = useState("");
+  const [month1Col, setMonth1Col] = useState("");
+  const [month2Col, setMonth2Col] = useState("");
+
+  // Update month column headers whenever quarter or year changes
+  useEffect(() => {
+    const [m0, m1, m2] = getQuarterMonthNames(selectedQuarter, selectedYear);
+    setMonthCol(m0);
+    setMonth1Col(m1);
+    setMonth2Col(m2);
+  }, [selectedQuarter, selectedYear]);
+
+  // Fix useEffect dependency warning by using useCallback for fetchSameGroupMembers
+  const fetchSameGroupMembers = useCallback(async () => {
+    try {
+      setIsLoadingTeamMembers(true);
+      setTeamMembersError(null);
+      const result = await ProjectDataService.getUsersInSameGroup(currentUser);
+      setTeamMembers(result.members || []);
+      setIsLoadingTeamMembers(false);
+    } catch (error) {
+      setTeamMembersError("Failed to load team members");
+      setIsLoadingTeamMembers(false);
+    }
+  }, [currentUser]);
+
   useEffect(() => {
     if (currentUser) {
       fetchSameGroupMembers();
     }
-  }, [currentUser]);
+  }, [currentUser, fetchSameGroupMembers]);
 
   useEffect(() => {
     // Initialize allocatingForUser with the current user's email
@@ -149,17 +200,6 @@ const MainContent = React.forwardRef((props, ref) => {
       localStorage.removeItem("allocatingForUser");
     };
   }, [currentUser]);
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (!event.target.closest(".team-dropdown")) {
-        setShowTeamDropdown(false);
-      }
-    };
-
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
 
   // Set user data on component mount
   useEffect(() => {
@@ -185,29 +225,10 @@ const MainContent = React.forwardRef((props, ref) => {
         console.log("No scheduled hours found, defaulting to 40");
         setScheduledHours(40);
       }
-
-      // Check if user is a group leader
-      setIsGroupLeader(details.isGroupManager || false);
     } else {
       console.warn("No valid user details found");
     }
   }, []);
-
-  const fetchSameGroupMembers = async () => {
-    try {
-      setIsLoadingTeamMembers(true);
-      setTeamMembersError(null);
-
-      const result = await ProjectDataService.getUsersInSameGroup(currentUser);
-      setTeamMembers(result.members || []);
-
-      setIsLoadingTeamMembers(false);
-    } catch (error) {
-      console.error("Error fetching same group members:", error);
-      setTeamMembersError("Failed to load team members");
-      setIsLoadingTeamMembers(false);
-    }
-  };
 
   // Add this handler for team member selection
   const handleTeamMemberSelect = (member) => {
@@ -265,22 +286,11 @@ const MainContent = React.forwardRef((props, ref) => {
     localStorage.setItem("allocatingForUser", userDetails.email);
   };
 
-  // Handle week change
-  const handleWeekChange = useCallback((startDate, endDate) => {
-    console.log("Week changed in MainContent:", {
-      startDate: format(startDate, "yyyy-MM-dd"),
-      endDate: format(endDate, "yyyy-MM-dd"),
-    });
-
-    // Clear cached allocations to ensure fresh data when switching weeks
-    try {
-      ProjectDataService.clearCacheWithPattern("allocations_");
-    } catch (e) {
-      console.warn("Failed to clear allocations cache:", e);
-    }
-
-    setWeekStartDate(startDate);
-    setWeekEndDate(endDate);
+  // Replace handleWeekChange with handleQuarterChange
+  const handleQuarterChange = useCallback((quarter, year) => {
+    setSelectedQuarter(quarter);
+    setSelectedYear(year);
+    // Optionally clear or reload data here
   }, []);
 
   // Track if there are unsaved changes
@@ -288,13 +298,10 @@ const MainContent = React.forwardRef((props, ref) => {
 
   // Update hasUnsavedChanges whenever rows are modified
   useEffect(() => {
-    if (hasLoadedInitialData && rows.length > 0) {
-      // Only set unsaved changes when rows are actually modified after initial load
-      if (!isLoading) {
-        setHasUnsavedChanges(true);
-      }
+    if (hasLoadedInitialData && rows.length > 0 && !isLoading) {
+      setHasUnsavedChanges(true);
     }
-  }, [rows]);
+  }, [rows, hasLoadedInitialData, isLoading]);
 
   // Reset hasUnsavedChanges when data is loaded
   useEffect(() => {
@@ -320,26 +327,13 @@ const MainContent = React.forwardRef((props, ref) => {
           const updatedRows = [];
           const newRows = [];
 
-          // Format week dates once for all operations
-          const formattedWeekStart = weekStartDate
-            ? format(weekStartDate, "yyyy-MM-dd")
-            : null;
-          const formattedWeekEnd = weekEndDate
-            ? format(weekEndDate, "yyyy-MM-dd")
-            : null;
-
-          console.log("Saving with week dates:", {
-            start: formattedWeekStart,
-            end: formattedWeekEnd,
-          });
-
           // Debug log all rows before saving
           console.log("All rows before saving:", JSON.stringify(rows, null, 2));
 
           // Organize rows for saving
           for (let row of rows) {
             // Skip rows with no project number or hours
-            if (!row.projectNumber || !row.hours) {
+            if (!row.projectNumber || (!row.month && !row.month1 && !row.month2)) {
               console.log(
                 "Skipping row - missing project number or hours:",
                 row
@@ -363,9 +357,11 @@ const MainContent = React.forwardRef((props, ref) => {
           for (let row of updatedRows) {
             console.log(`Updating allocation with ID: ${row.id}`);
             savePromises.push(
-              ProjectDataService.updateAllocation(
+              ProjectDataService.updateAllocationByQuarter(
                 row.id,
-                row.hours,
+                row.month,
+                row.month1,
+                row.month2,
                 row.remarks
               )
                 .then((result) => {
@@ -385,13 +381,15 @@ const MainContent = React.forwardRef((props, ref) => {
               `Creating new allocation for project: ${row.projectNumber}`
             );
             savePromises.push(
-              ProjectDataService.saveResourceAllocation({
+              ProjectDataService.saveResourceAllocationByQuarter({
                 email: currentUser,
                 project_number: row.projectNumber,
-                hours: parseFloat(row.hours) || 0,
+                year: selectedYear,
+                quarter: selectedQuarter,
+                month: row.month,
+                month1: row.month1,
+                month2: row.month2,
                 remarks: row.remarks || "",
-                week_start: formattedWeekStart,
-                week_end: formattedWeekEnd,
               })
                 .then((result) => {
                   console.log(`Create result:`, result);
@@ -426,73 +424,8 @@ const MainContent = React.forwardRef((props, ref) => {
 
       originalSave();
     },
-    [rows, weekStartDate, weekEndDate, currentUser]
+    [rows, selectedYear, selectedQuarter, currentUser]
   );
-
-  // IMPORTANT: Initialize week dates if not set by WeekPicker
-  useEffect(() => {
-    if (!weekStartDate || !weekEndDate) {
-      try {
-        // Try to get the date from localStorage
-        const storedDate = localStorage.getItem("selectedWeekDate");
-        let initialDate;
-
-        if (storedDate) {
-          initialDate = new Date(storedDate);
-          if (!(initialDate instanceof Date) || isNaN(initialDate)) {
-            // Invalid date from storage, use default
-            initialDate = addWeeks(new Date(), 1);
-          }
-        } else {
-          // No stored date, use default
-          initialDate = addWeeks(new Date(), 1);
-        }
-
-        const startDate = startOfWeek(initialDate, { weekStartsOn: 1 });
-        const endDate = endOfWeek(initialDate, { weekStartsOn: 1 });
-
-        console.log("MainContent - Initializing with dates:", {
-          startDate: format(startDate, "yyyy-MM-dd"),
-          endDate: format(endDate, "yyyy-MM-dd"),
-        });
-
-        setWeekStartDate(startDate);
-        setWeekEndDate(endDate);
-      } catch (e) {
-        console.warn("Error getting dates from localStorage:", e);
-        // Fall back to next week
-        const today = addWeeks(new Date(), 1);
-        const startDate = startOfWeek(today, { weekStartsOn: 1 });
-        const endDate = endOfWeek(today, { weekStartsOn: 1 });
-
-        console.log("Initializing with next week (after error):", {
-          startDate: format(startDate, "yyyy-MM-dd"),
-          endDate: format(endDate, "yyyy-MM-dd"),
-        });
-
-        setWeekStartDate(startDate);
-        setWeekEndDate(endDate);
-      }
-    }
-  }, [weekStartDate, weekEndDate]);
-
-  // Calculate PTO hours based on rows
-  useEffect(() => {
-    const ptoHours = rows.reduce((sum, row) => {
-      if (
-        row.projectNumber.startsWith("0000-0000-0PTO") ||
-        row.projectNumber.startsWith("0000-0000-0HOL") ||
-        row.projectNumber.startsWith("0000-0000-0SIC") ||
-        row.projectNumber.startsWith("0000-0000-LWOP") ||
-        row.projectNumber.startsWith("0000-0000-JURY")
-      ) {
-        return sum + (parseFloat(row.hours) || 0);
-      }
-      return sum;
-    }, 0);
-
-    setPTOHolHours(ptoHours);
-  }, [rows]);
 
   // Debug the dependencies in the allocation loading effect
   useEffect(() => {
@@ -500,15 +433,15 @@ const MainContent = React.forwardRef((props, ref) => {
     console.log("Loading allocations with scheduledHours:", scheduledHours);
     console.log("Allocation effect dependencies changed:", {
       currentUser,
-      weekStartDate: weekStartDate ? format(weekStartDate, "yyyy-MM-dd") : null,
-      weekEndDate: weekEndDate ? format(weekEndDate, "yyyy-MM-dd") : null,
+      selectedQuarter,
+      selectedYear,
       isLoading,
       scheduledHours,
     });
   }, [
     currentUser,
-    weekStartDate,
-    weekEndDate,
+    selectedQuarter,
+    selectedYear,
     isLoading,
     hasLoadedInitialData,
     scheduledHours,
@@ -516,61 +449,52 @@ const MainContent = React.forwardRef((props, ref) => {
 
   useEffect(() => {
     // Only proceed if we have both a user and date range
-    if (!currentUser || !weekStartDate || !weekEndDate) {
+    if (!currentUser || !selectedQuarter || !selectedYear) {
       console.log("Skipping allocation load - missing required data");
       return;
     }
 
     setIsLoading(true);
     setLoadError(null);
+    setRows([]);
+    setOpportunityRows([]);
 
-    setRows([]); // Clear rows when loading new data
+    // Convert quarter label (e.g., 'Q2') to string number if needed
+    let apiQuarter = selectedQuarter;
+    if (typeof apiQuarter === 'string' && apiQuarter.startsWith('Q')) {
+      apiQuarter = apiQuarter.replace('Q', '');
+    }
+    apiQuarter = String(apiQuarter); // Always send as string
 
-    const formattedStartDate = format(weekStartDate, "yyyy-MM-dd");
-    const formattedEndDate = format(weekEndDate, "yyyy-MM-dd");
-
-    let isMounted = true;
-
-    console.log("Loading allocations for:", {
-      email: currentUser,
-      startDate: format(weekStartDate, "yyyy-MM-dd"),
-      endDate: format(weekEndDate, "yyyy-MM-dd"),
-    });
-
-    // Fetch the allocations using the service
-    ProjectDataService.getAllocations(
+    // Fetch project allocations (milestone projections)
+    ProjectDataService.getAllocationsByQuarter(
       currentUser,
-      formattedStartDate,
-      formattedEndDate
+      selectedYear,
+      apiQuarter
     )
       .then((allocationsData) => {
-        // Skip if component unmounted
-        if (!isMounted) return;
-
-        // Ensure allocationsData is always an array
         const dataArray = Array.isArray(allocationsData) ? allocationsData : [];
         console.log("Received allocations data:", dataArray);
-
-        // Process the data
         if (dataArray.length > 0) {
-          console.log("Processing non-empty allocations");
           const newRows = dataArray.map((allocation) => ({
             id: allocation.ra_id,
             resource: currentUser,
-            projectNumber: allocation.proj_id || allocation.project_number, // Handle different field names
+            projectNumber: allocation.proj_id || allocation.project_number,
             projectName: allocation.project_name || "",
             milestone: allocation.milestone_name || "",
             pm: allocation.project_manager || "",
             labor: allocation.contract_labor || 0,
-            pctLaborUsed: (allocation.forecast_pm_labor || 0) * 100, // Convert to percentage
+            pctLaborUsed: (allocation.forecast_pm_labor || 0) * 100,
             hours: allocation.ra_hours || allocation.hours || 0,
             remarks: allocation.ra_remarks || allocation.remarks || "",
+            month: allocation.month || 0,
+            month1: allocation.month1 || 0,
+            month2: allocation.month2 || 0,
           }));
           setRows(newRows);
         } else {
-          // Initialize with 5 blank rows
           setRows(
-            [...Array(5)].map(() => ({
+            [...Array(3)].map(() => ({
               resource: currentUser,
               projectNumber: "",
               projectName: "",
@@ -578,25 +502,21 @@ const MainContent = React.forwardRef((props, ref) => {
               pm: "",
               labor: "",
               pctLaborUsed: "",
-              hours: "",
+              month: "",
+              month1: "",
+              month2: "",
               remarks: "",
             }))
           );
         }
-
         setHasLoadedInitialData(true);
-        setIsLoading(false); // Ensure we exit loading state
+        setIsLoading(false);
       })
       .catch((err) => {
-        // Skip if component unmounted
-        if (!isMounted) return;
-
         console.error("Error loading allocations:", err);
         setLoadError("Failed to load data: " + err.message);
-
-        // Initialize with 5 blank rows even if loading fails
         setRows(
-          [...Array(5)].map(() => ({
+          [...Array(3)].map(() => ({
             resource: currentUser,
             projectNumber: "",
             projectName: "",
@@ -604,19 +524,58 @@ const MainContent = React.forwardRef((props, ref) => {
             pm: "",
             labor: "",
             pctLaborUsed: "",
-            hours: "",
+            month: "",
+            month1: "",
+            month2: "",
             remarks: "",
           }))
         );
+        setIsLoading(false);
+      });
 
-        setIsLoading(false); // Ensure we exit loading state
+    // Fetch opportunity projections for the opportunities table
+    ProjectDataService.getOpportunitiesByQuarter(
+      currentUser,
+      selectedYear,
+      apiQuarter
+    )
+      .then((oppsData) => {
+        const dataArray = Array.isArray(oppsData) ? oppsData : [];
+        if (dataArray.length > 0) {
+          const newOppRows = dataArray.map((opp) => ({
+            id: opp.ra_id,
+            opportunityNumber: opp.opportunity_number || "",
+            opportunityName: opp.opportunity_name || "",
+            proposalChampion: opp.proposal_champion || "",
+            estimatedFee: opp.estimated_fee || "",
+            remarks: opp.remarks || "",
+            month: opp.month || 0,
+            month1: opp.month1 || 0,
+            month2: opp.month2 || 0,
+          }));
+          setOpportunityRows(newOppRows);
+        } else {
+          setOpportunityRows([
+            { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+            { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+            { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+          ]);
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading opportunities:", err);
+        setOpportunityRows([
+          { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+          { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+          { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+        ]);
       });
 
     // Return cleanup function to prevent state updates after unmounting
     return () => {
-      isMounted = false;
+      // isMounted = false;
     };
-  }, [currentUser, weekStartDate, weekEndDate, hasLoadedInitialData]);
+  }, [currentUser, selectedQuarter, selectedYear, hasLoadedInitialData]);
   // Rest of the component remains the same
   const addRow = useCallback(() => {
     setRows((prevRows) => [
@@ -629,7 +588,9 @@ const MainContent = React.forwardRef((props, ref) => {
         pm: "",
         labor: "",
         pctLaborUsed: "",
-        hours: "",
+        month: "",
+        month1: "",
+        month2: "",
         remarks: "",
       },
     ]);
@@ -670,115 +631,18 @@ const MainContent = React.forwardRef((props, ref) => {
     },
     [rows]
   );
-  const handleSave = async () => {
-    try {
-      setIsSaving(true);
-      setSaveError(null);
-
-      const savePromises = [];
-      const updatedRows = [];
-      const newRows = [];
-
-      // Format week dates once for all operations
-      const formattedWeekStart = weekStartDate
-        ? format(weekStartDate, "yyyy-MM-dd")
-        : null;
-      const formattedWeekEnd = weekEndDate
-        ? format(weekEndDate, "yyyy-MM-dd")
-        : null;
-
-      console.log("Saving with week dates:", {
-        start: formattedWeekStart,
-        end: formattedWeekEnd,
-      });
-
-      // Debug log all rows before saving
-      console.log("All rows before saving:", JSON.stringify(rows));
-
-      // Organize rows for saving
-      for (let row of rows) {
-        // Skip rows with no project number or hours
-        if (!row.projectNumber || !row.hours) {
-          console.log("Skipping row - missing project number or hours:", row);
-          continue;
-        }
-
-        // Explicitly check and log row ID to debug
-        if (row.id) {
-          console.log(
-            `Found existing row with ID: ${row.id}, Type: ${typeof row.id}`
-          );
-          updatedRows.push(row);
-        } else {
-          console.log("New row without ID:", row);
-          newRows.push(row);
-        }
-      }
-
-      // Process updates
-      for (let row of updatedRows) {
-        console.log(`Updating allocation with ID: ${row.id}`);
-        savePromises.push(
-          ProjectDataService.updateAllocation(row.id, row.hours, row.remarks)
-            .then((result) => {
-              console.log(`Update result for ID ${row.id}:`, result);
-              return { ...result, action: "update", id: row.id };
-            })
-            .catch((err) => {
-              console.error(`Error updating allocation ${row.id}:`, err);
-              throw err;
-            })
-        );
-      }
-
-      // Process new rows
-      for (let row of newRows) {
-        console.log(
-          `Creating new allocation for project: ${row.projectNumber}`
-        );
-        savePromises.push(
-          ProjectDataService.saveResourceAllocation({
-            email: currentUser,
-            project_number: row.projectNumber,
-            hours: parseFloat(row.hours) || 0,
-            remarks: row.remarks || "",
-            week_start: formattedWeekStart, // Add the week start date
-            week_end: formattedWeekEnd, // Add the week end date
-            // The project details will be fetched from CSV in the saveResourceAllocation method
-          })
-            .then((result) => {
-              console.log(`Create result:`, result);
-              return { ...result, action: "create" };
-            })
-            .catch((err) => {
-              console.error(`Error creating allocation:`, err);
-              throw err;
-            })
-        );
-      }
-
-      // Wait for all save operations to complete
-      if (savePromises.length > 0) {
-        const results = await Promise.all(savePromises);
-        console.log("Save operation results:", results);
-
-        // Rest of your existing code...
-      } else {
-        console.log("No changes to save");
-      }
-    } catch (error) {
-      console.error("Save failed:", error);
-      setSaveError("Failed to save data: " + error.message);
-    } finally {
-      setIsSaving(false);
-    }
-  };
-
-  // Calculate total hours
-  const totalHours = rows.reduce((sum, row) => {
-    const hours = parseFloat(row.hours) || 0;
-    return sum + hours;
+  // Calculate total hours  // Calculate total hours for all resource and opportunity rows (all months)
+  const totalResourceHours = rows.reduce((sum, row) => {
+    return (
+      sum + (parseFloat(row.month) || 0) + (parseFloat(row.month1) || 0) + (parseFloat(row.month2) || 0)
+    );
   }, 0);
+  const totalOpportunityHours = opportunityRows.reduce((sum, row) => {
+    return (
+      sum + (parseFloat(row.month) || 0) + (parseFloat(row.month1) || 0) + (parseFloat(row.month2) || 0)
+    );
+  }, 0);
+  const totalHoursAllTables = totalResourceHours + totalOpportunityHours;
 
   const formatter = new Intl.NumberFormat("en-US", {
     style: "decimal",
@@ -786,7 +650,7 @@ const MainContent = React.forwardRef((props, ref) => {
     maximumFractionDigits: 1,
   });
 
-  const totalHoursFormatted = formatter.format(totalHours);
+  const totalHoursFormatted = formatter.format(totalHoursAllTables);
 
   // Group rows by type
   const getGroupedRows = useCallback(() => {
@@ -829,20 +693,7 @@ const MainContent = React.forwardRef((props, ref) => {
       return sum + (parseFloat(row.hours) || 0);
     }, 0);
   }, [getGroupedRows]);
-  // Calculate overhead hours
-  const calculateOverheadHours = useCallback(() => {
-    return getGroupedRows().adminRows.reduce((sum, row) => {
-      return sum + (parseFloat(row.hours) || 0);
-    }, 0);
-  }, [getGroupedRows]);
-
-  // Calculate direct project hours
-  const calculateDirectHours = useCallback(() => {
-    return getGroupedRows().normalRows.reduce((sum, row) => {
-      return sum + (parseFloat(row.hours) || 0);
-    }, 0);
-  }, [getGroupedRows]);
-
+  
   // Calculate PTO/Holiday hours
   const calculatePTOHours = useCallback(() => {
     return getGroupedRows().ptoRows.reduce((sum, row) => {
@@ -857,78 +708,8 @@ const MainContent = React.forwardRef((props, ref) => {
     }, 0);
   }, [getGroupedRows]);
 
-  // Calculate Ratio B
-  const calculateRatioB = useCallback(() => {
-    const directHours = calculateDirectHours();
-    const denominator = scheduledHours - ptoHolHours - calculateLWOPHours();
-
-    if (denominator <= 0) return 0;
-    return directHours / denominator;
-  }, [calculateDirectHours, calculateLWOPHours, scheduledHours, ptoHolHours]);
-
-  // Formatter for percentage
-  const percentFormatter = new Intl.NumberFormat("en-US", {
-    style: "percent",
-    minimumFractionDigits: 1,
-    maximumFractionDigits: 1,
-  });
-
   // Get grouped rows once instead of calling multiple times
   const groupedRows = getGroupedRows();
-
-  const copyPreviousWeekAllocations = async () => {
-    try {
-      setIsLoading(true);
-      setLoadError(null);
-
-      const previousWeekStart = startOfWeek(subWeeks(weekStartDate, 1), {
-        weekStartsOn: 1,
-      });
-      const previousWeekEnd = endOfWeek(subWeeks(weekEndDate, 1), {
-        weekStartsOn: 1,
-      });
-
-      console.log("Copying allocations from previous week:", {
-        startDate: format(previousWeekStart, "yyyy-MM-dd"),
-        endDate: format(previousWeekEnd, "yyyy-MM-dd"),
-      });
-
-      const previousAllocations = await ProjectDataService.getAllocations(
-        currentUser,
-        format(previousWeekStart, "yyyy-MM-dd"),
-        format(previousWeekEnd, "yyyy-MM-dd")
-      );
-
-      if (previousAllocations && previousAllocations.length > 0) {
-        const newRows = previousAllocations.map((allocation) => ({
-          resource: currentUser,
-          projectNumber: allocation.proj_id || allocation.project_number,
-          projectName: allocation.project_name || "",
-          milestone: allocation.milestone_name || "",
-          pm: allocation.project_manager || "",
-          labor: allocation.contract_labor || 0,
-          pctLaborUsed: (allocation.forecast_pm_labor || 0) * 100,
-          hours: allocation.ra_hours || allocation.hours || 0,
-          remarks: allocation.ra_remarks || allocation.remarks || "",
-        }));
-
-        // Remove the 5 empty rows before adding the new rows
-        setRows((prevRows) => [
-          ...prevRows.filter((row) => row.projectNumber || row.hours),
-          ...newRows,
-        ]);
-
-        console.log("Copied previous week's allocations successfully.");
-      } else {
-        console.warn("No allocations found for the previous week.");
-      }
-    } catch (error) {
-      console.error("Error copying previous week's allocations:", error);
-      setLoadError("Failed to copy previous week's allocations.");
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   // Make hasUnsavedChanges and saveWithCallback accessible via ref
   React.useImperativeHandle(ref, () => ({
@@ -967,27 +748,17 @@ const MainContent = React.forwardRef((props, ref) => {
     setOpportunityRows((prev) => prev.filter((_, i) => i !== index));
   }, []);
 
-  // Get month names based on selected week
-  const getMonthNames = () => {
-    if (!weekStartDate) return ["", "", ""];
-    const month0 = format(weekStartDate, "MMMM yyyy");
-    const month1 = format(addMonths(weekStartDate, 1), "MMMM yyyy");
-    const month2 = format(addMonths(weekStartDate, 2), "MMMM yyyy");
-    return [month0, month1, month2];
-  };
-  const [monthCol, month1Col, month2Col] = getMonthNames();
-
   return (
     <main className="main-content">
       <div className="content-wrapper">
         <div className="table-container">
           {loadError && <div className="error-banner">{loadError}</div>}
           {saveError && <div className="error-banner">{saveError}</div>}
-          <WeekPicker
-            className="resource-week-picker"
-            onWeekChange={handleWeekChange}
-            hasUnsavedChanges={hasUnsavedChanges}
-            onSaveChanges={saveWithCallback}
+          <QuarterPicker
+            className="resource-quarter-picker"
+            onQuarterChange={handleQuarterChange}
+            initialYear={selectedYear}
+            initialQuarter={selectedQuarter}
           />
 
           <div className="user-info-container">
@@ -1004,7 +775,7 @@ const MainContent = React.forwardRef((props, ref) => {
               onSelectTeamMember={handleTeamMemberSelect}
               onReset={resetToCurrentUser}
             />
-            <div className="scheduled-hours-container">
+            {/* <div className="scheduled-hours-container">
               <label htmlFor="scheduledHours">Scheduled Hours:</label>
               <input
                 id="scheduledHours"
@@ -1016,7 +787,7 @@ const MainContent = React.forwardRef((props, ref) => {
                 min="0"
                 max="168"
               />
-            </div>
+            </div> */}
           </div>
 
           {isLoading ? (
@@ -1032,7 +803,9 @@ const MainContent = React.forwardRef((props, ref) => {
                     <th>Project Manager</th>
                     <th>Contract Total Labor</th>
                     <th>% EAC Labor Used</th>
-                    <th>Planned Hours</th>
+                    <th style={{ width: "110px" }}>{monthCol}</th>
+                    <th style={{ width: "110px" }}>{month1Col}</th>
+                    <th style={{ width: "110px" }}>{month2Col}</th>
                     <th>Remarks</th>
                     <th> </th>
                   </tr>
@@ -1048,6 +821,9 @@ const MainContent = React.forwardRef((props, ref) => {
                       deleteRow={deleteRow}
                       isLoading={isLoading}
                       currentUser={currentUser}
+                      monthCol={monthCol}
+                      month1Col={month1Col}
+                      month2Col={month2Col}
                     />
                   ))}
                   {/* Add Direct Hours Subtotal only if there are normal rows */}
@@ -1060,11 +836,20 @@ const MainContent = React.forwardRef((props, ref) => {
                       >
                         Total:
                       </td>
-                      <td
-                        style={{ textAlign: "center" }}
-                        className="direct-total-hours"
-                      >
-                        {formatter.format(calculateDirectHours())}
+                      <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
+                        {formatter.format(
+                          groupedRows.normalRows.reduce((sum, row) => sum + (parseFloat(row.month) || 0), 0)
+                        )}
+                      </td>
+                      <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
+                        {formatter.format(
+                          groupedRows.normalRows.reduce((sum, row) => sum + (parseFloat(row.month1) || 0), 0)
+                        )}
+                      </td>
+                      <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
+                        {formatter.format(
+                          groupedRows.normalRows.reduce((sum, row) => sum + (parseFloat(row.month2) || 0), 0)
+                        )}
                       </td>
                       <td colSpan="2"></td>
                     </tr>
@@ -1146,11 +931,23 @@ const MainContent = React.forwardRef((props, ref) => {
                         />
                       ))}
                       <tr className="overhead-total">
-                        <td colSpan="6" className="overhead-total-label">
+                        <td colSpan="6" className="overhead-total-label" style={{ textAlign: "right", fontWeight: "bold" }}>
                           Total:
                         </td>
-                        <td className="overhead-total-hours">
-                          {formatter.format(calculateOverheadHours())}
+                        <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
+                          {formatter.format(
+                            groupedRows.adminRows.reduce((sum, row) => sum + (parseFloat(row.month) || 0), 0)
+                          )}
+                        </td>
+                        <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
+                          {formatter.format(
+                            groupedRows.adminRows.reduce((sum, row) => sum + (parseFloat(row.month1) || 0), 0)
+                          )}
+                        </td>
+                        <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
+                          {formatter.format(
+                            groupedRows.adminRows.reduce((sum, row) => sum + (parseFloat(row.month2) || 0), 0)
+                          )}
                         </td>
                         <td colSpan="2"></td>
                       </tr>
@@ -1191,7 +988,7 @@ const MainContent = React.forwardRef((props, ref) => {
               <table className="resource-table opportunities-table">
                 <thead>
                   <tr>
-                    <th>Opportunity Number</th>
+                    <th>Opportunity No.</th>
                     <th>Opportunity Name</th>
                     <th>Proposal Champion</th>
                     <th>Estimated Fee Proposed</th>
@@ -1204,127 +1001,14 @@ const MainContent = React.forwardRef((props, ref) => {
                 </thead>
                 <tbody>
                   {opportunityRows.map((row, index) => (
-                    <tr key={`opp-${index}`}>
-                      <td>
-                        <input
-                          type="text"
-                          value={row.opportunityNumber}
-                          onChange={(e) =>
-                            updateOpportunityRow(
-                              index,
-                              "opportunityNumber",
-                              e.target.value
-                            )
-                          }
-                          disabled={isLoading}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          value={row.opportunityName}
-                          onChange={(e) =>
-                            updateOpportunityRow(
-                              index,
-                              "opportunityName",
-                              e.target.value
-                            )
-                          }
-                          disabled={isLoading}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          value={row.proposalChampion}
-                          onChange={(e) =>
-                            updateOpportunityRow(
-                              index,
-                              "proposalChampion",
-                              e.target.value
-                            )
-                          }
-                          disabled={isLoading}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="number"
-                          value={row.estimatedFee}
-                          onChange={(e) =>
-                            updateOpportunityRow(
-                              index,
-                              "estimatedFee",
-                              e.target.value
-                            )
-                          }
-                          disabled={isLoading}
-                        />
-                      </td>
-                      <td style={{ width: "110px" }}>
-                        <input
-                          type="number"
-                          value={row.month}
-                          onChange={(e) =>
-                            updateOpportunityRow(index, "month", e.target.value)
-                          }
-                          disabled={isLoading}
-                        />
-                      </td>
-                      <td style={{ width: "110px" }}>
-                        <input
-                          type="number"
-                          value={row.month1}
-                          onChange={(e) =>
-                            updateOpportunityRow(
-                              index,
-                              "month1",
-                              e.target.value
-                            )
-                          }
-                          disabled={isLoading}
-                        />
-                      </td>
-                      <td style={{ width: "110px" }}>
-                        <input
-                          type="number"
-                          value={row.month2}
-                          onChange={(e) =>
-                            updateOpportunityRow(
-                              index,
-                              "month2",
-                              e.target.value
-                            )
-                          }
-                          disabled={isLoading}
-                        />
-                      </td>
-                      <td>
-                        <input
-                          type="text"
-                          value={row.remarks}
-                          onChange={(e) =>
-                            updateOpportunityRow(
-                              index,
-                              "remarks",
-                              e.target.value
-                            )
-                          }
-                          disabled={isLoading}
-                        />
-                      </td>
-                      <td>
-                        <button
-                          className="delete-btn"
-                          onClick={() => deleteOpportunityRow(index)}
-                          disabled={isLoading}
-                          type="button"
-                          aria-label="Delete Opportunity Row"
-                        >
-                          <FaTrash />
-                        </button>
-                      </td>
-                    </tr>
+                    <OpportunityRow
+                      key={`opp-${index}`}
+                      row={row}
+                      index={index}
+                      updateOpportunityRow={updateOpportunityRow}
+                      deleteOpportunityRow={deleteOpportunityRow}
+                      isLoading={isLoading}
+                    />
                   ))}
                   {/* Opportunities Total Row */}
                   {opportunityRows.length > 0 && (
@@ -1399,11 +1083,11 @@ const MainContent = React.forwardRef((props, ref) => {
                     </span>
                   </>
                 )}
-                <div className="ratio-separator"></div>
+                {/* <div className="ratio-separator"></div>
                 <span className="ratio-label">Ratio B:</span>
                 <span className="ratio-value">
                   {percentFormatter.format(calculateRatioB())}
-                </span>
+                </span> */}
               </div>
               <div className="table-actions">
                 <button
@@ -1411,7 +1095,7 @@ const MainContent = React.forwardRef((props, ref) => {
                   className="add-btn"
                   disabled={isSaving || isLoading}
                 >
-                  Add Resource Row
+                  Add Milestone Row
                 </button>
                 <button
                   onClick={addOpportunityRow}
@@ -1449,7 +1133,7 @@ const Footer = () => {
           onMouseLeave={() => setShowAboutTooltip(false)}
         >
           {/* <span className="footer-text">Version 0.4 </span> */}
-          <span className="footer-text">Version 0.5 | About</span>
+          <span className="footer-text">Version 0.0 | About</span>
           {showAboutTooltip && (
             <div className="tooltip">
               Our Workload Projection App was developed by Anvit Patil, Nilay
