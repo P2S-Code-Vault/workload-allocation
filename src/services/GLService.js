@@ -100,6 +100,29 @@ export class GLService {
     }
   }
 
+  // Helper to get start/end date for a quarter
+  static getQuarterDateRange(quarter, year) {
+    const q = parseInt(quarter, 10);
+    const y = parseInt(year, 10);
+    let startMonth = 0;
+    if (q === 2) startMonth = 3;
+    else if (q === 3) startMonth = 6;
+    else if (q === 4) startMonth = 9;
+    const endMonth = startMonth + 2;
+    const endDate = new Date(y, endMonth + 1, 0); // last day of endMonth
+    // Format as YYYY-MM-DD
+    const pad = (n) => n.toString().padStart(2, '0');
+    const startStr = `${y}-${pad(startMonth + 1)}-01`;
+    const endStr = `${y}-${pad(endMonth + 1)}-${pad(endDate.getDate())}`;
+    return { startStr, endStr };
+  }
+
+  // New: get allocations by quarter
+  static async getTeamAllocationsByQuarter(emails, year, quarter) {
+    const { startStr, endStr } = this.getQuarterDateRange(quarter, year);
+    return this.getTeamAllocations(emails, startStr, endStr);
+  }
+
   // Cache helper methods
   static saveToCache(key, data) {
     this.cache[key] = {

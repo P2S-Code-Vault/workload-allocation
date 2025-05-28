@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
-import WeekPicker from "./WeekPicker";
-import { format, addWeeks, startOfWeek, endOfWeek } from "date-fns";
+import QuarterPicker from "./QuarterPicker";
+import { format } from "date-fns";
 import PMDashboardService from "../services/PMDashboardService";
 import { ProjectDataService } from "../services/ProjectDataService";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
@@ -281,17 +281,14 @@ const CollapsiblePMGroup = ({
 };
 
 // Main PM Page Component
-const PMPage = ({ navigate }) => {
-  const [dashboardData, setDashboardData] = useState({
-    projects: [],
-    summary: {},
-  });
+const PMPage = (props) => {
+  const [selectedQuarter, setSelectedQuarter] = useState(1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [dashboardData, setDashboardData] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedPM, setSelectedPM] = useState("");
   const [projectManagers, setProjectManagers] = useState([]);
-  const [weekStartDate, setWeekStartDate] = useState(null);
-  const [weekEndDate, setWeekEndDate] = useState(null);
   const [retryCount, setRetryCount] = useState(0);
   const [showAllMilestones, setShowAllMilestones] = useState(false);
 
@@ -387,42 +384,6 @@ const PMPage = ({ navigate }) => {
     };
 
     loadProjectManagers();
-
-    // Initialize with stored week date or default to next week
-    try {
-      const storedDate = localStorage.getItem("selectedWeekDate");
-      let initialDate;
-
-      if (storedDate) {
-        initialDate = new Date(storedDate);
-        if (!(initialDate instanceof Date) || isNaN(initialDate)) {
-          // Invalid date from storage, use default
-          initialDate = addWeeks(new Date(), 1);
-        }
-      } else {
-        // No stored date, use default
-        initialDate = addWeeks(new Date(), 1);
-      }
-
-      const startDate = startOfWeek(initialDate, { weekStartsOn: 1 });
-      const endDate = endOfWeek(initialDate, { weekStartsOn: 1 });
-
-      console.log("PM Page - Initializing with dates:", {
-        startDate: format(startDate, "yyyy-MM-dd"),
-        endDate: format(endDate, "yyyy-MM-dd"),
-      });
-
-      setWeekStartDate(startDate);
-      setWeekEndDate(endDate);
-    } catch (e) {
-      console.warn("Error getting dates from localStorage:", e);
-      // Fall back to next week if there's an error
-      const today = addWeeks(new Date(), 1);
-      const startDate = startOfWeek(today, { weekStartsOn: 1 });
-      const endDate = endOfWeek(today, { weekStartsOn: 1 });
-      setWeekStartDate(startDate);
-      setWeekEndDate(endDate);
-    }
   }, []);
 
   // Debug data state changes
@@ -435,25 +396,6 @@ const PMPage = ({ navigate }) => {
     );
   }, [dashboardData]);
 
-  // Handle week change
-  const handleWeekChange = (startDate, endDate) => {
-    console.log("PM dashboard week changed:", {
-      startDate: format(startDate, "yyyy-MM-dd"),
-      endDate: format(endDate, "yyyy-MM-dd"),
-    });
-
-    // Clear any cached data to ensure fresh load
-    try {
-      ProjectDataService.clearCacheWithPattern("pm_dashboard_");
-    } catch (e) {
-      console.warn("Failed to clear PM dashboard cache:", e);
-    }
-
-    setWeekStartDate(startDate);
-    setWeekEndDate(endDate);
-    setRetryCount(0); // Reset retry counter when dates change
-  };
-
   // Handle retry button click
   const handleRetry = () => {
     setError(null);
@@ -461,25 +403,23 @@ const PMPage = ({ navigate }) => {
     setRetryCount(retryCount + 1);
   };
 
-  // Load dashboard data when week dates or selected PM changes
+  // Load dashboard data when quarter/year or selected PM changes
   useEffect(() => {
     const loadDashboardData = async () => {
-      if (!weekStartDate || !weekEndDate) return;
-
       setIsLoading(true);
       setError(null);
 
-      console.log("Loading dashboard data with params:", {
-        startDate: format(weekStartDate, "yyyy-MM-dd"),
-        endDate: format(weekEndDate, "yyyy-MM-dd"),
+      console.log("Loading dashboard data:", {
+        selectedYear,
+        selectedQuarter,
         selectedPM: selectedPM || "All Projects",
         showAllMilestones,
       });
 
       try {
-        const data = await PMDashboardService.getPMDashboardData(
-          format(weekStartDate, "yyyy-MM-dd"),
-          format(weekEndDate, "yyyy-MM-dd"),
+        const data = await PMDashboardService.getPMDashboardDataByQuarter(
+          selectedYear,
+          selectedQuarter,
           selectedPM || null,
           showAllMilestones
         );
@@ -512,13 +452,40 @@ const PMPage = ({ navigate }) => {
     };
 
     loadDashboardData();
-  }, [weekStartDate, weekEndDate, selectedPM, retryCount, showAllMilestones]);
+  }, [selectedQuarter, selectedYear, selectedPM, retryCount, showAllMilestones]);
+
+  // Month column headers
+  const getQuarterMonths = (quarter) => {
+    const defaultQuarterMonths = {
+      1: [0, 1, 2],
+      2: [3, 4, 5],
+      3: [6, 7, 8],
+      4: [9, 10, 11],
+    };
+    return defaultQuarterMonths[quarter] || [0, 1, 2];
+  };
+
+  const getMonthNames = () => {
+    if (!selectedQuarter || !selectedYear) return ["", "", ""];
+    const months = getQuarterMonths(selectedQuarter);
+    return months.map((m) =>
+      format(new Date(selectedYear, m, 1), "MMMM yyyy")
+    );
+  };
+  const [monthCol, month1Col, month2Col] = getMonthNames();
 
   return (
     <main className="main-content">
       <div className="content-wrapper">
         <div className="table-container">
-          <WeekPicker onWeekChange={handleWeekChange} />
+          <QuarterPicker
+            onQuarterChange={(q, y) => {
+              setSelectedQuarter(q);
+              setSelectedYear(y);
+            }}
+            initialYear={selectedYear}
+            initialQuarter={selectedQuarter}
+          />
           <PMSelector
             onPMChange={setSelectedPM}
             selectedPM={selectedPM}

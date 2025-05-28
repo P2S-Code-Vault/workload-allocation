@@ -1,12 +1,11 @@
 import React, { useState, useEffect } from "react";
 import { UserService } from "../services/UserService";
 import { GLService } from "../services/GLService";
-import WeekPicker from "./WeekPicker";
+import QuarterPicker from "./QuarterPicker";
 import UserSelector from "./UserSelector";
 import TeamMemberPanel from "./TeamMemberPanel";
 import headerLogo from "../P2S_Legence_Logo_White.png";
 import format from "date-fns/format";
-import { startOfWeek, endOfWeek } from "date-fns";
 import "./GLView.css";
 
 const Header = ({ onNavigate }) => {
@@ -29,6 +28,16 @@ const Header = ({ onNavigate }) => {
   );
 };
 
+const defaultQuarterMonths = {
+  1: [0, 1, 2],
+  2: [3, 4, 5],
+  3: [6, 7, 8],
+  4: [9, 10, 11],
+};
+const getQuarterMonths = (quarter) => {
+  return defaultQuarterMonths[quarter] || [0, 1, 2];
+};
+
 // Main GL View component
 const GLView = ({ onNavigate }) => {
   const [currentUser, setCurrentUser] = useState(null);
@@ -36,65 +45,39 @@ const GLView = ({ onNavigate }) => {
   const [teamAllocations, setTeamAllocations] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [weekStartDate, setWeekStartDate] = useState(null);
-  const [weekEndDate, setWeekEndDate] = useState(null);
+  const [selectedQuarter, setSelectedQuarter] = useState(1);
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [isSaving, setIsSaving] = useState(false);
   const [saveStatus, setSaveStatus] = useState({ success: false, message: "" });
   const [showSaveStatus, setShowSaveStatus] = useState(false);
-  const [viewMode, setViewMode] = useState("team"); // 'team' or 'project'
+  const [viewMode, setViewMode] = useState("team");
   const [studioGroups, setStudioGroups] = useState({});
 
-  // Initialize user and date range
+  // Initialize user
   useEffect(() => {
     const userDetails = UserService.getCurrentUserDetails();
     if (userDetails) {
       setCurrentUser(userDetails);
     }
-
-    // Set default week to current week
-    const today = new Date();
-    const startDate = startOfWeek(today, { weekStartsOn: 0 });
-    const endDate = endOfWeek(today, { weekStartsOn: 0 });
-    setWeekStartDate(startDate);
-    setWeekEndDate(endDate);
   }, []);
 
-  // Handle week change from WeekPicker
-  const handleWeekChange = (startDate, endDate) => {
-    console.log("Week changed:", {
-      start: format(startDate, "yyyy-MM-dd"),
-      end: format(endDate, "yyyy-MM-dd"),
-    });
-    setWeekStartDate(startDate);
-    setWeekEndDate(endDate);
-  };
-
-  // Load team members and allocations
+  // Load team members and allocations for the selected quarter/year
   useEffect(() => {
-    if (!currentUser || !weekStartDate || !weekEndDate) return;
-
+    if (!currentUser || !selectedQuarter || !selectedYear) return;
     const loadData = async () => {
       setIsLoading(true);
       setError(null);
-
       try {
-        console.log("Loading GL data for user:", currentUser.email);
-
-        // Get team members
         const members = await GLService.getTeamMembers(currentUser.email);
         setTeamMembers(members);
-
         if (members.length > 0) {
-          // Get allocations for all team members
           const emails = members.map((member) => member.email);
-          const allocations = await GLService.getTeamAllocations(
+          const allocations = await GLService.getTeamAllocationsByQuarter(
             emails,
-            format(weekStartDate, "yyyy-MM-dd"),
-            format(weekEndDate, "yyyy-MM-dd")
+            selectedQuarter,
+            selectedYear
           );
-
           setTeamAllocations(allocations);
-
           // Group members by studio leader
           const studios = {};
           members.forEach((member) => {
@@ -104,19 +87,26 @@ const GLView = ({ onNavigate }) => {
             }
             studios[studioLeader].push(member);
           });
-
           setStudioGroups(studios);
         }
       } catch (err) {
-        console.error("Error loading GL data:", err);
         setError(`Failed to load data: ${err.message}`);
       } finally {
         setIsLoading(false);
       }
     };
-
     loadData();
-  }, [currentUser, weekStartDate, weekEndDate]);
+  }, [currentUser, selectedQuarter, selectedYear]);
+
+  // Month column headers
+  const getMonthNames = () => {
+    if (!selectedQuarter || !selectedYear) return ["", "", ""];
+    const months = getQuarterMonths(selectedQuarter);
+    return months.map((m) =>
+      format(new Date(selectedYear, m, 1), "MMMM yyyy")
+    );
+  };
+  const [monthCol, month1Col, month2Col] = getMonthNames();
 
   // Handle updates to allocations
   const handleAllocationUpdate = async (updates) => {
@@ -221,7 +211,14 @@ const GLView = ({ onNavigate }) => {
       <main className="gl-dashboard">
         <div className="content-wrapper">
           <div className="dashboard-controls">
-            <WeekPicker onWeekChange={handleWeekChange} />
+            <QuarterPicker
+              onQuarterChange={(q, y) => {
+                setSelectedQuarter(q);
+                setSelectedYear(y);
+              }}
+              initialYear={selectedYear}
+              initialQuarter={selectedQuarter}
+            />
 
             <div className="view-toggle">
               <button
@@ -313,7 +310,7 @@ const GLView = ({ onNavigate }) => {
                     </div>
                   </div>
                 ))
-              )}
+              }
             </div>
           ) : (
             <div className="project-view">

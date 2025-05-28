@@ -1,6 +1,6 @@
 const API_CONFIG = {
     // http://localhost:8000
-    BASE_URL: process.env.REACT_APP_API_BASE_URL || 'https://p2s-ra-api.azurewebsites.net',   //https://p2s-ra-api.azurewebsites.net
+    BASE_URL: process.env.REACT_APP_API_BASE_URL || 'https://p2s-wp-api-d6bhbbbzewd9gfc5.westus-01.azurewebsites.net/',   //https://p2s-ra-api.azurewebsites.net
     
     // API endpoints
     ENDPOINTS: {
@@ -18,7 +18,24 @@ const API_CONFIG = {
       USER_GROUP_INFO: '/users/group-info',
       USERS_BY_GROUP_MANAGER: '/users/by-group-manager',
       CONTACTS_SEARCH: '/contacts/search',
-      USERS_SAME_GROUP: '/users/same-group'
+      USERS_SAME_GROUP: '/users/same-group', // keep for future
+      // Added endpoints from FastAPI main.py, now as functions for path params
+      CONTACT_BY_ID: contactId => `/contacts/${contactId}`,
+      CONTACTS: '/contacts',
+      MILESTONES_ACTIVE_ALL: '/milestones/active-all',
+      MILESTONES_PROJECT: projectNumber => `/milestones/project/${projectNumber}`,
+      MILESTONE_BY_ID: milestoneId => `/milestones/${milestoneId}`,
+      OPPORTUNITY_BY_NUMBER: opportunityNumber => `/opportunities/number/${opportunityNumber}`,
+      OPPORTUNITIES: '/opportunities',
+      OPPORTUNITY_BY_ID: opportunityId => `/opportunities/${opportunityId}`,
+      MILESTONE_PROJECTIONS: '/milestone-projections',
+      MILESTONE_PROJECTION_BY_ID: raId => `/milestone-projections/${raId}`,
+      CONTACT_MILESTONE_PROJECTIONS: contactId => `/contacts/${contactId}/milestone-projections`,
+      MILESTONE_PROJECTIONS_BATCH: '/milestone-projections/batch',
+      OPPORTUNITY_PROJECTIONS: '/opportunity-projections',
+      OPPORTUNITY_PROJECTION_BY_ID: raId => `/opportunity-projections/${raId}`,
+      CONTACT_OPPORTUNITY_PROJECTIONS: contactId => `/contacts/${contactId}/opportunity-projections`,
+      OPPORTUNITY_PROJECTIONS_BATCH: '/opportunity-projections/batch'
     },
     
     // HTTP status codes

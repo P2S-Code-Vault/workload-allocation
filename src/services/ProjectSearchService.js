@@ -1,9 +1,13 @@
-import { loadMilestonesFromCSV } from '../utils/csvParser';
+import { loadMilestonesFromCSV, loadOpportunitiesFromCSV } from '../utils/csvParser';
 
 export class ProjectSearchService {
   static projectData = null;
   static isLoading = false;
   static loadPromise = null;
+
+  // Add static for opportunities
+  static opportunityData = null;
+  static opportunityLoadPromise = null;
 
   // Initialize by loading the CSV file
   static async initialize() {
@@ -26,6 +30,23 @@ export class ProjectSearchService {
       console.error('Failed to initialize project search service:', error);
       this.isLoading = false;
       this.loadPromise = null;
+      throw error;
+    }
+  }
+
+  // Load Opportunities.csv and cache
+  static async initializeOpportunities() {
+    console.log("ProjectSearchService.initializeOpportunities called");
+    if (this.opportunityData !== null) return this.opportunityData;
+    if (this.opportunityLoadPromise) return this.opportunityLoadPromise;
+
+    try {
+      this.opportunityLoadPromise = loadOpportunitiesFromCSV('/data/Opportunities.csv');
+      this.opportunityData = await this.opportunityLoadPromise;
+      return this.opportunityData;
+    } catch (error) {
+      console.error('Failed to load Opportunities.csv:', error);
+      this.opportunityLoadPromise = null;
       throw error;
     }
   }
@@ -122,7 +143,65 @@ console.log("Pct Labor Used value:", project['Pct Labor Used'], "Type:", typeof 
       throw error;
     }
   }
-  
+
+  // Get full details for a specific opportunity number (exact match)
+  static async getOpportunityDetails(opportunityNumber) {
+    if (!opportunityNumber) {
+      throw new Error('Opportunity number is required');
+    }
+
+    try {
+      if (!this.opportunityData) {
+        await this.initializeOpportunities();
+      }
+      // Find exact match
+      const opp = this.opportunityData.find(o => o.OpportunityNumber === opportunityNumber);
+      if (!opp) {
+        throw new Error(`Opportunity not found: ${opportunityNumber}`);
+      }
+      return opp;
+    } catch (error) {
+      console.error('Error getting opportunity details:', error);
+      throw error;
+    }
+  }
+
+  static async searchOpportunities(searchTerm) {
+    if (!searchTerm || searchTerm.length < 2) {
+      return [];
+    }
+    try {
+      if (!this.opportunityData) {
+        await this.initializeOpportunities();
+      }
+      const searchTermLower = searchTerm.trim().toLowerCase();
+      // Helper to get number and name fields robustly
+      const getNumber = (opp) => (opp.OpportunityNumber || opp['Opportunity Number'] || '').trim().toLowerCase();
+      const getName = (opp) => (opp.Opportunity_Name_from_Lead__c || opp['Opportunity Name'] || '').trim().toLowerCase();
+      // Highest priority: OpportunityNumber starts with search term
+      const numberStartsWith = this.opportunityData.filter(opp =>
+        getNumber(opp).startsWith(searchTermLower)
+      );
+      // Next: Opportunity Name starts with search term (but not already included)
+      const nameStartsWith = this.opportunityData.filter(opp =>
+        !getNumber(opp).startsWith(searchTermLower) &&
+        getName(opp).startsWith(searchTermLower)
+      );
+      // Partial matches (not already included)
+      const partialMatches = this.opportunityData.filter(opp =>
+        !getNumber(opp).startsWith(searchTermLower) &&
+        !getName(opp).startsWith(searchTermLower) &&
+        (
+          getNumber(opp).includes(searchTermLower) ||
+          getName(opp).includes(searchTermLower)
+        )
+      );
+      return [...numberStartsWith, ...nameStartsWith, ...partialMatches].slice(0, 40);
+    } catch (error) {
+      console.error('Error searching opportunities:', error);
+      return [];
+    }
+  }
 }
 
 export default ProjectSearchService;
