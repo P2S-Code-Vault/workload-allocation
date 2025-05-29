@@ -357,7 +357,7 @@ const MainContent = React.forwardRef((props, ref) => {
           for (let row of updatedRows) {
             console.log(`Updating allocation with ID: ${row.id}`);
             savePromises.push(
-              ProjectDataService.updateAllocationByQuarter(
+              ProjectDataService.updateMilestoneAllocationByQuarter(
                 row.id,
                 row.month,
                 row.month1,
@@ -397,6 +397,74 @@ const MainContent = React.forwardRef((props, ref) => {
                 })
                 .catch((err) => {
                   console.error(`Error creating allocation:`, err);
+                  throw err;
+                })
+            );
+          }
+          
+          // Process opportunity rows
+          const updatedOpportunityRows = [];
+          const newOpportunityRows = [];
+
+          // Organize opportunity rows for saving
+          for (let row of opportunityRows) {
+            // Skip rows with no opportunity number or hours
+            if (!row.opportunityNumber || (!row.month && !row.month1 && !row.month2)) {
+              console.log("Skipping opportunity row - missing number or hours:", row);
+              continue;
+            }
+
+            if (row.id) {
+              console.log(`Found existing opportunity row with ID: ${row.id}`);
+              updatedOpportunityRows.push(row);
+            } else {
+              console.log("New opportunity row without ID:", row);
+              newOpportunityRows.push(row);
+            }
+          }
+
+          // Process opportunity updates
+          for (let row of updatedOpportunityRows) {
+            console.log(`Updating opportunity allocation with ID: ${row.id}`);
+            savePromises.push(
+              ProjectDataService.updateOpportunityAllocationByQuarter(
+                row.id,
+                row.month,
+                row.month1,
+                row.month2,
+                row.remarks
+              )
+                .then((result) => {
+                  console.log(`Opportunity update result for ID ${row.id}:`, result);
+                  return { ...result, action: "update", id: row.id };
+                })
+                .catch((err) => {
+                  console.error(`Error updating opportunity allocation ${row.id}:`, err);
+                  throw err;
+                })
+            );
+          }
+
+          // Process new opportunity rows
+          for (let row of newOpportunityRows) {
+            console.log(`Creating new opportunity allocation for: ${row.opportunityNumber}`);
+            savePromises.push(
+              ProjectDataService.saveOpportunityAllocationByQuarter({
+                email: currentUser,
+                opportunity_number: row.opportunityNumber,
+                year: selectedYear,
+                quarter: selectedQuarter,
+                month: row.month,
+                month1: row.month1,
+                month2: row.month2,
+                remarks: row.remarks || "",
+              })
+                .then((result) => {
+                  console.log(`Opportunity create result:`, result);
+                  return { ...result, action: "create" };
+                })
+                .catch((err) => {
+                  console.error(`Error creating opportunity allocation:`, err);
                   throw err;
                 })
             );
@@ -460,11 +528,22 @@ const MainContent = React.forwardRef((props, ref) => {
     setOpportunityRows([]);
 
     // Convert quarter label (e.g., 'Q2') to string number if needed
+    // let apiQuarter = selectedQuarter;
+    // if (typeof apiQuarter === 'string' && apiQuarter.startsWith('Q')) {
+    //   apiQuarter = apiQuarter.replace('Q', '');
+    // }
+    // apiQuarter = String(apiQuarter); // Always send as string
+
+    // Keep quarter in Q format since database stores 'Q1', 'Q2', etc.
     let apiQuarter = selectedQuarter;
-    if (typeof apiQuarter === 'string' && apiQuarter.startsWith('Q')) {
-      apiQuarter = apiQuarter.replace('Q', '');
+    // Ensure it's in Q format
+    if (typeof apiQuarter === 'string' && !apiQuarter.startsWith('Q')) {
+      apiQuarter = 'Q' + apiQuarter;
     }
-    apiQuarter = String(apiQuarter); // Always send as string
+    // If it's a number, convert to Q format
+    if (typeof apiQuarter === 'number') {
+      apiQuarter = 'Q' + apiQuarter;
+    }
 
     // Fetch project allocations (milestone projections)
     ProjectDataService.getAllocationsByQuarter(
@@ -473,8 +552,15 @@ const MainContent = React.forwardRef((props, ref) => {
       apiQuarter
     )
       .then((allocationsData) => {
-        const dataArray = Array.isArray(allocationsData) ? allocationsData : [];
-        console.log("Received allocations data:", dataArray);
+         const dataArray = Array.isArray(allocationsData) ? allocationsData : [];
+          console.log("=== MILESTONE FETCH DEBUG ===");
+          console.log("Raw allocations data:", allocationsData);
+          console.log("Data array length:", dataArray.length);
+          if (dataArray.length > 0) {
+            console.log("First allocation item:", JSON.stringify(dataArray[0], null, 2));
+            console.log("Available fields:", Object.keys(dataArray[0]));
+          }
+          console.log("=== END MILESTONE DEBUG ===");
         if (dataArray.length > 0) {
           const newRows = dataArray.map((allocation) => ({
             id: allocation.ra_id,
@@ -487,9 +573,9 @@ const MainContent = React.forwardRef((props, ref) => {
             pctLaborUsed: (allocation.forecast_pm_labor || 0) * 100,
             hours: allocation.ra_hours || allocation.hours || 0,
             remarks: allocation.ra_remarks || allocation.remarks || "",
-            month: allocation.month || 0,
-            month1: allocation.month1 || 0,
-            month2: allocation.month2 || 0,
+            month: allocation.month_hours || 0,
+            month1: allocation.month_hours1 || 0,
+            month2: allocation.month_hours2 || 0,
           }));
           setRows(newRows);
         } else {
@@ -541,6 +627,14 @@ const MainContent = React.forwardRef((props, ref) => {
     )
       .then((oppsData) => {
         const dataArray = Array.isArray(oppsData) ? oppsData : [];
+          console.log("=== OPPORTUNITY FETCH DEBUG ===");
+          console.log("Raw opportunities data:", oppsData);
+          console.log("Data array length:", dataArray.length);
+          if (dataArray.length > 0) {
+            console.log("First opportunity item:", JSON.stringify(dataArray[0], null, 2));
+            console.log("Available fields:", Object.keys(dataArray[0]));
+          }
+          console.log("=== END OPPORTUNITY DEBUG ===");
         if (dataArray.length > 0) {
           const newOppRows = dataArray.map((opp) => ({
             id: opp.ra_id,
@@ -549,9 +643,9 @@ const MainContent = React.forwardRef((props, ref) => {
             proposalChampion: opp.proposal_champion || "",
             estimatedFee: opp.estimated_fee || "",
             remarks: opp.remarks || "",
-            month: opp.month || 0,
-            month1: opp.month1 || 0,
-            month2: opp.month2 || 0,
+            month: opp.month_hours || 0,
+            month1: opp.month_hours1 || 0,
+            month2: opp.month_hours2 || 0,
           }));
           setOpportunityRows(newOppRows);
         } else {
@@ -604,33 +698,61 @@ const MainContent = React.forwardRef((props, ref) => {
     });
   }, []);
 
+  // const deleteRow = useCallback(
+  //   async (index) => {
+  //     const rowToDelete = rows[index];
+
+  //     // If the row has an ID, it exists in the database
+  //     if (rowToDelete.id) {
+  //       try {
+  //         setIsSaving(true);
+  //         setSaveError(null);
+
+  //         await ProjectDataService.deleteAllocation(rowToDelete.id);
+
+  //         setRows((prevRows) => prevRows.filter((_, i) => i !== index));
+  //         console.log(`Deleted allocation with ID: ${rowToDelete.id}`);
+  //       } catch (error) {
+  //         console.error("Failed to delete allocation:", error);
+  //         setSaveError("Failed to delete: " + error.message);
+  //       } finally {
+  //         setIsSaving(false);
+  //       }
+  //     } else {
+  //       // If no ID, it's a new row that hasn't been saved yet
+  //       setRows((prevRows) => prevRows.filter((_, i) => i !== index));
+  //     }
+  //   },
+  //   [rows]
+  // );
   const deleteRow = useCallback(
-    async (index) => {
-      const rowToDelete = rows[index];
+  async (index) => {
+    const rowToDelete = rows[index];
 
-      // If the row has an ID, it exists in the database
-      if (rowToDelete.id) {
-        try {
-          setIsSaving(true);
-          setSaveError(null);
+    // If the row has an ID, it exists in the database
+    if (rowToDelete.id) {
+      try {
+        setIsSaving(true);
+        setSaveError(null);
 
-          await ProjectDataService.deleteAllocation(rowToDelete.id);
+        // Use the milestone-specific delete method
+        await ProjectDataService.deleteMilestoneAllocation(rowToDelete.id);
 
-          setRows((prevRows) => prevRows.filter((_, i) => i !== index));
-          console.log(`Deleted allocation with ID: ${rowToDelete.id}`);
-        } catch (error) {
-          console.error("Failed to delete allocation:", error);
-          setSaveError("Failed to delete: " + error.message);
-        } finally {
-          setIsSaving(false);
-        }
-      } else {
-        // If no ID, it's a new row that hasn't been saved yet
         setRows((prevRows) => prevRows.filter((_, i) => i !== index));
+        console.log(`Deleted milestone allocation with ID: ${rowToDelete.id}`);
+      } catch (error) {
+        console.error("Failed to delete milestone allocation:", error);
+        setSaveError("Failed to delete: " + error.message);
+      } finally {
+        setIsSaving(false);
       }
-    },
-    [rows]
-  );
+    } else {
+      // If no ID, it's a new row that hasn't been saved yet
+      setRows((prevRows) => prevRows.filter((_, i) => i !== index));
+    }
+  },
+  [rows]
+);
   // Calculate total hours  // Calculate total hours for all resource and opportunity rows (all months)
   const totalResourceHours = rows.reduce((sum, row) => {
     return (
@@ -744,9 +866,35 @@ const MainContent = React.forwardRef((props, ref) => {
   }, []);
 
   // Delete row for opportunities
-  const deleteOpportunityRow = useCallback((index) => {
+  // Delete row for opportunities
+const deleteOpportunityRow = useCallback(async (index) => {
+  const rowToDelete = opportunityRows[index];
+
+  // If the row has an ID, it exists in the database
+  if (rowToDelete.id) {
+    try {
+      setIsSaving(true);
+      setSaveError(null);
+
+      // Use the opportunity-specific delete method
+      await ProjectDataService.deleteOpportunityAllocation(rowToDelete.id);
+
+      setOpportunityRows((prev) => prev.filter((_, i) => i !== index));
+      console.log(`Deleted opportunity allocation with ID: ${rowToDelete.id}`);
+    } catch (error) {
+      console.error("Failed to delete opportunity allocation:", error);
+      setSaveError("Failed to delete: " + error.message);
+    } finally {
+      setIsSaving(false);
+    }
+  } else {
+    // If no ID, it's a new row that hasn't been saved yet
     setOpportunityRows((prev) => prev.filter((_, i) => i !== index));
-  }, []);
+  }
+}, [opportunityRows]);
+  // const deleteOpportunityRow = useCallback((index) => {
+  //   setOpportunityRows((prev) => prev.filter((_, i) => i !== index));
+  // }, []);
 
   return (
     <main className="main-content">
