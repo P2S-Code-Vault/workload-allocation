@@ -43,15 +43,9 @@ export async function loadOpportunitiesFromCSV(csvPath) {
     }
     console.log("First 3 parsed opportunities (raw):", data.slice(0, 3));
     const mapped = data.map(item => ({
-      'Opportunity Number': item.opportunity_number,
-      'OpportunityName': item.opportunity_name, // fallback for search
-      'Opportunity Name': item.opportunity_name,
-      'Proposal Champion': item.proposal_champion,
-      'Estimated Fee': item.estimated_fee,
-      // Add camelCase fields for search compatibility
       'OpportunityNumber': item.opportunity_number,
       'Opportunity_Name_from_Lead__c': item.opportunity_name,
-      'Proposal_Champion__c': item.proposal_champion,
+      'ProposalChampion': item.proposal_champion,
       'Estimated_Fee__c': item.estimated_fee,
       ...item
     }));
