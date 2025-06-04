@@ -165,38 +165,61 @@ console.log("Pct Labor Used value:", project['Pct Labor Used'], "Type:", typeof 
       throw error;
     }
   }
-
   static async searchOpportunities(searchTerm) {
     if (!searchTerm || searchTerm.length < 2) {
       return [];
     }
+
     try {
+      // Make sure data is loaded
       if (!this.opportunityData) {
         await this.initializeOpportunities();
       }
-      const searchTermLower = searchTerm.trim().toLowerCase();
-      // Helper to get number and name fields robustly
-      const getNumber = (opp) => (opp.OpportunityNumber || opp['Opportunity Number'] || '').trim().toLowerCase();
-      const getName = (opp) => (opp.Opportunity_Name_from_Lead__c || opp['Opportunity Name'] || '').trim().toLowerCase();
-      // Highest priority: OpportunityNumber starts with search term
-      const numberStartsWith = this.opportunityData.filter(opp =>
-        getNumber(opp).startsWith(searchTermLower)
+
+      const searchTermLower = searchTerm.toLowerCase();
+      
+      // First look for opportunity numbers that start with the search term (highest priority)
+      const numberStartsWithMatches = this.opportunityData.filter(opportunity => 
+        opportunity['OpportunityNumber']?.toLowerCase().startsWith(searchTermLower)
       );
-      // Next: Opportunity Name starts with search term (but not already included)
-      const nameStartsWith = this.opportunityData.filter(opp =>
-        !getNumber(opp).startsWith(searchTermLower) &&
-        getName(opp).startsWith(searchTermLower)
+      
+      // Then look for opportunity names that start with the search term (high priority)
+      const nameStartsWithMatches = this.opportunityData.filter(opportunity => 
+        !opportunity['OpportunityNumber']?.toLowerCase().startsWith(searchTermLower) &&
+        opportunity['Opportunity_Name_from_Lead__c']?.toLowerCase().startsWith(searchTermLower)
       );
-      // Partial matches (not already included)
-      const partialMatches = this.opportunityData.filter(opp =>
-        !getNumber(opp).startsWith(searchTermLower) &&
-        !getName(opp).startsWith(searchTermLower) &&
+      
+      // Then look for proposal champion names that start with the search term (medium priority)
+      const championStartsWithMatches = this.opportunityData.filter(opportunity => 
+        !opportunity['OpportunityNumber']?.toLowerCase().startsWith(searchTermLower) &&
+        !opportunity['Opportunity_Name_from_Lead__c']?.toLowerCase().startsWith(searchTermLower) &&
+        opportunity['ProposalChampion']?.toLowerCase().startsWith(searchTermLower)
+      );
+      
+      // Then look for partial matches in opportunity number, name, and proposal champion (lowest priority)
+      const partialMatches = this.opportunityData.filter(opportunity => 
+        !opportunity['OpportunityNumber']?.toLowerCase().startsWith(searchTermLower) &&
+        !opportunity['Opportunity_Name_from_Lead__c']?.toLowerCase().startsWith(searchTermLower) &&
+        !opportunity['ProposalChampion']?.toLowerCase().startsWith(searchTermLower) &&
         (
-          getNumber(opp).includes(searchTermLower) ||
-          getName(opp).includes(searchTermLower)
+          opportunity['OpportunityNumber']?.toLowerCase().includes(searchTermLower) ||
+          opportunity['Opportunity_Name_from_Lead__c']?.toLowerCase().includes(searchTermLower) ||
+          opportunity['ProposalChampion']?.toLowerCase().includes(searchTermLower)
         )
       );
-      return [...numberStartsWith, ...nameStartsWith, ...partialMatches].slice(0, 40);
+      
+      // Combine all matches in priority order
+      const matches = [
+        ...numberStartsWithMatches,
+        ...nameStartsWithMatches, 
+        ...championStartsWithMatches,
+        ...partialMatches
+      ];
+
+      console.log(`Found ${matches.length} opportunities matching "${searchTerm}" across opportunity number, name, and proposal champion`);
+      
+      // Limit the results to avoid overwhelming the UI
+      return matches.slice(0, 40);
     } catch (error) {
       console.error('Error searching opportunities:', error);
       return [];

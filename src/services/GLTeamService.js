@@ -6,161 +6,166 @@ export class GLTeamService {
   static cacheExpiration = 5 * 60 * 1000; // 5 minutes in milliseconds
   
   /**
-   * Get team members for a specific user by trying multiple approaches
-   * @param {string} userEmail - Email of the current user
-   * @param {string} groupManagerName - Name of the user's group manager
+   * Get team members for a group manager (GET /gl/team-members?group_manager_email=...)
+   * @param {string} groupManagerEmail - Email of the group manager
    * @returns {Promise<Array>} - List of team members
    */
-  static async getTeamMembersForUser(userEmail, groupManagerName) {
+  static async getTeamMembers(groupManagerEmail) {
     try {
-      // Try different approaches to get team members
-      
-      // Approach 1: Check if the group manager is in the leaders list
-      const groupMembers = await this.getTeamMembersByGroupManager(groupManagerName);
-      if (groupMembers && groupMembers.length > 0) {
-        console.log(`Found ${groupMembers.length} members using group manager name`);
-        return groupMembers;
-      }
-      
-      // Approach 2: Try searching contacts directly
-      const contacts = await this.searchContactsByGroupManager(groupManagerName);
-      if (contacts && contacts.length > 0) {
-        console.log(`Found ${contacts.length} contacts by searching`);
-        return this.convertContactsToMembers(contacts);
-      }
-      
-      // No members found through any approach
-      console.log("No team members found through any approach");
-      return [];
+      const cacheKey = `teamMembers_${groupManagerEmail}`;
+      const cachedData = this.getFromCache(cacheKey);
+      if (cachedData) return cachedData;
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_TEAM_MEMBERS}?group_manager_email=${encodeURIComponent(groupManagerEmail)}`;
+      const response = await fetch(url);
+      if (!response.ok) throw new Error(`Failed to fetch team members: ${response.status}`);
+      const data = await response.json();
+      this.saveToCache(cacheKey, data);
+      return data;
     } catch (error) {
-      console.error("Error getting team members for user:", error);
+      console.error("Error fetching team members (GL API):", error);
       throw error;
     }
   }
-  
+
   /**
-   * Get team members directly by group manager name
-   * @param {string} managerName - Name of the group manager
-   * @returns {Promise<Array>} - List of team members
+   * Get quarterly milestones for a group manager (GET /gl/milestones/quarterly)
    */
-  static async getTeamMembersByGroupManager(managerName) {
-    try {
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.USERS_BY_GROUP_MANAGER}?manager_name=${encodeURIComponent(managerName)}`
-      );
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch team members by manager: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      return data.members || [];
-    } catch (error) {
-      console.error("Error fetching team members by manager:", error);
-      return [];
-    }
-  }
-  
-  /**
-   * Search contacts by group manager name
-   * @param {string} managerName - Name of the group manager
-   * @returns {Promise<Array>} - List of contacts
-   */
-  static async searchContactsByGroupManager(managerName) {
-    try {
-      const response = await fetch(
-        `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CONTACTS_SEARCH}?group_manager=${encodeURIComponent(managerName)}`
-      );
-      
-      if (!response.ok) {
-        throw new Error(`Failed to search contacts: ${response.status}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error("Error searching contacts:", error);
-      return [];
-    }
-  }
-  
-  /**
-   * Convert contacts format to team members format
-   * @param {Array} contacts - List of contacts
-   * @returns {Array} - List of team members in the expected format
-   */
-  static convertContactsToMembers(contacts) {
-    return contacts.map(contact => ({
-      id: contact.contact_id,
-      name: contact.full_name,
-      email: contact.email,
-      labor_category: contact.labor_category || '',
-      scheduled_hours: contact.hrs_worked_per_week || 40,
-      GroupName: contact.GroupName || 'Unassigned',
-      is_group_manager: contact.is_group_manager || false
-    }));
-  }
-  
-  /**
-   * Get team allocations for a list of emails
-   * @param {Array} emails - List of email addresses
-   * @param {string} startDate - Start date in YYYY-MM-DD format
-   * @param {string} endDate - End date in YYYY-MM-DD format
-   * @returns {Promise<Array>} - List of allocations
-   */
-  static async getTeamAllocations(emails, startDate, endDate) {
-    // Reuse the existing GLService functionality for allocations
-    const emailParams = emails.map(email => `emails=${encodeURIComponent(email)}`).join('&');
-    const dateParams = `&start_date=${startDate}&end_date=${endDate}`;
-    
-    const cacheKey = `teamAllocations_${emails.join('_')}_${startDate}_${endDate}`;
-    const cachedData = this.getFromCache(cacheKey);
-    
-    if (cachedData) {
-      return cachedData;
-    }
-    
-    try {
-      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_TEAM_ALLOCATIONS}?${emailParams}${dateParams}`;
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`Failed to fetch team allocations: ${response.status}`);
-      }
-      
-      const data = await response.json();
-      this.saveToCache(cacheKey, data);
-      
-      return data;
-    } catch (error) {
-      console.error("Error fetching team allocations:", error);
-      return [];
-    }
-  }
-  
-  // Helper to get start/end date for a quarter
-  static getQuarterDateRange(quarter, year) {
-    const q = parseInt(quarter, 10);
-    const y = parseInt(year, 10);
-    let startMonth = 0;
-    if (q === 2) startMonth = 3;
-    else if (q === 3) startMonth = 6;
-    else if (q === 4) startMonth = 9;
-    const startDate = new Date(y, startMonth, 1);
-    const endMonth = startMonth + 2;
-    const endDate = new Date(y, endMonth + 1, 0); // last day of endMonth
-    // Format as YYYY-MM-DD
-    const pad = (n) => n.toString().padStart(2, '0');
-    const startStr = `${y}-${pad(startMonth + 1)}-01`;
-    const endStr = `${y}-${pad(endMonth + 1)}-${pad(endDate.getDate())}`;
-    return { startStr, endStr };
+  static async getQuarterlyMilestones(groupManagerEmail, year, quarter) {
+    console.log('[GLTeamService] getQuarterlyMilestones called with:', {
+      groupManagerEmail,
+      year,
+      quarter
+    });
+    const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_MILESTONES_QUARTERLY}?group_manager_email=${encodeURIComponent(groupManagerEmail)}&year=${year}&quarter=${quarter}`;
+    console.log('[GLTeamService] Fetching quarterly milestones URL:', url);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch quarterly milestones: ${response.status}`);
+    return await response.json();
   }
 
-  // New: get allocations by quarter
-  static async getTeamAllocationsByQuarter(emails, quarter, year) {
-    const { startStr, endStr } = this.getQuarterDateRange(quarter, year);
-    return this.getTeamAllocations(emails, startStr, endStr);
+  /**
+   * Get quarterly opportunities for a group manager (GET /gl/opportunities/quarterly)
+   */
+  static async getQuarterlyOpportunities(groupManagerEmail, year, quarter) {
+    const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_OPPORTUNITIES_QUARTERLY}?group_manager_email=${encodeURIComponent(groupManagerEmail)}&year=${year}&quarter=${quarter}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch quarterly opportunities: ${response.status}`);
+    return await response.json();
   }
-  
+
+  /**
+   * Get monthly milestones for a group manager (GET /gl/milestones/monthly)
+   */
+  static async getMonthlyMilestones(groupManagerEmail, year, quarter) {
+    const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_MILESTONES_MONTHLY}?group_manager_email=${encodeURIComponent(groupManagerEmail)}&year=${year}&quarter=${quarter}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch monthly milestones: ${response.status}`);
+    return await response.json();
+  }
+
+  /**
+   * Get monthly opportunities for a group manager (GET /gl/opportunities/monthly)
+   */
+  static async getMonthlyOpportunities(groupManagerEmail, year, quarter) {
+    const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_OPPORTUNITIES_MONTHLY}?group_manager_email=${encodeURIComponent(groupManagerEmail)}&year=${year}&quarter=${quarter}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch monthly opportunities: ${response.status}`);
+    return await response.json();
+  }
+
+  /**
+   * Get combined workload for a group manager (GET /gl/workload/combined)
+   */
+  static async getCombinedWorkload(groupManagerEmail, year, quarter) {
+    const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_WORKLOAD_COMBINED}?group_manager_email=${encodeURIComponent(groupManagerEmail)}&year=${year}&quarter=${quarter}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch combined workload: ${response.status}`);
+    return await response.json();
+  }
+
+  /**
+   * Batch update workload projections (POST /gl/workload/batch-update)
+   */
+  static async batchUpdateWorkload(groupManagerEmail, milestoneUpdates, opportunityUpdates) {
+    const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_WORKLOAD_BATCH_UPDATE}?group_manager_email=${encodeURIComponent(groupManagerEmail)}`;
+    const body = {};
+    if (milestoneUpdates) body.milestone_updates = milestoneUpdates;
+    if (opportunityUpdates) body.opportunity_updates = opportunityUpdates;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    });
+    if (!response.ok) throw new Error(`Failed to batch update workload: ${response.status}`);
+    return await response.json();
+  }
+
+  /**
+   * Check GL access (GET /gl/access-check?email=...)
+   */
+  static async checkGLAccess(email) {
+    const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_ACCESS_CHECK}?email=${encodeURIComponent(email)}`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to check GL access: ${response.status}`);
+    return await response.json();
+  }
+
+  /**
+   * Get team allocations (milestones and opportunities) for a group manager by quarter and year
+   * @param {string} groupManagerEmail
+   * @param {number|string} year
+   * @param {number|string} quarter
+   * @returns {Promise<{milestones: Array, opportunities: Array}>}
+   */
+  static async getTeamAllocationsByQuarter(groupManagerEmail, year, quarter) {
+    console.log('[GLTeamService] getTeamAllocationsByQuarter called with:', {
+      groupManagerEmail,
+      year,
+      quarter
+    });
+    const [milestones, opportunities] = await Promise.all([
+      this.getQuarterlyMilestones(groupManagerEmail, year, quarter),
+      this.getQuarterlyOpportunities(groupManagerEmail, year, quarter)
+    ]);
+    return { milestones, opportunities };
+  }
+
+  /**
+   * Get team monthly allocations (milestones) for a group manager by quarter and year
+   * @param {string} groupManagerEmail
+   * @param {number|string} year
+   * @param {string} quarter (e.g., 'Q1')
+   * @returns {Promise<Object>} monthly_milestones object from backend
+   */
+  static async getTeamMonthlyAllocations(groupManagerEmail, year, quarter) {
+    console.log('[GLTeamService] getTeamMonthlyAllocations called with:', {
+      groupManagerEmail,
+      year,
+      quarter
+    });
+    const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.GL_MILESTONES_MONTHLY}?group_manager_email=${encodeURIComponent(groupManagerEmail)}&year=${year}&quarter=${quarter}`;
+    console.log('[GLTeamService] Fetching monthly milestones URL:', url);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch monthly milestones: ${response.status}`);
+    const data = await response.json();
+    return data.monthly_milestones;
+  }
+
+  /**
+   * Get all staff monthly workload for a given year and quarter (for 'All Groups' view)
+   * @param {number|string} year
+   * @param {string} quarter (e.g., 'Q1')
+   * @returns {Promise<Object>} backend response for all staff monthly workload
+   */
+  static async getAllStaffMonthlyWorkload(year, quarter) {
+    console.log('[GLTeamService] getAllStaffMonthlyWorkload called with:', { year, quarter });
+    const url = `${API_CONFIG.BASE_URL}/all-staff/workload/monthly?year=${year}&quarter=${quarter}`;
+    console.log('[GLTeamService] Fetching all staff monthly workload URL:', url);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch all staff monthly workload: ${response.status}`);
+    return await response.json();
+  }
+
   // Cache helper methods
   static saveToCache(key, data) {
     this.cache[key] = {
@@ -184,5 +189,12 @@ export class GLTeamService {
   
   static clearCache() {
     this.cache = {};
+  }
+
+  static clearCacheWithPattern(pattern) {
+    const keysToDelete = Object.keys(this.cache).filter(key => key.startsWith(pattern));
+    for (const key of keysToDelete) {
+      delete this.cache[key];
+    }
   }
 }

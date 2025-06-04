@@ -946,7 +946,7 @@ const deleteOpportunityRow = useCallback(async (index) => {
                 <thead>
                   <tr>
                     <th>Project No.</th>
-                    <th>Project No. & Name</th>
+                    <th>Project Name</th>
                     <th>Milestone</th>
                     <th>Project Manager</th>
                     <th>Contract Total Labor</th>

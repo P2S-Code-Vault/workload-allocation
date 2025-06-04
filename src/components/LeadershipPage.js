@@ -3,6 +3,7 @@ import { UserService } from "../services/UserService";
 import { GLTeamService } from "../services/GLTeamService";
 import QuarterPicker from "./QuarterPicker";
 import "./LeadershipPage.css";
+import API_CONFIG from "../services/apiConfig";
 
 const LeadershipPage = ({ navigate }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -16,6 +17,9 @@ const LeadershipPage = ({ navigate }) => {
   const [groupList, setGroupList] = useState([]);
   const [showAllGroups, setShowAllGroups] = useState(false);
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(0);
+
+  const [months, setMonths] = useState([1, 2, 3]); // default to Q1
+  const [allStaffMonthlyData, setAllStaffMonthlyData] = useState(null);
 
   useEffect(() => {
     const userDetails = UserService.getCurrentUserDetails();
@@ -39,6 +43,25 @@ const LeadershipPage = ({ navigate }) => {
     }
   }, []);
 
+  // Helper to fetch group manager email from backend contacts API
+  async function fetchGroupManagerEmailFromBackend(name) {
+    if (!name || name.includes("@")) return name;
+    try {
+      // Use /contacts?search=<name> (not /contacts/search)
+      const params = new URLSearchParams({ search: name });
+      const url = `${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.CONTACTS}?${params.toString()}`;
+      const response = await fetch(url);
+      if (!response.ok) return null;
+      const data = await response.json();
+      if (Array.isArray(data) && data.length > 0 && data[0].email) {
+        return data[0].email;
+      }
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+
   const loadTeamData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
@@ -51,6 +74,9 @@ const LeadershipPage = ({ navigate }) => {
 
       const userGroupManager = currentUser.groupManager;
 
+      // Fix: Only declare quarterString once
+      const quarterString = typeof selectedQuarter === 'number' ? `Q${selectedQuarter}` : selectedQuarter;
+
       if (!userGroupManager && !showAllGroups) {
         console.log("User is not assigned to any group");
         setTeamData({});
@@ -59,20 +85,48 @@ const LeadershipPage = ({ navigate }) => {
       }
 
       if (showAllGroups) {
-        // Remove fetch and API_CONFIG usage for all groups
-        // If you have a GLTeamService or similar, use it here for all groups
-        // Otherwise, skip or setTeamData({})
-        setTeamData({});
+        // Fetch all staff monthly workload for all groups
+        const allStaffData = await GLTeamService.getAllStaffMonthlyWorkload(
+          selectedYear,
+          quarterString
+        );
+        setAllStaffMonthlyData(allStaffData);
+        // Optionally, set months for selector if available
+        if (allStaffData && allStaffData.expected_months) {
+          setMonths(allStaffData.expected_months);
+        }
+        setTeamData({}); // Clear teamData for all groups view
         setIsLoading(false);
         return;
       }
 
-      console.log(`User belongs to group managed by: ${userGroupManager}`);
-
-      const members = await GLTeamService.getTeamMembersForUser(
-        currentUser.email,
-        userGroupManager
-      );
+      console.log(`User belongs to group managed by: ${userGroupManager}`);      // Always refresh and get the group manager's email, don't use localStorage
+      let groupManagerEmail = userGroupManager;
+      if (groupManagerEmail && !groupManagerEmail.includes('@')) {
+        try {
+          // First try to find from mockStaffData
+          const staffList = window.mockStaffData || [];
+          const gm = staffList.find(
+            (s) => s.name === groupManagerEmail || s.groupManager === groupManagerEmail
+          );
+          if (gm && gm.email) {
+            groupManagerEmail = gm.email;
+          } else {
+            // Always fetch from backend, don't use cached value
+            const backendEmail = await fetchGroupManagerEmailFromBackend(groupManagerEmail);
+            if (backendEmail) {
+              groupManagerEmail = backendEmail;
+              // Optionally store for this session, but always refresh on page load
+              localStorage.setItem('userGroupManagerEmail', backendEmail);
+            }
+          }
+        } catch (e) {
+          console.warn('Failed to fetch group manager email:', e);
+          // fallback: leave as is
+        }
+      }
+      // Use new GLTeamService signature: only groupManagerEmail
+      const members = await GLTeamService.getTeamMembers(groupManagerEmail);
 
       if (!members || members.length === 0) {
         console.log("No team members found for this group");
@@ -88,14 +142,23 @@ const LeadershipPage = ({ navigate }) => {
         `Found ${members.length} team members for group manager: ${userGroupManager}`
       );
 
-      const emails = members.map((member) => member.email);
+      // Remove unused emails variable
+      // const emails = members.map((member) => member.email);
 
-      // Use the new quarter-based allocations method
-      const allocations = await GLTeamService.getTeamAllocationsByQuarter(
-        emails,
-        selectedQuarter,
-        selectedYear
+      // Use the new monthly allocations method
+      const monthlyData = await GLTeamService.getTeamMonthlyAllocations(
+        groupManagerEmail,
+        selectedYear,
+        quarterString
       );
+
+      // Use backend's expected_months for month selector
+      setMonths(monthlyData.expected_months || [1, 2, 3]);
+
+      // Instead of milestones, use monthlyData.monthly_data for allocations
+      // Determine which month key to use based on selectedMonthIndex
+      const monthKey = `month${selectedMonthIndex + 1}`;
+      const monthAllocations = (monthlyData.monthly_data && monthlyData.monthly_data[monthKey]) || [];
 
       const allGroupsData = {};
       const groupManager = userGroupManager;
@@ -166,10 +229,10 @@ const LeadershipPage = ({ navigate }) => {
           };
         }
 
-        const memberAllocations = allocations.filter(
-          (a) => a.email === member.email
+        // FIX: Use contact_id for matching allocations
+        const memberAllocations = monthAllocations.filter(
+          (a) => a.contact_id === member.contact_id
         );
-
         const memberRows = memberAllocations.map((allocation) => ({
           projectNumber: allocation.proj_id || allocation.project_number || "",
           projectName: allocation.project_name || "",
@@ -182,7 +245,7 @@ const LeadershipPage = ({ navigate }) => {
             ) * 100,
           hours: parseFloat(allocation.ra_hours || allocation.hours || 0),
           remarks: allocation.ra_remarks || allocation.remarks || "",
-          availableHours: !!allocation.availableHours, //new
+          availableHours: !!allocation.available_hours, // new, note: available_hours is a string
         }));
 
         const directHours = memberRows
@@ -236,7 +299,7 @@ const LeadershipPage = ({ navigate }) => {
           directHours,
           ptoHours,
           overheadHours,
-          availableHours, //new
+          availableHours: //new
           totalHours,
           ratioB: calculateRatioB(directHours, scheduledHours, ptoHours),
           rows: memberRows,
@@ -291,7 +354,7 @@ const LeadershipPage = ({ navigate }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear]);
+  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear, selectedMonthIndex]);
 
   useEffect(() => {
     if (!currentUser) {
@@ -376,7 +439,7 @@ const LeadershipPage = ({ navigate }) => {
                   Group By Team
                 </button>
 
-                <button
+                {/* <button
                   className={`view-control-btn ${
                     viewMode === "projects" ? "active" : ""
                   } ${showAllGroups ? "disabled" : ""}`}
@@ -389,7 +452,7 @@ const LeadershipPage = ({ navigate }) => {
                   }
                 >
                   Group By Projects
-                </button>
+                </button> */}
               </div>
             )}
 
@@ -397,172 +460,373 @@ const LeadershipPage = ({ navigate }) => {
 
             {isLoading ? (
               <div className="loading-indicator">Loading team data...</div>
+            ) : showAllGroups ? (
+              allStaffMonthlyData && allStaffMonthlyData.monthly_data && Object.values(allStaffMonthlyData.monthly_data).some(arr => arr && arr.length > 0) ? (
+                <div className="group-summary">
+                  <div className="project-summary">
+                    <div className="pm-dashboard-title">
+                      All Groups Summary
+                      <div className="month-selector">
+                        {/* Month selector buttons */}
+                        {months.map((monthNum, idx) => (
+                          <button
+                            key={monthNum}
+                            className={`view-control-btn ${selectedMonthIndex === idx ? "active" : ""}`}
+                            onClick={() => setSelectedMonthIndex(idx)}
+                          >
+                            {new Date(2000, monthNum - 1, 1).toLocaleString('default', { month: 'long' })}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                    {/* Debug: show structure of allStaffMonthlyData */}
+                    {process.env.NODE_ENV !== 'production' && (
+                      <pre style={{fontSize: '10px', color: '#888', background: '#f8f8f8', maxHeight: 200, overflow: 'auto'}}>
+                        {JSON.stringify(allStaffMonthlyData, null, 2)}
+                      </pre>
+                    )}
+                    {/* Combined summary row for the group */}
+                    {(() => {
+                      const monthKey = `month${selectedMonthIndex + 1}`;
+                      const monthArr = allStaffMonthlyData.monthly_data ? allStaffMonthlyData.monthly_data[monthKey] : undefined;
+                      if (!monthArr || !Array.isArray(monthArr) || monthArr.length === 0) {
+                        return (<div className="no-data-message">No data for this month.</div>);
+                      }
+                      // Calculate combined summary
+                      const summary = monthArr.reduce((acc, member) => {
+                        acc.scheduled_hours += member.scheduled_hours || 0;
+                        acc.direct_hours += member.direct_hours || 0;
+                        acc.pto_holiday_hours += member.pto_holiday_hours || 0;
+                        acc.indirect_hours += member.indirect_hours || 0;
+                        acc.available_hours += member.available_hours || 0;
+                        acc.total_hours += member.total_hours || 0;
+                        acc.ratio_b += member.ratio_b || 0;
+                        return acc;
+                      }, {
+                        scheduled_hours: 0,
+                        direct_hours: 0,
+                        pto_holiday_hours: 0,
+                        indirect_hours: 0,
+                        available_hours: 0,
+                        total_hours: 0,
+                        ratio_b: 0
+                      });
+                      // Average ratio_b
+                      summary.ratio_b = monthArr.length > 0 ? summary.ratio_b / monthArr.length : 0;
+                      return (
+                        <table className="summary-table">
+                          <thead>
+                            <tr className="project-metrics">
+                              <th>Member Name</th>
+                              <th>Labor Category</th>
+                              <th>Scheduled Hours</th>
+                              <th>Direct Hours</th>
+                              <th>PTO/HOL</th>
+                              <th>Indirect Hours</th>
+                              <th>Available Hours</th>
+                              <th>Total Hours</th>
+                              <th>Ratio B</th>
+                            </tr>
+                          </thead>
+                          <tbody>
+                            <tr className="group-total-row" style={{ background: '#e0e0e0', fontWeight: 'bold' }}>
+                              <td colSpan="2">All Members Total</td>
+                              <td className="number-cell">{formatter.format(summary.scheduled_hours)}</td>
+                              <td className="number-cell">{formatter.format(summary.direct_hours)}</td>
+                              <td className="number-cell">{formatter.format(summary.pto_holiday_hours)}</td>
+                              <td className="number-cell">{formatter.format(summary.indirect_hours)}</td>
+                              <td className="number-cell">{formatter.format(summary.available_hours)}</td>
+                              <td className="number-cell">{formatter.format(summary.total_hours)}</td>
+                              <td className="number-cell">{formatPercent(summary.ratio_b)}</td>
+                            </tr>
+                          </tbody>
+                        </table>
+                      );
+                    })()}
+                    {/* Collapsible group for each member */}
+                    <div className="collapsible-group-list">
+                      {(() => {
+                        const monthKey = `month${selectedMonthIndex + 1}`;
+                        const monthArr = allStaffMonthlyData.monthly_data ? allStaffMonthlyData.monthly_data[monthKey] : undefined;
+                        if (!monthArr || !Array.isArray(monthArr) || monthArr.length === 0) return null;
+                        // Use CollapsibleGroup style for all-staff view: show each member as a collapsible row
+                        return monthArr.map((member, idx) => (
+                          <CollapsibleMember
+                            key={member.email || idx}
+                            member={{ ...member, laborCategory: member.labor_category, scheduledHours: member.scheduled_hours, directHours: member.direct_hours, ptoHours: member.pto_holiday_hours, overheadHours: member.indirect_hours, availableHours: member.available_hours, totalHours: member.total_hours, ratioB: member.ratio_b, rows: member.rows || [] }}
+                            formatter={formatter}
+                            formatPercent={formatPercent}
+                            navigate={navigate}
+                            isEditable={true}
+                          />
+                        ));
+                      })()}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="no-data-message">
+                  No data found for any group for this month/quarter.
+                </div>
+              )
             ) : Object.keys(teamData).length === 0 ? (
               <div className="no-data-message">
-                No data found for your group. You might not be assigned to a group
-                yet.
+                No data found for your group. You might not be assigned to a group yet.
               </div>
             ) : (
               <div className="group-summary">
-                {viewMode === "hierarchy" ? (
-                  <>
-                    <div className="project-summary">
-                      <div className="pm-dashboard-title">
-                        Group Summary
-                        <div className="month-selector">
-                          {/* Month selector buttons */}
-                          <button
-                            className={`view-control-btn ${
-                              selectedMonthIndex === 0 ? "active" : ""
-                            }`}
-                            onClick={() => setSelectedMonthIndex(0)}
-                          >
-                            January
-                          </button>
-                          <button
-                            className={`view-control-btn ${
-                              selectedMonthIndex === 1 ? "active" : ""
-                            }`}
-                            onClick={() => setSelectedMonthIndex(1)}
-                          >
-                            February
-                          </button>
-                          <button
-                            className={`view-control-btn ${
-                              selectedMonthIndex === 2 ? "active" : ""
-                            }`}
-                            onClick={() => setSelectedMonthIndex(2)}
-                          >
-                            March
-                          </button>
-                          {/* TODO: Implement functionality to filter data by selected month */}
-                        </div>
-                      </div>
-                      <table className="summary-table">
-                        <thead>
-                          <tr className="project-metrics">
-                            <th>Group Leader</th>
-                            <th>Team Members</th>
-                            <th>Scheduled Hours</th>
-                            <th>Direct Hours</th>
-                            <th>PTO/HOL</th>
-                            <th>Indirect Hours</th>
-                            <th>Available Hours</th>
-                            <th>Total Hours</th>
-                            <th>Ratio B</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {Object.entries(teamData).map(
-                            ([manager, data], index) => (
-                              <tr key={index}>
-                                <td>{manager}</td>
-                                <td className="number-cell">
-                                  {data.memberCount}
-                                </td>
-                                <td className="number-cell">
-                                  {formatter.format(data.scheduledHours)}
-                                </td>
-                                <td className="number-cell">
-                                  {formatter.format(data.directHours)}
-                                </td>
-                                <td className="number-cell">
-                                  {formatter.format(data.ptoHours)}
-                                </td>
-                                <td className="number-cell">
-                                  {formatter.format(data.overheadHours)}
-                                </td>
-                                <td className="number-cell">
-                                  {formatter.format(data.availableHours)}
-                                </td>
-                                <td className="number-cell">
-                                  <strong>
-                                    {formatter.format(data.totalHours)}
-                                  </strong>
-                                </td>
-                                <td className="number-cell">
-                                  <strong>{formatPercent(data.ratioB)}</strong>
-                                </td>
-                              </tr>
-                            )
-                          )}
-                        </tbody>
-                      </table>
+                <div className="project-summary">
+                  <div className="pm-dashboard-title">
+                    Group Summary
+                    <div className="month-selector">
+                      {/* Month selector buttons */}
+                      {months.map((monthNum, idx) => (
+                        <button
+                          key={monthNum}
+                          className={`view-control-btn ${selectedMonthIndex === idx ? "active" : ""}`}
+                          onClick={() => setSelectedMonthIndex(idx)}
+                        >
+                          {new Date(2000, monthNum - 1, 1).toLocaleString('default', { month: 'long' })}
+                        </button>
+                      ))}
                     </div>
-
-                    {Object.entries(teamData).map(([manager, managerData]) => (
-                      <div key={manager} className="manager-summary">
-                        <div className="manager-header">
-                          <h3>{manager}</h3>
-                        </div>
-                        <div className="manager-content">
-                          <table className="details-table">
-                            <thead>
-                              <tr>
-                                <th>Studio</th>
-                                <th>Members</th>
-                                <th>Scheduled Hours</th>
-                                <th>Direct Hours</th>
-                                <th>PTO/HOL</th>
-                                <th>Indirect Hours</th>
-                                <th>Available Hours</th>
-                                <th>Total Hours</th>
-                                <th>Ratio B</th>
-                              </tr>
-                            </thead>
-                            <tbody>
-                              {Object.entries(managerData.studios).map(
-                                ([studio, studioData]) => (
-                                  <tr key={studio}>
-                                    <td>{studio}</td>
-                                    <td className="number-cell">
-                                      {studioData.members.length}
-                                    </td>
-                                    <td className="number-cell">
-                                      {formatter.format(studioData.scheduledHours)}
-                                    </td>
-                                    <td className="number-cell">
-                                      {formatter.format(studioData.directHours)}
-                                    </td>
-                                    <td className="number-cell">
-                                      {formatter.format(studioData.ptoHours)}
-                                    </td>
-                                    <td className="number-cell">
-                                      {formatter.format(studioData.overheadHours)}
-                                    </td>
-                                    <td className="number-cell">
-                                      {formatter.format(studioData.availableHours)}
-                                    </td>
-                                    <td className="number-cell">
-                                      <strong>
-                                        {formatter.format(studioData.totalHours)}
-                                      </strong>
-                                    </td>
-                                    <td className="number-cell">
-                                      <strong>
-                                        {formatPercent(studioData.ratioB)}
-                                      </strong>
-                                    </td>
-                                  </tr>
-                                )
-                              )}
-                            </tbody>
-                          </table>
-                        </div>
-                      </div>
-                    ))}
-                  </>
-                ) : (
-                  <div className="projects-view">
-                    {/* Projects view content here */}
                   </div>
-                )}
+                  <table className="summary-table">
+                    <thead>
+                      <tr className="project-metrics">
+                        <th>Group Leader</th>
+                        <th>Team Members</th>
+                        <th>Scheduled Hours</th>
+                        <th>Direct Hours</th>
+                        <th>PTO/HOL</th>
+                        <th>Indirect Hours</th>
+                        <th>Available Hours</th>
+                        <th>Total Hours</th>
+                        <th>Utilization Ratio</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {Object.entries(teamData)
+                        .sort(([managerA, dataA], [managerB, dataB]) => {
+                          const groupA = dataA.groupNo;
+                          const groupB = dataB.groupNo;
+                          if (groupA == null && groupB == null) return 0;
+                          if (groupA == null) return 1;
+                          if (groupB == null) return -1;
+                          const numA = parseInt(groupA);
+                          const numB = parseInt(groupB);
+                          if (isNaN(numA) && isNaN(numB)) return 0;
+                          if (isNaN(numA)) return 1;
+                          if (isNaN(numB)) return -1;
+                          return numA - numB;
+                        })
+                        .map(([manager, data], index) => (
+                          <tr key={index}>
+                            <td>{manager}</td>
+                            <td className="number-cell">{data.memberCount}</td>
+                            <td className="number-cell">{formatter.format(data.scheduledHours)}</td>
+                            <td className="number-cell">{formatter.format(data.directHours)}</td>
+                            <td className="number-cell">{formatter.format(data.ptoHours)}</td>
+                            <td className="number-cell">{formatter.format(data.overheadHours)}</td>
+                            <td className={`number-cell available-hours-cell ${data.availableHours === 0 ? 'zero-hours' : ''}`}>{formatter.format(data.availableHours)}</td>
+                            <td className="number-cell"><strong>{formatter.format(data.totalHours)}</strong></td>
+                            <td className="number-cell"><strong>{formatPercent(data.ratioB)}</strong></td>
+                          </tr>
+                        ))}
+                    </tbody>
+                  </table>
+                </div>
+                {/* Collapsible group for each manager */}
+                {Object.entries(teamData)
+                  .sort(([managerA, dataA], [managerB, dataB]) => {
+                    const groupA = dataA.groupNo;
+                    const groupB = dataB.groupNo;
+                    if (groupA == null && groupB == null) return 0;
+                    if (groupA == null) return 1;
+                    if (groupB == null) return -1;
+                    const numA = parseInt(groupA);
+                    const numB = parseInt(groupB);
+                    if (isNaN(numA) && isNaN(numB)) return 0;
+                    if (isNaN(numA)) return 1;
+                    if (isNaN(numB)) return -1;
+                    return numA - numB;
+                  })
+                  .map(([manager, managerData]) => (
+                    <CollapsibleGroup
+                      key={manager}
+                      manager={manager}
+                      managerData={managerData}
+                      formatter={formatter}
+                      formatPercent={formatPercent}
+                      navigate={navigate}
+                      isEditable={true}
+                    />
+                  ))}
               </div>
             )}
           </div>
         </div>
       </main>
     </div>
+  );
+};
+
+// CollapsibleGroup, CollapsibleStudio, CollapsibleMember components from RA app version
+const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent, navigate, isEditable = true }) => {
+  const [isExpanded, setIsExpanded] = React.useState(true);
+  return (
+    <div className="collapsible-group">
+      <div className="collapsible-header" onClick={() => setIsExpanded(!isExpanded)}>
+        {isExpanded ? <span style={{marginRight: 8}}>▼</span> : <span style={{marginRight: 8}}>▶</span>}
+        <h3 style={{display: 'inline'}}>{manager} Group</h3>
+      </div>
+      {isExpanded && (
+        <div className="collapsible-content">
+          <table className="summary-table">
+            <thead>
+              <tr className="project-metrics">
+                <th>Studio Leader</th>
+                <th>Discipline</th>
+                <th>Team Members</th>
+                <th>Scheduled Hours</th>
+                <th>Direct Hours</th>
+                <th>PTO/HOL</th>
+                <th>Indirect Hours</th>
+                <th>Available Hours</th>
+                <th>Total Hours</th>
+                <th>Utilization Ratio</th>
+              </tr>
+            </thead>
+            <tbody>
+              {Object.entries(managerData.studios).map(([studio, studioData], index) => {
+                const studioLeaderName = studioData.studioLeader || (studioData.members.length > 0 && studioData.members[0].studioLeader) || 'Unassigned';
+                const discipline = studioData.discipline || '';
+                return (
+                  <tr key={index}>
+                    <td>{studioLeaderName}</td>
+                    <td>{discipline}</td>
+                    <td className="number-cell">{studioData.members.length}</td>
+                    <td className="number-cell">{formatter.format(studioData.scheduledHours)}</td>
+                    <td className="number-cell">{formatter.format(studioData.directHours)}</td>
+                    <td className="number-cell">{formatter.format(studioData.ptoHours)}</td>
+                    <td className="number-cell">{formatter.format(studioData.overheadHours)}</td>
+                    <td className={`number-cell available-hours-cell ${studioData.availableHours === 0 ? 'zero-hours' : ''}`}>{formatter.format(studioData.availableHours)}</td>
+                    <td className="number-cell"><strong>{formatter.format(studioData.totalHours)}</strong></td>
+                    <td className="number-cell"><strong>{formatPercent(studioData.ratioB)}</strong></td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+          {Object.entries(managerData.studios).map(([studio, studioData]) => (
+            <CollapsibleStudio
+              key={studio}
+              studio={studio}
+              studioData={studioData}
+              formatter={formatter}
+              formatPercent={formatPercent}
+              navigate={navigate}
+              isEditable={isEditable}
+            />
+          ))}
+        </div>
+      )}
+    </div>
+  );
+};
+
+const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent, navigate, isEditable = true }) => {
+  const [isExpanded, setIsExpanded] = React.useState(true);
+  const studioLeaderName = studioData.studioLeader || (studioData.members.length > 0 && studioData.members[0].studioLeader) || 'Unassigned';
+  const discipline = studioData.discipline || (studioData.members.length > 0 && studioData.members[0].discipline) || '';
+  return (
+    <div className="collapsible-studio">
+      <div className="collapsible-header" onClick={() => setIsExpanded(!isExpanded)}>
+        {isExpanded ? <span style={{marginRight: 8}}>▼</span> : <span style={{marginRight: 8}}>▶</span>}
+        <h4 style={{display: 'inline'}}>{studioLeaderName} - {discipline}</h4>
+      </div>
+      {isExpanded && (
+        <table className="summary-table">
+          <thead>
+            <tr className="project-metrics">
+              <th>Team Member</th>
+              <th>Labor Category</th>
+              <th>Scheduled Hours</th>
+              <th>Direct Hours</th>
+              <th>PTO/HOL</th>
+              <th>Indirect Hours</th>
+              <th>Available Hours</th>
+              <th>Total Hours</th>
+              <th>Utilization Ratio</th>
+              <th>Details</th>
+            </tr>
+          </thead>
+          <tbody>
+            {studioData.members
+              .sort((a, b) => a.name.localeCompare(b.name))
+              .map((member, index) => (
+                <CollapsibleMember
+                  key={index}
+                  member={member}
+                  formatter={formatter}
+                  formatPercent={formatPercent}
+                  navigate={navigate}
+                  isEditable={isEditable}
+                />
+              ))}
+          </tbody>
+        </table>
+      )}
+    </div>
+  );
+};
+
+const CollapsibleMember = ({ member, formatter, formatPercent, navigate, isEditable = true }) => {
+  const [isExpanded, setIsExpanded] = React.useState(false);
+  const sortedRows = [...(member.rows || [])].sort((a, b) => a.projectNumber.localeCompare(b.projectNumber));
+  return (
+    <>
+      <tr>
+        <td>
+          {member.name}
+        </td>
+        <td>{member.laborCategory}</td>
+        <td className="number-cell">{formatter.format(member.scheduledHours || 0)}</td>
+        <td className="number-cell">{formatter.format(member.directHours)}</td>
+        <td className="number-cell">{formatter.format(member.ptoHours)}</td>
+        <td className="number-cell">{formatter.format(member.overheadHours)}</td>
+        <td className={`number-cell available-hours-cell ${member.availableHours === 0 ? 'zero-hours' : ''}`}>{formatter.format(member.availableHours)}</td>
+        <td className={`number-cell ${member.totalHours < member.scheduledHours ? 'hours-warning' : ''}`}>{formatter.format(member.totalHours)}</td>
+        <td className="number-cell"><strong>{formatPercent(member.ratioB)}</strong></td>
+        <td>
+          <button
+            className="expand-details-btn"
+            onClick={e => { e.preventDefault(); setIsExpanded(!isExpanded); }}
+          >
+            Details
+          </button>
+        </td>
+      </tr>      {isExpanded && (
+        <tr className="member-details">
+          <td colSpan="10">
+            <div className="time-entries">
+              {sortedRows.length === 0 ? (
+                <div className="no-entries">No time entries found</div>
+              ) : (
+                sortedRows.map((entry, i) => (
+                  <div key={i} className="time-entry">
+                    <span className="project-number">{entry.projectNumber}</span>
+                    <span className="project-name">{entry.projectName}</span>
+                    <span className="remarks">{entry.remarks}</span>
+                    <span className="number-cell">{formatter.format(entry.hours)}</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
   );
 };
 

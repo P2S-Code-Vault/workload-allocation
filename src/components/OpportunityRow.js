@@ -132,7 +132,7 @@ const OpportunityRow = ({
               onKeyDown={handleKeyPress}
               onFocus={handleFocus}
               onClick={() => setUserInteracted(true)}
-              placeholder={isLoading ? "Loading..." : "Search by opportunity number..."}
+              placeholder={isLoading ? "Loading..." : "Search by number, name, or champion..."}
               disabled={isLoading}
               ref={inputRef}
               className={hasError ? "input-error" : "centered-input"}
@@ -141,8 +141,7 @@ const OpportunityRow = ({
             />
           </div>
           {isSearching && <div className="search-indicator">Searching...</div>}
-          {hasError && <div className="search-error">Opportunity not found</div>}
-          {showDropdown && suggestions.length > 0 && (
+          {hasError && <div className="search-error">Opportunity not found</div>}          {showDropdown && suggestions.length > 0 && (
             <div className="suggestions-dropdown">
               {suggestions.map((opp, i) => (
                 <div
@@ -151,10 +150,13 @@ const OpportunityRow = ({
                   onClick={() => handleOpportunitySelect(opp)}
                   tabIndex="0"
                   onKeyDown={(e) => e.key === "Enter" && handleOpportunitySelect(opp)}
-                  aria-label={`Select Opportunity Number ${opp.OpportunityNumber}`}
+                  aria-label={`Select Opportunity ${opp.OpportunityNumber} - ${opp.Opportunity_Name_from_Lead__c}`}
                 >
                   <div className="suggestion-project-number">
-                    {highlightMatch(opp.OpportunityNumber, searchTerm)}
+                    {highlightMatch(opp.OpportunityNumber, searchTerm)} - {highlightMatch(opp.Opportunity_Name_from_Lead__c, searchTerm)}
+                  </div>
+                  <div className="suggestion-milestone">
+                    Champion: {highlightMatch(opp.ProposalChampion, searchTerm)}
                   </div>
                 </div>
               ))}

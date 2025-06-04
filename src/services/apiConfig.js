@@ -5,28 +5,17 @@ const API_CONFIG = {
     // API endpoints
     ENDPOINTS: {
       LOGIN: '/login',
-      MILESTONES: '/milestones',
-      MILESTONE_SEARCH: '/milestones/search',
-      ALLOCATIONS: '/allocations',
-      LEADERSHIP_DATA: '/leadership/data',
-      LEADERSHIP_LEADERS: '/leadership/leaders',
-      PM_DASHBOARD: '/pm/dashboard',
-      GL_TEAM_MEMBERS: '/gl/team-members',
-      GL_TEAM_ALLOCATIONS: '/gl/team-allocations',
-      GL_BATCH_UPDATE: '/gl/batch-update',
-      GL_ALL_STAFF: '/gl/all-staff',
-      USER_GROUP_INFO: '/users/group-info',
-      USERS_BY_GROUP_MANAGER: '/users/by-group-manager',
-      CONTACTS_SEARCH: '/contacts/search',
-      USERS_SAME_GROUP: '/users/same-group', // keep for future
-      // Added endpoints from FastAPI main.py, now as functions for path params
       CONTACT_BY_ID: contactId => `/contacts/${contactId}`,
-      CONTACTS: '/contacts',
+      CONTACTS: '/contacts', // for GET /contacts?search=...&group_manager=...
+      CONTACT_BY_EMAIL: email => `/contacts/email/${encodeURIComponent(email)}`,
+      CONTACTS_SAME_GROUP: contactId => `/contacts/${contactId}/same-group`,
+      CONTACTS_SAME_GROUP_BY_EMAIL: email => `/contacts/by-email/${encodeURIComponent(email)}/same-group`,
       MILESTONES_ACTIVE_ALL: '/milestones/active-all',
       MILESTONES_PROJECT: projectNumber => `/milestones/project/${projectNumber}`,
+      MILESTONES: '/milestones', // for GET /milestones?search=...&project_manager=...&active_only=...&limit=...
       MILESTONE_BY_ID: milestoneId => `/milestones/${milestoneId}`,
       OPPORTUNITY_BY_NUMBER: opportunityNumber => `/opportunities/number/${opportunityNumber}`,
-      OPPORTUNITIES: '/opportunities',
+      OPPORTUNITIES: '/opportunities', // for GET /opportunities?search=...&min_probability=...&champion_email=...&limit=...
       OPPORTUNITY_BY_ID: opportunityId => `/opportunities/${opportunityId}`,
       MILESTONE_PROJECTIONS: '/milestone-projections',
       MILESTONE_PROJECTION_BY_ID: raId => `/milestone-projections/${raId}`,
@@ -35,7 +24,22 @@ const API_CONFIG = {
       OPPORTUNITY_PROJECTIONS: '/opportunity-projections',
       OPPORTUNITY_PROJECTION_BY_ID: raId => `/opportunity-projections/${raId}`,
       CONTACT_OPPORTUNITY_PROJECTIONS: contactId => `/contacts/${contactId}/opportunity-projections`,
-      OPPORTUNITY_PROJECTIONS_BATCH: '/opportunity-projections/batch'
+      OPPORTUNITY_PROJECTIONS_BATCH: '/opportunity-projections/batch',
+      // GL endpoints
+      GL_TEAM_MEMBERS: '/gl/team-members', // GET with group_manager_email query param
+      GL_MILESTONES_QUARTERLY: '/gl/milestones/quarterly', // group_manager_email, year, quarter
+      GL_OPPORTUNITIES_QUARTERLY: '/gl/opportunities/quarterly', // group_manager_email, year, quarter
+      GL_MILESTONES_MONTHLY: '/gl/milestones/monthly', // group_manager_email, year, quarter
+      GL_OPPORTUNITIES_MONTHLY: '/gl/opportunities/monthly', // group_manager_email, year, quarter
+      GL_WORKLOAD_COMBINED: '/gl/workload/combined', // group_manager_email, year, quarter
+      GL_WORKLOAD_BATCH_UPDATE: '/gl/workload/batch-update', // POST with group_manager_email
+      GL_ACCESS_CHECK: '/gl/access-check', // GET with email
+      // All-staff endpoints
+      ALL_STAFF_WORKLOAD_QUARTERLY: '/all-staff/workload/quarterly', // year, quarter
+      ALL_STAFF_WORKLOAD_MONTHLY: '/all-staff/workload/monthly', // year, quarter
+      ALL_STAFF_WORKLOAD_SUMMARY: '/all-staff/workload/summary', // year, quarter
+      ALL_STAFF_WORKLOAD_MANAGER: managerName => `/all-staff/workload/manager/${encodeURIComponent(managerName)}`,
+      ALL_STAFF_WORKLOAD_STUDIOS: '/all-staff/workload/studios', // year, quarter
     },
     
     // HTTP status codes
