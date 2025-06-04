@@ -1,6 +1,6 @@
 const API_CONFIG = {
     // http://localhost:8000
-    BASE_URL: process.env.REACT_APP_API_BASE_URL || 'https://p2s-wp-api-d6bhbbbzewd9gfc5.westus-01.azurewebsites.net/',   //https://p2s-wp-api-d6bhbbbzewd9gfc5.westus-01.azurewebsites.net/
+    BASE_URL: process.env.REACT_APP_API_BASE_URL || 'http://localhost:8000',   //https://p2s-wp-api-d6bhbbbzewd9gfc5.westus-01.azurewebsites.net/
     
     // API endpoints
     ENDPOINTS: {

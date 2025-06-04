@@ -217,6 +217,19 @@ const LeadershipPage = ({ navigate }) => {
           }, Studio: ${studio}, Hours: ${scheduledHours} (type: ${typeof scheduledHours})`
         );
 
+        // if (!allGroupsData[groupManager].studios[studio]) {
+        //   allGroupsData[groupManager].studios[studio] = {
+        //     members: [],
+        //     totalHours: 0,
+        //     scheduledHours: 0,
+        //     directHours: 0,
+        //     ptoHours: 0,
+        //     overheadHours: 0,
+        //     availableHours: 0, 
+        //     studioLeader: member.studio_leader || 'Unassigned',
+        //     discipline: member.discipline || ''//new
+        //   };
+        // }
         if (!allGroupsData[groupManager].studios[studio]) {
           allGroupsData[groupManager].studios[studio] = {
             members: [],
@@ -225,8 +238,19 @@ const LeadershipPage = ({ navigate }) => {
             directHours: 0,
             ptoHours: 0,
             overheadHours: 0,
-            availableHours: 0, //new
+            availableHours: 0,
+            // ADD THESE LINES:
+            studioLeader: member.studio_leader || 'Unassigned',
+            discipline: member.discipline || ''
           };
+        } else {
+          // UPDATE existing studio data if this member has better info
+          if (member.studio_leader && !allGroupsData[groupManager].studios[studio].studioLeader) {
+            allGroupsData[groupManager].studios[studio].studioLeader = member.studio_leader;
+          }
+          if (member.discipline && !allGroupsData[groupManager].studios[studio].discipline) {
+            allGroupsData[groupManager].studios[studio].discipline = member.discipline;
+          }
         }
 
         // FIX: Use contact_id for matching allocations
@@ -303,6 +327,8 @@ const LeadershipPage = ({ navigate }) => {
           totalHours,
           ratioB: calculateRatioB(directHours, scheduledHours, ptoHours),
           rows: memberRows,
+          studioLeader: member.studio_leader || 'Unassigned',
+          discipline: member.discipline || ''
         });
 
         allGroupsData[groupManager].studios[studio].totalHours += totalHours;
@@ -737,7 +763,7 @@ const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent, navi
 
 const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent, navigate, isEditable = true }) => {
   const [isExpanded, setIsExpanded] = React.useState(true);
-  const studioLeaderName = studioData.studioLeader || (studioData.members.length > 0 && studioData.members[0].studioLeader) || 'Unassigned';
+  const studioLeaderName =studioData.studioLeader || 'Unassigned';
   const discipline = studioData.discipline || (studioData.members.length > 0 && studioData.members[0].discipline) || '';
   return (
     <div className="collapsible-studio">
