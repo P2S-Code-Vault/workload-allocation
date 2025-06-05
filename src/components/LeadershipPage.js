@@ -5,6 +5,12 @@ import QuarterPicker from "./QuarterPicker";
 import "./LeadershipPage.css";
 import API_CONFIG from "../services/apiConfig";
 import { getCurrentQuarterString, getCurrentYear, getQuarterMonths, getCurrentQuarter } from "../utils/dateUtils";
+import { 
+  normalizeMonthlyWorkloadData, 
+  groupStaffByManager, 
+  calculateGroupSummary, 
+  validateMonthlyData 
+} from "../utils/monthlyPayloadUtils";
 
 const LeadershipPage = ({ navigate }) => {
   const [isLoading, setIsLoading] = useState(true);
@@ -83,14 +89,73 @@ const LeadershipPage = ({ navigate }) => {
         setTeamData({});
         setIsLoading(false);
         return;
-      }      if (showAllGroups) {        // Fetch all staff monthly workload for all groups
+      }      if (showAllGroups) {
+        // Fetch all staff monthly workload for all groups
+        console.log('Fetching all staff monthly workload for all groups...');
         const allStaffData = await GLTeamService.getAllStaffMonthlyWorkload(
           selectedYear,
           quarterString
         );
-        setAllStaffMonthlyData(allStaffData);        // Optionally, set months for selector if available
-        if (allStaffData && allStaffData.expectedMonths) {
-          setMonths(allStaffData.expectedMonths);
+        console.log('All staff monthly workload data received:', allStaffData);
+        
+        // Add detailed structure inspection
+        if (allStaffData && allStaffData.managers) {
+          console.log('Managers structure found:');
+          Object.entries(allStaffData.managers).forEach(([managerName, managerData]) => {
+            console.log(`Manager: ${managerName}`, {
+              hasStudios: !!managerData.studios,
+              studiosCount: managerData.studios ? Object.keys(managerData.studios).length : 0,
+              groupNo: managerData.groupNo,
+              memberCount: managerData.memberCount,
+              hasMonthlyTotals: !!managerData.monthlyTotals
+            });
+            
+            if (managerData.studios) {
+              Object.entries(managerData.studios).forEach(([studioName, studioData]) => {
+                console.log(`  Studio: ${studioName}`, {
+                  membersCount: studioData.members ? studioData.members.length : 0,
+                  hasMembers: !!studioData.members,
+                  sampleMember: studioData.members && studioData.members[0] ? {
+                    name: studioData.members[0].name,
+                    hasScheduledHours: !!studioData.members[0].scheduled_hours,
+                    hasDirectHours: !!studioData.members[0].direct_hours
+                  } : null
+                });
+              });
+            }
+          });
+        }
+        
+        // Validate the data structure
+        const validation = validateMonthlyData(allStaffData);
+        console.log('Data validation result:', validation);
+        
+        if (!validation.isValid) {
+          console.error('Invalid data structure:', validation.errors);
+          setError('Invalid data received from server: ' + validation.errors.join(', '));
+          setIsLoading(false);
+          return;
+        }
+        
+        if (validation.warnings.length > 0) {
+          console.warn('Data structure warnings:', validation.warnings);
+        }
+        
+        setAllStaffMonthlyData(allStaffData);
+
+        // Set months for selector based on the received data structure
+        if (allStaffData) {
+          if (allStaffData.expectedMonths) {
+            setMonths(allStaffData.expectedMonths);
+          } else if (allStaffData.expected_months) {
+            setMonths(allStaffData.expected_months);
+          } else {
+            // Fallback to quarter months if not provided
+            const quarterNum = typeof selectedQuarter === 'number' ? selectedQuarter : 
+              selectedQuarter === 'Q1' ? 1 : selectedQuarter === 'Q2' ? 2 : 
+              selectedQuarter === 'Q3' ? 3 : 4;
+            setMonths(getQuarterMonths(quarterNum));
+          }
         }
         setTeamData({}); // Clear teamData for all groups view
         setIsLoading(false);
@@ -482,7 +547,7 @@ const LeadershipPage = ({ navigate }) => {
 
             {isLoading ? (
               <div className="loading-indicator">Loading team data...</div>            ) : showAllGroups ? (
-              allStaffMonthlyData && allStaffMonthlyData.managers && Object.keys(allStaffMonthlyData.managers).length > 0 ? (
+              allStaffMonthlyData ? (
                 <div className="group-summary">
                   <div className="project-summary">
                     <div className="pm-dashboard-title">
@@ -500,71 +565,33 @@ const LeadershipPage = ({ navigate }) => {
                         ))}
                       </div>
                     </div>
-                    {/* Debug: show structure of allStaffMonthlyData */}
-                    {process.env.NODE_ENV !== 'production' && (
-                      <pre style={{fontSize: '10px', color: '#888', background: '#f8f8f8', maxHeight: 200, overflow: 'auto'}}>
-                        {JSON.stringify(allStaffMonthlyData, null, 2)}
-                      </pre>
-                    )}                    {/* Group-by-group summary table for All Groups view */}
+                    
+                    {/* Group-by-group summary table for All Groups view */}
                     {(() => {
-                      const monthKey = `month${selectedMonthIndex + 1}`;
+                      console.log('Processing all staff data for summary table...');
+                      console.log('AllStaffMonthlyData structure:', allStaffMonthlyData);
                       
-                      // Extract all staff members from all managers for the selected month
-                      const allStaffMembers = [];
-                      if (allStaffMonthlyData.managers) {
-                        Object.entries(allStaffMonthlyData.managers).forEach(([managerName, managerData]) => {
-                          if (managerData.monthlyData && managerData.monthlyData[monthKey]) {
-                            managerData.monthlyData[monthKey].forEach(member => {
-                              allStaffMembers.push({
-                                ...member,
-                                group_manager: managerName
-                              });
-                            });
-                          }
-                        });
-                      }
+                      // Use utility functions to normalize and process the data
+                      const normalizedStaffMembers = normalizeMonthlyWorkloadData(allStaffMonthlyData, selectedMonthIndex);
+                      console.log('Normalized staff members:', normalizedStaffMembers);
                       
-                      if (allStaffMembers.length === 0) {
-                        return (<div className="no-data-message">No data for this month.</div>);
+                      if (normalizedStaffMembers.length === 0) {
+                        return (
+                          <div className="no-data-message">
+                            <p>No data found for this month/quarter.</p>
+                            <p>Debug info: selectedMonthIndex = {selectedMonthIndex}, dataStructure = {Object.keys(allStaffMonthlyData).join(', ')}</p>
+                          </div>
+                        );
                       }
 
-                      // Group members by their group_manager
-                      const groupedByManager = allStaffMembers.reduce((acc, member) => {
-                        const manager = member.group_manager || 'Unassigned';
-                        if (!acc[manager]) {
-                          acc[manager] = [];
-                        }
-                        acc[manager].push(member);
-                        return acc;
-                      }, {});
+                      // Group staff by manager using utility function
+                      const groupedByManager = groupStaffByManager(normalizedStaffMembers);
+                      console.log('Staff grouped by manager:', groupedByManager);
 
-                      // Calculate summary for each group
+                      // Calculate summary for each group using utility function
                       const groupSummaries = Object.entries(groupedByManager).map(([manager, members]) => {
-                        const summary = members.reduce((acc, member) => {
-                          acc.scheduled_hours += member.scheduled_hours || 0;
-                          acc.direct_hours += member.direct_hours || 0;
-                          acc.pto_holiday_hours += member.pto_holiday_hours || 0;
-                          acc.indirect_hours += member.indirect_hours || 0;
-                          acc.available_hours += member.available_hours || 0;
-                          // Fix: Total Hours = Direct Hours + PTO/HOL + Indirect Hours (exclude Available Hours)
-                          acc.total_hours += (member.direct_hours || 0) + (member.pto_holiday_hours || 0) + (member.indirect_hours || 0);
-                          acc.ratio_b += member.ratio_b || 0;
-                          return acc;
-                        }, {
-                          scheduled_hours: 0,
-                          direct_hours: 0,
-                          pto_holiday_hours: 0,
-                          indirect_hours: 0,
-                          available_hours: 0,
-                          total_hours: 0,
-                          ratio_b: 0
-                        });
-                        
-                        // Average ratio_b for the group
-                        summary.ratio_b = members.length > 0 ? summary.ratio_b / members.length : 0;
-                        summary.memberCount = members.length;
+                        const summary = calculateGroupSummary(members);
                         summary.manager = manager;
-                        
                         return summary;
                       });
 
@@ -602,58 +629,125 @@ const LeadershipPage = ({ navigate }) => {
                           </tbody>
                         </table>
                       );
-                    })()}                    {/* Collapsible group for each member */}
+                    })()}                    {/* Collapsible groups for each manager */}
                     <div className="collapsible-group-list">
                       {(() => {
-                        const monthKey = `month${selectedMonthIndex + 1}`;
+                        console.log('Rendering collapsible groups for selectedMonthIndex:', selectedMonthIndex);
                         
-                        // Extract all staff members from all managers for the selected month
-                        const allStaffMembers = [];
-                        if (allStaffMonthlyData.managers) {
-                          Object.entries(allStaffMonthlyData.managers).forEach(([managerName, managerData]) => {
-                            if (managerData.monthlyData && managerData.monthlyData[monthKey]) {
-                              managerData.monthlyData[monthKey].forEach(member => {
-                                allStaffMembers.push({
-                                  ...member,
-                                  group_manager: managerName,
-                                  // Fix: Calculate total hours correctly
-                                  totalHours: (member.direct_hours || 0) + (member.pto_holiday_hours || 0) + (member.indirect_hours || 0)
-                                });
-                              });
-                            }
-                          });
+                        // Use utility function to normalize and extract staff members for the selected month
+                        const allStaffMembers = normalizeMonthlyWorkloadData(allStaffMonthlyData, selectedMonthIndex);
+                        console.log('Staff members for collapsible view:', allStaffMembers);
+                        
+                        if (allStaffMembers.length === 0) {
+                          return (
+                            <div className="no-data-message">
+                              <p>No staff members found for the selected month.</p>
+                              <p>This could be due to:</p>
+                              <ul>
+                                <li>No data available for {new Date(2000, months[selectedMonthIndex] - 1, 1).toLocaleString('default', { month: 'long' })}</li>
+                                <li>Data processing issues in utility functions</li>
+                                <li>Backend data structure changes</li>
+                              </ul>
+                            </div>
+                          );
                         }
                         
-                        if (allStaffMembers.length === 0) return null;
+                        // Group staff by manager using utility function
+                        const groupedByManager = groupStaffByManager(allStaffMembers);
+                        console.log('Grouped by manager for collapsible view:', groupedByManager);
                         
-                        // Use CollapsibleGroup style for all-staff view: show each member as a collapsible row
-                        return allStaffMembers.map((member, idx) => (                          <CollapsibleMember
-                            key={member.email || idx}
-                            member={{ 
-                              ...member, 
-                              laborCategory: member.labor_category, 
-                              scheduledHours: member.scheduled_hours, 
-                              directHours: member.direct_hours, 
-                              ptoHours: member.pto_holiday_hours, 
-                              overheadHours: member.indirect_hours, 
-                              availableHours: member.available_hours, 
-                              totalHours: member.totalHours, 
-                              ratioB: member.ratio_b, 
-                              rows: member.rows || [] 
-                            }}
-                            formatter={formatter}
-                            formatPercent={formatPercent}
-                            navigate={navigate}
-                            isEditable={true}
-                          />
-                        ));
+                        // Convert the managers structure from backend to the format expected by CollapsibleGroup
+                        const teamDataForGroups = {};
+                        Object.entries(groupedByManager).forEach(([managerName, staffMembers]) => {
+                          // Create studios structure grouped by studio/discipline
+                          const studios = {};
+                          staffMembers.forEach(member => {
+                            const studioName = member.studio || 'Unassigned';
+                            if (!studios[studioName]) {
+                              studios[studioName] = {
+                                members: [],
+                                studioLeader: member.studio_leader || 'Unassigned',
+                                discipline: member.discipline || '',
+                                totalHours: 0,
+                                scheduledHours: 0,
+                                directHours: 0,
+                                ptoHours: 0,
+                                overheadHours: 0,
+                                availableHours: 0,
+                                ratioB: 0
+                              };
+                            }
+                            
+                            // Add member to studio
+                            studios[studioName].members.push({
+                              ...member,
+                              laborCategory: member.labor_category,
+                              scheduledHours: member.scheduled_hours,
+                              directHours: member.direct_hours,
+                              ptoHours: member.pto_holiday_hours,
+                              overheadHours: member.indirect_hours,
+                              availableHours: member.available_hours,
+                              totalHours: member.total_hours,
+                              ratioB: member.ratio_b,
+                              rows: member.rows || []
+                            });
+                            
+                            // Accumulate studio totals
+                            studios[studioName].scheduledHours += member.scheduled_hours || 0;
+                            studios[studioName].directHours += member.direct_hours || 0;
+                            studios[studioName].ptoHours += member.pto_holiday_hours || 0;
+                            studios[studioName].overheadHours += member.indirect_hours || 0;
+                            studios[studioName].availableHours += member.available_hours || 0;
+                            studios[studioName].totalHours += member.total_hours || 0;
+                          });
+                          
+                          // Calculate studio ratios
+                          Object.values(studios).forEach(studio => {
+                            studio.ratioB = calculateRatioB(studio.directHours, studio.scheduledHours, studio.ptoHours);
+                          });
+                          
+                          teamDataForGroups[managerName] = {
+                            studios: studios,
+                            memberCount: staffMembers.length
+                          };
+                        });
+                        
+                        console.log('TeamData for collapsible groups:', teamDataForGroups);
+                        
+                        // Render CollapsibleGroup components similar to the "My Group Only" view
+                        return Object.entries(teamDataForGroups)
+                          .sort(([managerA], [managerB]) => managerA.localeCompare(managerB))
+                          .map(([manager, managerData]) => (
+                            <CollapsibleGroup
+                              key={manager}
+                              manager={manager}
+                              managerData={managerData}
+                              formatter={formatter}
+                              formatPercent={formatPercent}
+                              navigate={navigate}
+                              isEditable={false} // Read-only for all groups view
+                            />
+                          ));
                       })()}
-                    </div>
-                  </div>
+                    </div></div>
                 </div>
               ) : (
                 <div className="no-data-message">
-                  No data found for any group for this month/quarter.
+                  <p>No workload data available for all groups.</p>
+                  <p>This could be due to:</p>
+                  <ul>
+                    <li>No data returned from the backend</li>
+                    <li>Data structure mismatch</li>
+                    <li>Network connectivity issues</li>
+                  </ul>
+                  {process.env.NODE_ENV !== 'production' && (
+                    <div style={{marginTop: '10px'}}>
+                      <strong>Debug Info:</strong>
+                      <pre style={{fontSize: '10px', color: '#888', background: '#f8f8f8', padding: '10px'}}>
+                        AllStaffMonthlyData: {JSON.stringify(allStaffMonthlyData, null, 2)}
+                      </pre>
+                    </div>
+                  )}
                 </div>
               )
             ) : Object.keys(teamData).length === 0 ? (
@@ -892,8 +986,8 @@ const CollapsibleMember = ({ member, formatter, formatPercent, navigate, isEdita
           >
             Details
           </button>
-        </td>
-      </tr>      {isExpanded && (
+        </td>      </tr>
+      {isExpanded && (
         <tr className="member-details">
           <td colSpan="10">
             <div className="time-entries">
