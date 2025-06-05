@@ -22,12 +22,19 @@ const QuarterPicker = ({ onQuarterChange, className = "", initialYear, initialQu
 
   const [year, setYear] = useState(defaultYear);
   const [quarter, setQuarter] = useState(defaultQuarter);
+  const [isInitialized, setIsInitialized] = useState(false);
 
+  // Only call onQuarterChange after initial mount and when values actually change
   useEffect(() => {
-    if (onQuarterChange) {
+    if (isInitialized && onQuarterChange) {
       onQuarterChange(quarter, year);
     }
-  }, [quarter, year, onQuarterChange]);
+  }, [quarter, year, onQuarterChange, isInitialized]);
+
+  // Mark as initialized after first render
+  useEffect(() => {
+    setIsInitialized(true);
+  }, []);
 
   const handleQuarterChange = (e) => {
     setQuarter(e.target.value);

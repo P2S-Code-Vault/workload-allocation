@@ -4,21 +4,22 @@ import { GLTeamService } from "../services/GLTeamService";
 import QuarterPicker from "./QuarterPicker";
 import "./LeadershipPage.css";
 import API_CONFIG from "../services/apiConfig";
+import { getCurrentQuarterString, getCurrentYear, getQuarterMonths, getCurrentQuarter } from "../utils/dateUtils";
 
 const LeadershipPage = ({ navigate }) => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [selectedGroup, setSelectedGroup] = useState("");
   const [teamData, setTeamData] = useState({});
-  const [selectedQuarter, setSelectedQuarter] = useState(1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedQuarter, setSelectedQuarter] = useState(getCurrentQuarterString());
+  const [selectedYear, setSelectedYear] = useState(getCurrentYear());
   const [viewMode, setViewMode] = useState("hierarchy");
   const [currentUser, setCurrentUser] = useState(null);
   const [groupList, setGroupList] = useState([]);
   const [showAllGroups, setShowAllGroups] = useState(false);
   const [selectedMonthIndex, setSelectedMonthIndex] = useState(0);
 
-  const [months, setMonths] = useState([1, 2, 3]); // default to Q1
+  const [months, setMonths] = useState(getQuarterMonths(getCurrentQuarter()));
   const [allStaffMonthlyData, setAllStaffMonthlyData] = useState(null);
 
   useEffect(() => {
@@ -82,18 +83,14 @@ const LeadershipPage = ({ navigate }) => {
         setTeamData({});
         setIsLoading(false);
         return;
-      }
-
-      if (showAllGroups) {
-        // Fetch all staff monthly workload for all groups
+      }      if (showAllGroups) {        // Fetch all staff monthly workload for all groups
         const allStaffData = await GLTeamService.getAllStaffMonthlyWorkload(
           selectedYear,
           quarterString
         );
-        setAllStaffMonthlyData(allStaffData);
-        // Optionally, set months for selector if available
-        if (allStaffData && allStaffData.expected_months) {
-          setMonths(allStaffData.expected_months);
+        setAllStaffMonthlyData(allStaffData);        // Optionally, set months for selector if available
+        if (allStaffData && allStaffData.expectedMonths) {
+          setMonths(allStaffData.expectedMonths);
         }
         setTeamData({}); // Clear teamData for all groups view
         setIsLoading(false);
@@ -308,11 +305,9 @@ const LeadershipPage = ({ navigate }) => {
               !row.availableHours && // new
               !row.projectNumber.startsWith("0000-0000-AVAIL_HOURS") //new
           )
-          .reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
-
-        //check with team
+          .reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);        //check with team
         const totalHours =
-          directHours + ptoHours + overheadHours + availableHours;
+          directHours + ptoHours + overheadHours;
 
         allGroupsData[groupManager].studios[studio].members.push({
           id: member.id,
@@ -322,8 +317,7 @@ const LeadershipPage = ({ navigate }) => {
           scheduledHours: scheduledHours,
           directHours,
           ptoHours,
-          overheadHours,
-          availableHours: //new
+          overheadHours,          availableHours, //new
           totalHours,
           ratioB: calculateRatioB(directHours, scheduledHours, ptoHours),
           rows: memberRows,
@@ -386,10 +380,9 @@ const LeadershipPage = ({ navigate }) => {
     if (!currentUser) {
       return;
     }
-    loadTeamData();
-  }, [currentUser, selectedGroup, showAllGroups, loadTeamData]);
-
-  const handleQuarterChange = (quarter, year) => {
+    loadTeamData();  }, [currentUser, selectedGroup, showAllGroups, loadTeamData]);
+  
+  const handleQuarterChange = useCallback((quarter, year) => {
     console.log("Quarter changed in LeadershipPage:", {
       quarter,
       year,
@@ -397,7 +390,10 @@ const LeadershipPage = ({ navigate }) => {
 
     setSelectedQuarter(quarter);
     setSelectedYear(year);
-  };
+    // Update months when quarter changes
+    const quarterNum = quarter === 'Q1' ? 1 : quarter === 'Q2' ? 2 : quarter === 'Q3' ? 3 : quarter === 'Q4' ? 4 : quarter;
+    setMonths(getQuarterMonths(quarterNum));
+  }, []); // Empty dependency array since this function doesn't depend on any props or state
 
   const extractGroupNames = (teamData) => {
     const groups = new Set();
@@ -453,7 +449,7 @@ const LeadershipPage = ({ navigate }) => {
                     setShowAllGroups(!showAllGroups);
                   }}
                 >
-                  {showAllGroups ? "My Group Only" : "All Groups"}
+                  {showAllGroups ? "My Group Only" : "All Groups (WIP)"}
                 </button>
 
                 <button
@@ -485,9 +481,8 @@ const LeadershipPage = ({ navigate }) => {
             {error && <div className="error-message">{error}</div>}
 
             {isLoading ? (
-              <div className="loading-indicator">Loading team data...</div>
-            ) : showAllGroups ? (
-              allStaffMonthlyData && allStaffMonthlyData.monthly_data && Object.values(allStaffMonthlyData.monthly_data).some(arr => arr && arr.length > 0) ? (
+              <div className="loading-indicator">Loading team data...</div>            ) : showAllGroups ? (
+              allStaffMonthlyData && allStaffMonthlyData.managers && Object.keys(allStaffMonthlyData.managers).length > 0 ? (
                 <div className="group-summary">
                   <div className="project-summary">
                     <div className="pm-dashboard-title">
@@ -510,76 +505,142 @@ const LeadershipPage = ({ navigate }) => {
                       <pre style={{fontSize: '10px', color: '#888', background: '#f8f8f8', maxHeight: 200, overflow: 'auto'}}>
                         {JSON.stringify(allStaffMonthlyData, null, 2)}
                       </pre>
-                    )}
-                    {/* Combined summary row for the group */}
+                    )}                    {/* Group-by-group summary table for All Groups view */}
                     {(() => {
                       const monthKey = `month${selectedMonthIndex + 1}`;
-                      const monthArr = allStaffMonthlyData.monthly_data ? allStaffMonthlyData.monthly_data[monthKey] : undefined;
-                      if (!monthArr || !Array.isArray(monthArr) || monthArr.length === 0) {
+                      
+                      // Extract all staff members from all managers for the selected month
+                      const allStaffMembers = [];
+                      if (allStaffMonthlyData.managers) {
+                        Object.entries(allStaffMonthlyData.managers).forEach(([managerName, managerData]) => {
+                          if (managerData.monthlyData && managerData.monthlyData[monthKey]) {
+                            managerData.monthlyData[monthKey].forEach(member => {
+                              allStaffMembers.push({
+                                ...member,
+                                group_manager: managerName
+                              });
+                            });
+                          }
+                        });
+                      }
+                      
+                      if (allStaffMembers.length === 0) {
                         return (<div className="no-data-message">No data for this month.</div>);
                       }
-                      // Calculate combined summary
-                      const summary = monthArr.reduce((acc, member) => {
-                        acc.scheduled_hours += member.scheduled_hours || 0;
-                        acc.direct_hours += member.direct_hours || 0;
-                        acc.pto_holiday_hours += member.pto_holiday_hours || 0;
-                        acc.indirect_hours += member.indirect_hours || 0;
-                        acc.available_hours += member.available_hours || 0;
-                        acc.total_hours += member.total_hours || 0;
-                        acc.ratio_b += member.ratio_b || 0;
+
+                      // Group members by their group_manager
+                      const groupedByManager = allStaffMembers.reduce((acc, member) => {
+                        const manager = member.group_manager || 'Unassigned';
+                        if (!acc[manager]) {
+                          acc[manager] = [];
+                        }
+                        acc[manager].push(member);
                         return acc;
-                      }, {
-                        scheduled_hours: 0,
-                        direct_hours: 0,
-                        pto_holiday_hours: 0,
-                        indirect_hours: 0,
-                        available_hours: 0,
-                        total_hours: 0,
-                        ratio_b: 0
+                      }, {});
+
+                      // Calculate summary for each group
+                      const groupSummaries = Object.entries(groupedByManager).map(([manager, members]) => {
+                        const summary = members.reduce((acc, member) => {
+                          acc.scheduled_hours += member.scheduled_hours || 0;
+                          acc.direct_hours += member.direct_hours || 0;
+                          acc.pto_holiday_hours += member.pto_holiday_hours || 0;
+                          acc.indirect_hours += member.indirect_hours || 0;
+                          acc.available_hours += member.available_hours || 0;
+                          // Fix: Total Hours = Direct Hours + PTO/HOL + Indirect Hours (exclude Available Hours)
+                          acc.total_hours += (member.direct_hours || 0) + (member.pto_holiday_hours || 0) + (member.indirect_hours || 0);
+                          acc.ratio_b += member.ratio_b || 0;
+                          return acc;
+                        }, {
+                          scheduled_hours: 0,
+                          direct_hours: 0,
+                          pto_holiday_hours: 0,
+                          indirect_hours: 0,
+                          available_hours: 0,
+                          total_hours: 0,
+                          ratio_b: 0
+                        });
+                        
+                        // Average ratio_b for the group
+                        summary.ratio_b = members.length > 0 ? summary.ratio_b / members.length : 0;
+                        summary.memberCount = members.length;
+                        summary.manager = manager;
+                        
+                        return summary;
                       });
-                      // Average ratio_b
-                      summary.ratio_b = monthArr.length > 0 ? summary.ratio_b / monthArr.length : 0;
+
                       return (
                         <table className="summary-table">
                           <thead>
                             <tr className="project-metrics">
-                              <th>Member Name</th>
-                              <th>Labor Category</th>
+                              <th>Group Leader</th>
+                              <th>Team Members</th>
                               <th>Scheduled Hours</th>
                               <th>Direct Hours</th>
                               <th>PTO/HOL</th>
                               <th>Indirect Hours</th>
                               <th>Available Hours</th>
                               <th>Total Hours</th>
-                              <th>Ratio B</th>
+                              <th>Utilization Ratio</th>
                             </tr>
                           </thead>
                           <tbody>
-                            <tr className="group-total-row" style={{ background: '#e0e0e0', fontWeight: 'bold' }}>
-                              <td colSpan="2">All Members Total</td>
-                              <td className="number-cell">{formatter.format(summary.scheduled_hours)}</td>
-                              <td className="number-cell">{formatter.format(summary.direct_hours)}</td>
-                              <td className="number-cell">{formatter.format(summary.pto_holiday_hours)}</td>
-                              <td className="number-cell">{formatter.format(summary.indirect_hours)}</td>
-                              <td className="number-cell">{formatter.format(summary.available_hours)}</td>
-                              <td className="number-cell">{formatter.format(summary.total_hours)}</td>
-                              <td className="number-cell">{formatPercent(summary.ratio_b)}</td>
-                            </tr>
+                            {groupSummaries
+                              .sort((a, b) => a.manager.localeCompare(b.manager))
+                              .map((summary, index) => (
+                                <tr key={index}>
+                                  <td>{summary.manager}</td>
+                                  <td className="number-cell">{summary.memberCount}</td>
+                                  <td className="number-cell">{formatter.format(summary.scheduled_hours)}</td>
+                                  <td className="number-cell">{formatter.format(summary.direct_hours)}</td>
+                                  <td className="number-cell">{formatter.format(summary.pto_holiday_hours)}</td>
+                                  <td className="number-cell">{formatter.format(summary.indirect_hours)}</td>
+                                  <td className={`number-cell available-hours-cell ${summary.available_hours === 0 ? 'zero-hours' : ''}`}>{formatter.format(summary.available_hours)}</td>
+                                  <td className="number-cell"><strong>{formatter.format(summary.total_hours)}</strong></td>
+                                  <td className="number-cell"><strong>{formatPercent(summary.ratio_b)}</strong></td>
+                                </tr>
+                              ))}
                           </tbody>
                         </table>
                       );
-                    })()}
-                    {/* Collapsible group for each member */}
+                    })()}                    {/* Collapsible group for each member */}
                     <div className="collapsible-group-list">
                       {(() => {
                         const monthKey = `month${selectedMonthIndex + 1}`;
-                        const monthArr = allStaffMonthlyData.monthly_data ? allStaffMonthlyData.monthly_data[monthKey] : undefined;
-                        if (!monthArr || !Array.isArray(monthArr) || monthArr.length === 0) return null;
+                        
+                        // Extract all staff members from all managers for the selected month
+                        const allStaffMembers = [];
+                        if (allStaffMonthlyData.managers) {
+                          Object.entries(allStaffMonthlyData.managers).forEach(([managerName, managerData]) => {
+                            if (managerData.monthlyData && managerData.monthlyData[monthKey]) {
+                              managerData.monthlyData[monthKey].forEach(member => {
+                                allStaffMembers.push({
+                                  ...member,
+                                  group_manager: managerName,
+                                  // Fix: Calculate total hours correctly
+                                  totalHours: (member.direct_hours || 0) + (member.pto_holiday_hours || 0) + (member.indirect_hours || 0)
+                                });
+                              });
+                            }
+                          });
+                        }
+                        
+                        if (allStaffMembers.length === 0) return null;
+                        
                         // Use CollapsibleGroup style for all-staff view: show each member as a collapsible row
-                        return monthArr.map((member, idx) => (
-                          <CollapsibleMember
+                        return allStaffMembers.map((member, idx) => (                          <CollapsibleMember
                             key={member.email || idx}
-                            member={{ ...member, laborCategory: member.labor_category, scheduledHours: member.scheduled_hours, directHours: member.direct_hours, ptoHours: member.pto_holiday_hours, overheadHours: member.indirect_hours, availableHours: member.available_hours, totalHours: member.total_hours, ratioB: member.ratio_b, rows: member.rows || [] }}
+                            member={{ 
+                              ...member, 
+                              laborCategory: member.labor_category, 
+                              scheduledHours: member.scheduled_hours, 
+                              directHours: member.direct_hours, 
+                              ptoHours: member.pto_holiday_hours, 
+                              overheadHours: member.indirect_hours, 
+                              availableHours: member.available_hours, 
+                              totalHours: member.totalHours, 
+                              ratioB: member.ratio_b, 
+                              rows: member.rows || [] 
+                            }}
                             formatter={formatter}
                             formatPercent={formatPercent}
                             navigate={navigate}

@@ -2,8 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import QuarterPicker from "./QuarterPicker";
 import { format } from "date-fns";
 import PMDashboardService from "../services/PMDashboardService";
-import { ProjectDataService } from "../services/ProjectDataService";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
+import { getCurrentQuarterString, getCurrentYear } from "../utils/dateUtils";
 
 // CollapsibleProject component for individual project display
 const CollapsibleProject = ({
@@ -282,8 +282,8 @@ const CollapsiblePMGroup = ({
 
 // Main PM Page Component
 const PMPage = (props) => {
-  const [selectedQuarter, setSelectedQuarter] = useState(1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [selectedQuarter, setSelectedQuarter] = useState(getCurrentQuarterString());
+  const [selectedYear, setSelectedYear] = useState(getCurrentYear());
   const [dashboardData, setDashboardData] = useState({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -453,18 +453,18 @@ const PMPage = (props) => {
 
     loadDashboardData();
   }, [selectedQuarter, selectedYear, selectedPM, retryCount, showAllMilestones]);
-
   // Month column headers
-  const getQuarterMonths = (quarter) => {
+  const getQuarterMonths = (quarterString) => {
+    // Extract number from "Q1", "Q2", etc.
+    const quarterNum = parseInt(quarterString.replace('Q', ''));
     const defaultQuarterMonths = {
       1: [0, 1, 2],
       2: [3, 4, 5],
       3: [6, 7, 8],
       4: [9, 10, 11],
     };
-    return defaultQuarterMonths[quarter] || [0, 1, 2];
+    return defaultQuarterMonths[quarterNum] || [0, 1, 2];
   };
-
   const getMonthNames = () => {
     if (!selectedQuarter || !selectedYear) return ["", "", ""];
     const months = getQuarterMonths(selectedQuarter);
@@ -472,7 +472,6 @@ const PMPage = (props) => {
       format(new Date(selectedYear, m, 1), "MMMM yyyy")
     );
   };
-  const [monthCol, month1Col, month2Col] = getMonthNames();
 
   return (
     <main className="main-content">

@@ -9,6 +9,7 @@ import { ProjectDataService } from "../services/ProjectDataService";
 import TableRow from "./TableRow";
 import QuarterPicker from "./QuarterPicker";
 import { format } from "date-fns";
+import { getCurrentQuarterString, getCurrentYear } from "../utils/dateUtils";
 
 const defaultQuarterMonths = {
   1: [0, 1, 2],
@@ -16,8 +17,10 @@ const defaultQuarterMonths = {
   3: [6, 7, 8],
   4: [9, 10, 11],
 };
-const getQuarterMonths = (quarter) => {
-  return defaultQuarterMonths[quarter] || [0, 1, 2];
+const getQuarterMonths = (quarterString) => {
+  // Extract number from "Q1", "Q2", etc.
+  const quarterNum = parseInt(quarterString.replace('Q', ''));
+  return defaultQuarterMonths[quarterNum] || [0, 1, 2];
 };
 
 const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
@@ -25,10 +28,8 @@ const TeamEdit = forwardRef(({ selectedUser, navigate }, ref) => {
   const [rows, setRows] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState(null);
-  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
-  const [initialRowsData, setInitialRowsData] = useState("");
-  const [selectedQuarter, setSelectedQuarter] = useState(1);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);  const [initialRowsData, setInitialRowsData] = useState("");  const [selectedQuarter, setSelectedQuarter] = useState(getCurrentQuarterString());
+  const [selectedYear, setSelectedYear] = useState(getCurrentYear());
 
   useEffect(() => {
     if (!selectedUser) {

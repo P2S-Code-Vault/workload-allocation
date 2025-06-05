@@ -23,12 +23,21 @@ const TeamMemberSelector = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
   const handleTeamMemberSelect = (member) => {
-    console.log(`Selected team member: ${member.name}, ${member.email}`);
+    console.log(`TeamMemberSelector: Selected team member:`, member);
     setShowDropdown(false);
     onSelectTeamMember(member);
   };
+
+  // Add debug logging
+  console.log("TeamMemberSelector render:", {
+    teamMembers,
+    teamMembersLength: teamMembers?.length,
+    isLoading,
+    error,
+    selectedMember,
+    showDropdown
+  });
 
   return (
     <div className="team-selector-container">

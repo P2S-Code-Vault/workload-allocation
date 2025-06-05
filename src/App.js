@@ -4,6 +4,8 @@ import headerLogo from "./P2S_Legence_Logo_White.png";
 import TableRow from "./components/TableRow";
 import { ProjectDataService } from "./services/ProjectDataService";
 import { UserService } from "./services/UserService";
+import { GLService } from "./services/GLService";
+import { StaffService } from "./services/StaffService";
 import QuarterPicker from "./components/QuarterPicker";
 import Login from "./components/Login";
 import PMPage from "./components/PMPage";
@@ -11,9 +13,8 @@ import LeadershipPage from "./components/LeadershipPage";
 import format from "date-fns/format";
 import TeamMemberSelector from "./components/TeamMemberSelector";
 import TeamEdit from "./components/teamedit";
-import { FaTrash } from "react-icons/fa"; // <-- Add this import
-import { loadMilestonesFromCSV } from "./utils/csvParser";
 import OpportunityRow from "./components/OpportunityRow";
+import { getCurrentQuarterString, getCurrentYear } from "./utils/dateUtils";
 
 // Header Component
 const Header = ({ currentView, onNavigate, onLogout }) => {
@@ -45,7 +46,7 @@ const Header = ({ currentView, onNavigate, onLogout }) => {
           onClick={() => currentView !== "pm" && onNavigate("pm")}
           disabled={currentView === "pm"}
         >
-          PM View
+          PM View (WIP)
         </button>
 
         {/* GL View Button - disabled when on leadership view */}
@@ -86,10 +87,9 @@ const MainContent = React.forwardRef((props, ref) => {
   const [currentUser, setCurrentUser] = useState("");
   const [userDetails, setUserDetails] = useState(null);
   const [isSaving, setIsSaving] = useState(false);
-  const [saveError, setSaveError] = useState(null);
-  const [scheduledHours, setScheduledHours] = useState(40);
-  const [selectedQuarter, setSelectedQuarter] = useState(null);
-  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
+  const [saveError, setSaveError] = useState(null);  const [scheduledHours, setScheduledHours] = useState(40);
+  const [selectedQuarter, setSelectedQuarter] = useState(getCurrentQuarterString());
+  const [selectedYear, setSelectedYear] = useState(getCurrentYear());
   const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
   const [teamMembers, setTeamMembers] = useState([]);
   const [selectedTeamMember, setSelectedTeamMember] = useState(null);
@@ -166,18 +166,73 @@ const MainContent = React.forwardRef((props, ref) => {
     const [m0, m1, m2] = getQuarterMonthNames(selectedQuarter, selectedYear);
     setMonthCol(m0);
     setMonth1Col(m1);
-    setMonth2Col(m2);
-  }, [selectedQuarter, selectedYear]);
-
+    setMonth2Col(m2);  }, [selectedQuarter, selectedYear]);
+  
   // Fix useEffect dependency warning by using useCallback for fetchSameGroupMembers
   const fetchSameGroupMembers = useCallback(async () => {
     try {
       setIsLoadingTeamMembers(true);
       setTeamMembersError(null);
-      const result = await ProjectDataService.getUsersInSameGroup(currentUser);
-      setTeamMembers(result.members || []);
+      console.log("Fetching team members for user:", currentUser);
+      
+      // First try to get team members from GLService
+      try {
+        const glTeamMembers = await GLService.getTeamMembers(currentUser);
+        console.log("GLService team members result:", glTeamMembers);
+        if (glTeamMembers && glTeamMembers.length > 0) {
+          setTeamMembers(glTeamMembers);
+          setIsLoadingTeamMembers(false);
+          return;
+        }
+      } catch (glError) {
+        console.warn("GLService failed, trying alternative:", glError.message);
+      }
+      
+      // Fallback to StaffService with mock data
+      try {
+        const staffData = await StaffService.loadStaffData();
+        console.log("StaffService data loaded:", staffData);
+        
+        // Find current user's group manager to filter team members
+        const currentUserData = staffData.find(staff => staff.email === currentUser);
+        const groupManager = currentUserData?.groupManager || currentUserData?.studioLeader;
+        
+        if (groupManager) {
+          // Get all staff members with the same group manager
+          const teamMembers = staffData.filter(staff => 
+            staff.groupManager === groupManager || staff.studioLeader === groupManager
+          ).map(staff => ({
+            id: staff.email,
+            name: staff.name,
+            email: staff.email,
+            title: staff.laborCategory,
+            hrs_worked_per_week: 40 // Default to 40 hours if not specified
+          }));
+          
+          console.log("Team members from StaffService:", teamMembers);
+          setTeamMembers(teamMembers);
+        } else {
+          // If no group manager found, just return all staff as potential team members
+          const allTeamMembers = staffData.map(staff => ({
+            id: staff.email,
+            name: staff.name,
+            email: staff.email,
+            title: staff.laborCategory,
+            hrs_worked_per_week: 40
+          }));
+          console.log("All staff as team members:", allTeamMembers);
+          setTeamMembers(allTeamMembers);
+        }
+      } catch (staffError) {
+        console.error("StaffService also failed:", staffError);
+        // Last fallback - use empty array
+        setTeamMembers([]);
+        setTeamMembersError("Failed to load team members from all sources");
+      }
+      
       setIsLoadingTeamMembers(false);
     } catch (error) {
+      console.error("Error fetching team members:", error);
       setTeamMembersError("Failed to load team members");
       setIsLoadingTeamMembers(false);
     }
@@ -808,25 +863,10 @@ const MainContent = React.forwardRef((props, ref) => {
     );
     return { normalRows, adminRows, ptoRows, lwopRows, availableHoursRows };
   }, [rows]);
-
   //avail hours
   const calculateAvailableHours = useCallback(() => {
     return getGroupedRows().availableHoursRows.reduce((sum, row) => {
-      return sum + (parseFloat(row.hours) || 0);
-    }, 0);
-  }, [getGroupedRows]);
-  
-  // Calculate PTO/Holiday hours
-  const calculatePTOHours = useCallback(() => {
-    return getGroupedRows().ptoRows.reduce((sum, row) => {
-      return sum + (parseFloat(row.hours) || 0);
-    }, 0);
-  }, [getGroupedRows]);
-
-  // Calculate LWOP hours
-  const calculateLWOPHours = useCallback(() => {
-    return getGroupedRows().lwopRows.reduce((sum, row) => {
-      return sum + (parseFloat(row.hours) || 0);
+      return sum + (parseFloat(row.month) || 0) + (parseFloat(row.month1) || 0) + (parseFloat(row.month2) || 0);
     }, 0);
   }, [getGroupedRows]);
 
@@ -1019,13 +1059,24 @@ const deleteOpportunityRow = useCallback(async (index) => {
                           isLoading={isLoading}
                           currentUser={currentUser}
                         />
-                      ))}
-                      <tr className="pto-total">
-                        <td colSpan="6" className="pto-total-label">
+                      ))}                      <tr className="pto-total">
+                        <td colSpan="6" className="pto-total-label" style={{ textAlign: "right", fontWeight: "bold" }}>
                           Total:
                         </td>
-                        <td className="pto-total-hours">
-                          {formatter.format(calculatePTOHours())}
+                        <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
+                          {formatter.format(
+                            groupedRows.ptoRows.reduce((sum, row) => sum + (parseFloat(row.month) || 0), 0)
+                          )}
+                        </td>
+                        <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
+                          {formatter.format(
+                            groupedRows.ptoRows.reduce((sum, row) => sum + (parseFloat(row.month1) || 0), 0)
+                          )}
+                        </td>
+                        <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
+                          {formatter.format(
+                            groupedRows.ptoRows.reduce((sum, row) => sum + (parseFloat(row.month2) || 0), 0)
+                          )}
                         </td>
                         <td colSpan="2"></td>
                       </tr>
@@ -1048,13 +1099,24 @@ const deleteOpportunityRow = useCallback(async (index) => {
                           isLoading={isLoading}
                           currentUser={currentUser}
                         />
-                      ))}
-                      <tr className="lwop-total">
-                        <td colSpan="6" className="lwop-total-label">
+                      ))}                      <tr className="lwop-total">
+                        <td colSpan="6" className="lwop-total-label" style={{ textAlign: "right", fontWeight: "bold" }}>
                           Total:
                         </td>
-                        <td className="lwop-total-hours">
-                          {formatter.format(calculateLWOPHours())}
+                        <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
+                          {formatter.format(
+                            groupedRows.lwopRows.reduce((sum, row) => sum + (parseFloat(row.month) || 0), 0)
+                          )}
+                        </td>
+                        <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
+                          {formatter.format(
+                            groupedRows.lwopRows.reduce((sum, row) => sum + (parseFloat(row.month1) || 0), 0)
+                          )}
+                        </td>
+                        <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
+                          {formatter.format(
+                            groupedRows.lwopRows.reduce((sum, row) => sum + (parseFloat(row.month2) || 0), 0)
+                          )}
                         </td>
                         <td colSpan="2"></td>
                       </tr>
@@ -1117,13 +1179,24 @@ const deleteOpportunityRow = useCallback(async (index) => {
                           isLoading={isLoading}
                           currentUser={currentUser}
                         />
-                      ))}
-                      <tr className="available-hours-total">
-                        <td colSpan="6" className="available-hours-total-label">
+                      ))}                      <tr className="available-hours-total">
+                        <td colSpan="6" className="available-hours-total-label" style={{ textAlign: "right", fontWeight: "bold" }}>
                           Total:
                         </td>
-                        <td className="available-hours-total-hours">
-                          {formatter.format(calculateAvailableHours())}
+                        <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
+                          {formatter.format(
+                            groupedRows.availableHoursRows.reduce((sum, row) => sum + (parseFloat(row.month) || 0), 0)
+                          )}
+                        </td>
+                        <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
+                          {formatter.format(
+                            groupedRows.availableHoursRows.reduce((sum, row) => sum + (parseFloat(row.month1) || 0), 0)
+                          )}
+                        </td>
+                        <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
+                          {formatter.format(
+                            groupedRows.availableHoursRows.reduce((sum, row) => sum + (parseFloat(row.month2) || 0), 0)
+                          )}
                         </td>
                         <td colSpan="2"></td>
                       </tr>
