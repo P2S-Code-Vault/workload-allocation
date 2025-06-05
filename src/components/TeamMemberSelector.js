@@ -1,6 +1,5 @@
 import React, { useState, useEffect } from "react";
 import "./TeamMemberSelector.css";
-import { ProjectDataService } from "../services/ProjectDataService";
 
 const TeamMemberSelector = ({
   currentUser,
