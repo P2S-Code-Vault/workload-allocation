@@ -208,7 +208,13 @@ const LeadershipPage = ({ navigate }) => {
       // const emails = members.map((member) => member.email);
 
       // Use the new monthly allocations method
-      const monthlyData = await GLTeamService.getTeamMonthlyAllocations(
+      // const monthlyData = await GLTeamService.getTeamMonthlyAllocations(
+      //   groupManagerEmail,
+      //   selectedYear,
+      //   quarterString
+      // );
+
+      const monthlyData = await GLTeamService.getTeamMonthlyAllocationsWithDetails(
         groupManagerEmail,
         selectedYear,
         quarterString
@@ -320,20 +326,50 @@ const LeadershipPage = ({ navigate }) => {
           (a) => a.contact_id === member.contact_id
         );
         const memberRows = memberAllocations.map((allocation) => ({
-          projectNumber: allocation.proj_id || allocation.project_number || "",
-          projectName: allocation.project_name || "",
-          milestone: allocation.milestone_name || "",
-          pm: allocation.project_manager || "",
-          labor: parseFloat(allocation.contract_labor || allocation.labor || 0),
-          pctLaborUsed:
-            parseFloat(
-              allocation.forecast_pm_labor || allocation.percentLaborUsed || 0
-            ) * 100,
-          hours: parseFloat(allocation.ra_hours || allocation.hours || 0),
-          remarks: allocation.ra_remarks || allocation.remarks || "",
-          availableHours: !!allocation.available_hours, // new, note: available_hours is a string
-        }));
-
+              // Core identifiers
+                        ra_id: allocation.ra_id,
+                        milestone_id: allocation.milestone_id,
+                        contact_id: allocation.contact_id,
+                        
+                        // Project/Milestone Information (now with detailed data)
+                        projectNumber: allocation.project_number || allocation.proj_id || "",
+                        projectName: allocation.project_name || "",
+                        milestone: allocation.milestone_name || "",
+                        pm: allocation.project_manager || "",
+                        
+                        // Financial Information
+                        labor: parseFloat(allocation.contract_labor || allocation.labor || 0),
+                        pctLaborUsed: parseFloat(allocation.forecast_pm_labor || allocation.percentLaborUsed || 0) * 100,
+                        
+                        // Hours Information
+                        hours: parseFloat(allocation.ra_hours || allocation.hours || 0),
+                        month_hours: parseFloat(allocation.month_hours || 0),
+                        month_hours1: parseFloat(allocation.month_hours1 || 0),
+                        month_hours2: parseFloat(allocation.month_hours2 || 0),
+                        
+                        // Classification flags
+                        directHours: !!allocation.direct_hours,
+                        ptoHolidayHours: !!allocation.pto_holiday_hours,
+                        lwopHours: !!allocation.lwop_hours,
+                        indirectHours: !!allocation.indirect_hours,
+                        availableHours: !!allocation.available_hours,
+                        
+                        // Additional Information
+                        remarks: allocation.ra_remarks || allocation.remarks || "",
+                        quarter: allocation.quarter,
+                        year: allocation.year,
+                        month: allocation.month,
+                        
+                        // Milestone status and billing info
+                        milestone_status: allocation.milestone_status,
+                        is_billable: allocation.is_billable,
+                        act_mult_rate: allocation.act_mult_rate,
+                        
+                        // Dates and metadata
+                        ra_date: allocation.ra_date,
+                        modified_by: allocation.modified_by,
+                      }));
+        
         const directHours = memberRows
           .filter((row) => !row.projectNumber.startsWith("0000-0000"))
           .reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
@@ -997,7 +1033,7 @@ const CollapsibleMember = ({ member, formatter, formatPercent, navigate, isEdita
                 sortedRows.map((entry, i) => (
                   <div key={i} className="time-entry">
                     <span className="project-number">{entry.projectNumber}</span>
-                    <span className="project-name">{entry.projectName}</span>
+                    <span className="project-name">{entry.milestone}</span>
                     <span className="remarks">{entry.remarks}</span>
                     <span className="number-cell">{formatter.format(entry.hours)}</span>
                   </div>
