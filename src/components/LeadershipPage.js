@@ -550,7 +550,7 @@ const LeadershipPage = ({ navigate }) => {
                     setShowAllGroups(!showAllGroups);
                   }}
                 >
-                  {showAllGroups ? "My Group Only" : "All Groups (WIP)"}
+                  {showAllGroups ? "My Group Only" : "All Groups"}
                 </button>
 
                 <button
@@ -622,19 +622,20 @@ const LeadershipPage = ({ navigate }) => {
 
                       // Group staff by manager using utility function
                       const groupedByManager = groupStaffByManager(normalizedStaffMembers);
-                      console.log('Staff grouped by manager:', groupedByManager);
-
-                      // Calculate summary for each group using utility function
+                      console.log('Staff grouped by manager:', groupedByManager);                      // Calculate summary for each group using utility function
                       const groupSummaries = Object.entries(groupedByManager).map(([manager, members]) => {
                         const summary = calculateGroupSummary(members);
                         summary.manager = manager;
+                        // Try to get group number from the original allStaffMonthlyData
+                        if (allStaffMonthlyData.managers && allStaffMonthlyData.managers[manager]) {
+                          summary.groupNo = allStaffMonthlyData.managers[manager].groupNo;
+                        }
                         return summary;
-                      });
-
-                      return (
+                      });return (
                         <table className="summary-table">
                           <thead>
                             <tr className="project-metrics">
+                              {showAllGroups && <th>Group</th>}
                               <th>Group Leader</th>
                               <th>Team Members</th>
                               <th>Scheduled Hours</th>
@@ -645,12 +646,22 @@ const LeadershipPage = ({ navigate }) => {
                               <th>Total Hours</th>
                               <th>Utilization Ratio</th>
                             </tr>
-                          </thead>
-                          <tbody>
-                            {groupSummaries
-                              .sort((a, b) => a.manager.localeCompare(b.manager))
+                          </thead>                          <tbody>                            {groupSummaries
+                              .sort((a, b) => {
+                                if (showAllGroups && a.groupNo && b.groupNo) {
+                                  // Sort by group number when showing all groups
+                                  const groupA = parseInt(a.groupNo);
+                                  const groupB = parseInt(b.groupNo);
+                                  if (!isNaN(groupA) && !isNaN(groupB)) {
+                                    return groupA - groupB;
+                                  }
+                                }
+                                // Fallback to manager name sorting
+                                return a.manager.localeCompare(b.manager);
+                              })
                               .map((summary, index) => (
                                 <tr key={index}>
+                                  {showAllGroups && <td>{summary.groupNo || 'N/A'}</td>}
                                   <td>{summary.manager}</td>
                                   <td className="number-cell">{summary.memberCount}</td>
                                   <td className="number-cell">{formatter.format(summary.scheduled_hours)}</td>
