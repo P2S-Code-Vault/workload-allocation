@@ -205,9 +205,7 @@ const LeadershipPage = ({ navigate }) => {
       );
 
       // Remove unused emails variable
-      // const emails = members.map((member) => member.email);
-
-      // Use the new monthly allocations method
+      // const emails = members.map((member) => member.email);      // Use the new monthly allocations method
       // const monthlyData = await GLTeamService.getTeamMonthlyAllocations(
       //   groupManagerEmail,
       //   selectedYear,
@@ -220,6 +218,13 @@ const LeadershipPage = ({ navigate }) => {
         quarterString
       );
 
+      // Also fetch monthly opportunities
+      const opportunitiesData = await GLTeamService.getMonthlyOpportunities(
+        groupManagerEmail,
+        selectedYear,
+        quarterString
+      );
+
       // Use backend's expected_months for month selector
       setMonths(monthlyData.expected_months || [1, 2, 3]);
 
@@ -227,6 +232,7 @@ const LeadershipPage = ({ navigate }) => {
       // Determine which month key to use based on selectedMonthIndex
       const monthKey = `month${selectedMonthIndex + 1}`;
       const monthAllocations = (monthlyData.monthly_data && monthlyData.monthly_data[monthKey]) || [];
+      const monthOpportunities = (opportunitiesData.monthly_opportunities && opportunitiesData.monthly_opportunities.monthly_data && opportunitiesData.monthly_opportunities.monthly_data[monthKey]) || [];
 
       const allGroupsData = {};
       const groupManager = userGroupManager;
@@ -319,9 +325,7 @@ const LeadershipPage = ({ navigate }) => {
           if (member.discipline && !allGroupsData[groupManager].studios[studio].discipline) {
             allGroupsData[groupManager].studios[studio].discipline = member.discipline;
           }
-        }
-
-        // FIX: Use contact_id for matching allocations
+        }        // FIX: Use contact_id for matching allocations
         const memberAllocations = monthAllocations.filter(
           (a) => a.contact_id === member.contact_id
         );
@@ -368,13 +372,55 @@ const LeadershipPage = ({ navigate }) => {
                         // Dates and metadata
                         ra_date: allocation.ra_date,
                         modified_by: allocation.modified_by,
+                        type: 'milestone' // Add type to distinguish from opportunities
                       }));
+
+        // Process opportunities for this member
+        const memberOpportunities = monthOpportunities.filter(
+          (o) => o.contact_id === member.contact_id
+        );
+        const memberOpportunityRows = memberOpportunities.map((opportunity) => ({
+          // Core identifiers
+          ra_id: opportunity.ra_id,
+          opportunity_id: opportunity.opportunity_id,
+          contact_id: opportunity.contact_id,
+          
+          // Project/Opportunity Information
+          projectNumber: `OPP-${opportunity.opportunity_id}`, // Prefix to distinguish from projects
+          projectName: `Opportunity ${opportunity.opportunity_id}`, // Will be enhanced with actual opportunity details
+          milestone: '', // Opportunities don't have milestones
+          pm: '', // Will be enhanced with opportunity details
+          
+          // Hours Information
+          hours: parseFloat(opportunity.hours || 0),
+          
+          // Classification - opportunities are considered direct hours
+          directHours: true,
+          ptoHolidayHours: false,
+          lwopHours: false,
+          indirectHours: false,
+          availableHours: false,
+          
+          // Additional Information
+          remarks: opportunity.ra_remarks || "",
+          quarter: opportunity.quarter,
+          year: opportunity.year,
+          month: opportunity.month,
+          
+          // Metadata
+          type: 'opportunity' // Add type to distinguish from milestones
+        }));
+          // Combine milestone and opportunity rows
+        const allMemberRows = [...memberRows, ...memberOpportunityRows];
         
-        const directHours = memberRows
-          .filter((row) => !row.projectNumber.startsWith("0000-0000"))
+        const directHours = allMemberRows
+          .filter((row) => {
+            // Include opportunities (they are direct hours) and milestone rows that don't start with "0000-0000"
+            return row.type === 'opportunity' || !row.projectNumber.startsWith("0000-0000");
+          })
           .reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
 
-        const ptoHours = memberRows
+        const ptoHours = allMemberRows
           .filter(
             (row) =>
               row.projectNumber.startsWith("0000-0000-0PTO") ||
@@ -386,7 +432,7 @@ const LeadershipPage = ({ navigate }) => {
           .reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
 
         //new
-        const availableHours = memberRows
+        const availableHours = allMemberRows
           .filter(
             (row) =>
               row.availableHours ||
@@ -394,7 +440,7 @@ const LeadershipPage = ({ navigate }) => {
           )
           .reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
 
-        const overheadHours = memberRows
+        const overheadHours = allMemberRows
           .filter(
             (row) =>
               row.projectNumber.startsWith("0000-0000") &&
@@ -406,11 +452,9 @@ const LeadershipPage = ({ navigate }) => {
               !row.availableHours && // new
               !row.projectNumber.startsWith("0000-0000-AVAIL_HOURS") //new
           )
-          .reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);        //check with team
+          .reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);//check with team
         const totalHours =
-          directHours + ptoHours + overheadHours;
-
-        allGroupsData[groupManager].studios[studio].members.push({
+          directHours + ptoHours + overheadHours;        allGroupsData[groupManager].studios[studio].members.push({
           id: member.id,
           name: member.name,
           email: member.email,
@@ -421,7 +465,9 @@ const LeadershipPage = ({ navigate }) => {
           overheadHours,          availableHours, //new
           totalHours,
           ratioB: calculateRatioB(directHours, scheduledHours, ptoHours),
-          rows: memberRows,
+          rows: allMemberRows, // Use combined rows instead of just memberRows
+          milestoneRows: memberRows, // Keep separate for detailed view
+          opportunityRows: memberOpportunityRows, // Keep separate for detailed view
           studioLeader: member.studio_leader || 'Unassigned',
           discipline: member.discipline || ''
         });
@@ -1011,7 +1057,9 @@ const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent, navig
 
 const CollapsibleMember = ({ member, formatter, formatPercent, navigate, isEditable = true }) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
-  const sortedRows = [...(member.rows || [])].sort((a, b) => a.projectNumber.localeCompare(b.projectNumber));
+  const sortedMilestoneRows = [...(member.milestoneRows || [])].sort((a, b) => a.projectNumber.localeCompare(b.projectNumber));
+  const sortedOpportunityRows = [...(member.opportunityRows || [])].sort((a, b) => a.projectNumber.localeCompare(b.projectNumber));
+  
   return (
     <>
       <tr>
@@ -1038,18 +1086,39 @@ const CollapsibleMember = ({ member, formatter, formatPercent, navigate, isEdita
         <tr className="member-details">
           <td colSpan="10">
             <div className="time-entries">
-              {sortedRows.length === 0 ? (
-                <div className="no-entries">No time entries found</div>
-              ) : (
-                sortedRows.map((entry, i) => (
-                  <div key={i} className="time-entry">
-                    <span className="project-number">{entry.projectNumber}</span>
-                    <span className="project-name">{entry.milestone}</span>
-                    <span className="remarks">{entry.remarks}</span>
-                    <span className="number-cell">{formatter.format(entry.hours)}</span>
-                  </div>
-                ))
-              )}
+              {/* Milestones Section */}
+              <div className="time-entries-section">
+                <h5>Milestones</h5>
+                {sortedMilestoneRows.length === 0 ? (
+                  <div className="no-entries">No milestone entries found</div>
+                ) : (
+                  sortedMilestoneRows.map((entry, i) => (
+                    <div key={`milestone-${i}`} className="time-entry">
+                      <span className="project-number">{entry.projectNumber}</span>
+                      <span className="project-name">{entry.milestone}</span>
+                      <span className="remarks">{entry.remarks}</span>
+                      <span className="number-cell">{formatter.format(entry.hours)}</span>
+                    </div>
+                  ))
+                )}
+              </div>
+              
+              {/* Opportunities Section */}
+              <div className="time-entries-section">
+                <h5>Opportunities</h5>
+                {sortedOpportunityRows.length === 0 ? (
+                  <div className="no-entries">No opportunity entries found</div>
+                ) : (
+                  sortedOpportunityRows.map((entry, i) => (
+                    <div key={`opportunity-${i}`} className="time-entry">
+                      <span className="project-number">{entry.projectNumber}</span>
+                      <span className="project-name">{entry.projectName}</span>
+                      <span className="remarks">{entry.remarks}</span>
+                      <span className="number-cell">{formatter.format(entry.hours)}</span>
+                    </div>
+                  ))
+                )}
+              </div>
             </div>
           </td>
         </tr>
