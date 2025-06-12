@@ -29,7 +29,11 @@ const LeadershipPage = ({ navigate }) => {
   const [months, setMonths] = useState(getQuarterMonths(getCurrentQuarter()));
   const [allStaffMonthlyData, setAllStaffMonthlyData] = useState(null);
 
+  // const [scheduledHoursData, setScheduledHoursData] = useState({});
+  // const [scheduledHoursLoading, setScheduledHoursLoading] = useState(false);
+  // const [scheduledHoursError, setScheduledHoursError] = useState(null);
   const [scheduledHoursData, setScheduledHoursData] = useState({});
+  const [quarterlyScheduledHoursData, setQuarterlyScheduledHoursData] = useState({}); // NEW: Cache quarterly data
   const [scheduledHoursLoading, setScheduledHoursLoading] = useState(false);
   const [scheduledHoursError, setScheduledHoursError] = useState(null);
 
@@ -74,90 +78,16 @@ const LeadershipPage = ({ navigate }) => {
     }
   }
 
-  //  /**
-  //  * Get scheduled hours for a specific member
-  //  * @param {Object} member - Member object with contact_id, id, or email
-  //  * @returns {number} Scheduled hours (defaults to 40.0 if not found)
-  //  */
-  // const getScheduledHoursForMember = useCallback((member) => {
-  //   const memberKey = member.contact_id || member.contactId || member.id || member.email;
-  //   const scheduledHoursInfo = scheduledHoursData[memberKey];
-    
-  //   if (scheduledHoursInfo && scheduledHoursInfo.success && scheduledHoursInfo.scheduledHoursData) {
-  //     const extractedHours = ScheduledHoursService.extractScheduledHours(scheduledHoursInfo.scheduledHoursData, 40.0);
-  //     console.log(`[LeadershipPage] Using API scheduled hours for ${member.name || memberKey}: ${extractedHours}`);
-  //     return extractedHours;
-  //   }
-    
-  //   // Fallback to member data if available
-  //   if (member.scheduled_hours !== null && member.scheduled_hours !== undefined) {
-  //     const memberHours = parseFloat(member.scheduled_hours);
-  //     if (!isNaN(memberHours)) {
-  //       console.log(`[LeadershipPage] Using fallback scheduled hours for ${member.name || memberKey}: ${memberHours}`);
-  //       return memberHours;
-  //     }
-  //   }
-    
-  //   console.log(`[LeadershipPage] Using default scheduled hours for ${member.name || memberKey}: 40.0`);
-  //   return 40.0;
-  // }, [scheduledHoursData]);
-  /**
-     * Get scheduled hours for a specific member
-     * @param {Object} member - Member object with contact_id, id, or email
-     * @returns {number} Scheduled hours (defaults to 40.0 if not found)
-     */
     const getScheduledHoursForMember = useCallback((member) => {
-      const memberKey = member.contact_id || member.contactId || member.id || member.email;
-      const scheduledHoursInfo = scheduledHoursData[memberKey];
-      
-      if (scheduledHoursInfo && scheduledHoursInfo.success && scheduledHoursInfo.scheduledHoursData) {
-        const extractedHours = ScheduledHoursService.extractScheduledHours(scheduledHoursInfo.scheduledHoursData, 40.0);
-        console.log(`[LeadershipPage] Using API scheduled hours for ${member.name || memberKey}: ${extractedHours}`);
-        return extractedHours;
-      }
-      
-      // Fallback to member data if available
-      if (member.scheduled_hours !== null && member.scheduled_hours !== undefined) {
-        const memberHours = parseFloat(member.scheduled_hours);
-        if (!isNaN(memberHours)) {
-          console.log(`[LeadershipPage] Using fallback scheduled hours for ${member.name || memberKey}: ${memberHours}`);
-          return memberHours;
-        }
-      }
-      
-      console.log(`[LeadershipPage] Using default scheduled hours for ${member.name || memberKey}: 40.0`);
-      return 40.0;
-    }, [scheduledHoursData]);
+      return ScheduledHoursService.getScheduledHoursForMemberOptimized(
+        member, 
+        quarterlyScheduledHoursData, 
+        selectedMonthIndex, 
+        40.0
+      );
+    }, [quarterlyScheduledHoursData, selectedMonthIndex]);
 
-  //     /**
-  //      * Calculate total scheduled hours for a studio
-  //      * @param {Object} studioData - Studio data with members array
-  //      * @returns {number} Total scheduled hours for the studio
-  //      */
-  //     const calculateStudioScheduledHours = useCallback((studioData) => {
-  //       if (!studioData.members || studioData.members.length === 0) {
-  //         return 0;
-  //       }
-        
-  //       return studioData.members.reduce((total, member) => {
-  //         return total + getScheduledHoursForMember(member);
-  //       }, 0);
-  //     }, [getScheduledHoursForMember]);
-
-  // /**
-  //  * Calculate total scheduled hours for a manager's entire team
-  //  * @param {Object} managerData - Manager data with studios object
-  //  * @returns {number} Total scheduled hours for the manager's team
-  //  */
-  // const calculateManagerScheduledHours = useCallback((managerData) => {
-  //   if (!managerData.studios) {
-  //     return 0;
-  //   }
-    
-  //   return Object.values(managerData.studios).reduce((total, studioData) => {
-  //     return total + calculateStudioScheduledHours(studioData);
-  //   }, 0);
-  // }, [calculateStudioScheduledHours]);
+  
   /**
  * Calculate total scheduled hours for a studio
  * @param {Object} studioData - Studio data with members array
@@ -188,157 +118,104 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
   }, 0);
 }, [calculateStudioScheduledHours]);
 
-  /**
-   * Get scheduled hours data for display in summary tables
-   * @param {Array} members - Array of member objects
-   * @returns {Object} Summary of scheduled hours data
-   */
+ 
   const getScheduledHoursSummary = useCallback((members) => {
-    let totalScheduledHours = 0;
-    let apiDataCount = 0;
-    let fallbackDataCount = 0;
-    let errorCount = 0;
+  let totalScheduledHours = 0;
+  let apiDataCount = 0;
+  let fallbackDataCount = 0;
+  let errorCount = 0;
+  
+  members.forEach(member => {
+    const memberKey = member.contact_id || member.contactId || member.id || member.email;
+    const quarterlyScheduledHoursInfo = quarterlyScheduledHoursData[memberKey];
     
-    members.forEach(member => {
-      const memberKey = member.contact_id || member.contactId || member.id || member.email;
-      const scheduledHoursInfo = scheduledHoursData[memberKey];
-      
-      if (scheduledHoursInfo && scheduledHoursInfo.success) {
-        apiDataCount++;
-        totalScheduledHours += ScheduledHoursService.extractScheduledHours(scheduledHoursInfo.scheduledHoursData, 40.0);
-      } else if (scheduledHoursInfo && !scheduledHoursInfo.success) {
-        errorCount++;
-        totalScheduledHours += getScheduledHoursForMember(member); // Use fallback
-      } else {
-        fallbackDataCount++;
-        totalScheduledHours += getScheduledHoursForMember(member); // Use fallback
-      }
-    });
-    
-    return {
-      totalScheduledHours,
-      apiDataCount,
-      fallbackDataCount,
-      errorCount,
-      totalMembers: members.length
-    };
-  }, [scheduledHoursData, getScheduledHoursForMember]);
-
-  /**
-   * Fetch scheduled hours for a list of members
-   * @param {Array} members - Array of member objects
-   * @param {number} year - Year
-   * @param {number} month - Month number (1-12)
-   * @returns {Promise<Object>} Scheduled hours data map
-   */
-  const fetchScheduledHoursForMembers = useCallback(async (members, year, month) => {
-    if (!members || members.length === 0) {
-      console.log('[LeadershipPage] No members to fetch scheduled hours for');
-      return {};
-    }
-    
-    setScheduledHoursLoading(true);
-    setScheduledHoursError(null);
-    
-    try {
-      console.log(`[LeadershipPage] Fetching scheduled hours for ${members.length} members, ${year}-${month}`);
-      
-      const scheduledHoursMap = await ScheduledHoursService.batchFetchScheduledHours(
-        members, 
-        year, 
-        month // Monthly data for the selected month
+    if (quarterlyScheduledHoursInfo && quarterlyScheduledHoursInfo.success) {
+      apiDataCount++;
+      const monthlyHours = ScheduledHoursService.extractMonthlyFromQuarterly(
+        quarterlyScheduledHoursInfo.quarterlyScheduledHoursData, 
+        selectedMonthIndex, 
+        40.0
       );
-      
-      // Log results summary
-      const successCount = Object.values(scheduledHoursMap).filter(r => r.success).length;
-      const errorCount = Object.values(scheduledHoursMap).filter(r => !r.success).length;
-      
-      console.log(`[LeadershipPage] Scheduled hours fetch completed. Success: ${successCount}, Errors: ${errorCount}`);
-      
-      if (errorCount > 0) {
-        console.warn(`[LeadershipPage] ${errorCount} scheduled hours requests failed`);
-        setScheduledHoursError(`Failed to fetch scheduled hours for ${errorCount} out of ${members.length} members`);
-      }
-      
-      return scheduledHoursMap;
-      
-    } catch (error) {
-      console.error('[LeadershipPage] Error fetching scheduled hours:', error);
-      setScheduledHoursError(`Failed to fetch scheduled hours: ${error.message}`);
-      return {};
-    } finally {
-      setScheduledHoursLoading(false);
+      totalScheduledHours += monthlyHours;
+    } else if (quarterlyScheduledHoursInfo && !quarterlyScheduledHoursInfo.success) {
+      errorCount++;
+      totalScheduledHours += getScheduledHoursForMember(member); // Use fallback
+    } else {
+      fallbackDataCount++;
+      totalScheduledHours += getScheduledHoursForMember(member); // Use fallback
     }
-  }, []);
+  });
+  
+  return {
+    totalScheduledHours,
+    apiDataCount,
+    fallbackDataCount,
+    errorCount,
+    totalMembers: members.length
+  };
+}, [quarterlyScheduledHoursData, getScheduledHoursForMember, selectedMonthIndex]);
 
-  /**
-   * Update scheduled hours when month selection changes
-   * @param {number} newMonthIndex - New month index (0-based)
-   */
-  const updateScheduledHoursForMonth = useCallback(async (newMonthIndex) => {
-    if (!currentUser) return;
+ 
+  const fetchQuarterlyScheduledHoursForMembers = useCallback(async (members, year, quarter) => {
+  if (!members || members.length === 0) {
+    console.log('[LeadershipPage] No members to fetch quarterly scheduled hours for');
+    return {};
+  }
+  
+  setScheduledHoursLoading(true);
+  setScheduledHoursError(null);
+  
+  try {
+    console.log(`[LeadershipPage] Fetching QUARTERLY scheduled hours for ${members.length} members, ${year}-${quarter}`);
     
-    try {
-      const quarterString = typeof selectedQuarter === 'number' ? `Q${selectedQuarter}` : selectedQuarter;
-      const currentMonth = ScheduledHoursService.getMonthNumberFromQuarterIndex(newMonthIndex, quarterString);
-      
-      let membersToFetch = [];
-      
-      if (showAllGroups && allStaffMonthlyData?.managers) {
-        // Extract members from all staff data
-        Object.values(allStaffMonthlyData.managers).forEach(managerData => {
-          if (managerData.studios) {
-            Object.values(managerData.studios).forEach(studioData => {
-              if (studioData.members) {
-                membersToFetch.push(...studioData.members);
-              }
-            });
-          }
-        });
-      } else if (Object.keys(teamData).length > 0) {
-        // Extract members from team data
-        Object.values(teamData).forEach(managerData => {
-          if (managerData.studios) {
-            Object.values(managerData.studios).forEach(studioData => {
-              if (studioData.members) {
-                membersToFetch.push(...studioData.members);
-              }
-            });
-          }
-        });
-      }
-      
-      if (membersToFetch.length > 0) {
-        console.log(`[LeadershipPage] Updating scheduled hours for month ${currentMonth} (index ${newMonthIndex})`);
-        const newScheduledHoursMap = await fetchScheduledHoursForMembers(membersToFetch, selectedYear, currentMonth);
-        setScheduledHoursData(newScheduledHoursMap);
-      }
-    } catch (error) {
-      console.error('[LeadershipPage] Error updating scheduled hours for month:', error);
-      setScheduledHoursError(`Failed to update scheduled hours: ${error.message}`);
+    const quarterlyScheduledHoursMap = await ScheduledHoursService.batchFetchQuarterlyScheduledHours(
+      members, 
+      year, 
+      quarter
+    );
+    
+    // Log results summary
+    const successCount = Object.values(quarterlyScheduledHoursMap).filter(r => r.success).length;
+    const errorCount = Object.values(quarterlyScheduledHoursMap).filter(r => !r.success).length;
+    
+    console.log(`[LeadershipPage] Quarterly scheduled hours fetch completed. Success: ${successCount}, Errors: ${errorCount}`);
+    
+    if (errorCount > 0) {
+      console.warn(`[LeadershipPage] ${errorCount} quarterly scheduled hours requests failed`);
+      setScheduledHoursError(`Failed to fetch scheduled hours for ${errorCount} out of ${members.length} members`);
     }
-  }, [currentUser, selectedQuarter, selectedYear, showAllGroups, allStaffMonthlyData, teamData, fetchScheduledHoursForMembers]);
+    
+    return quarterlyScheduledHoursMap;
+    
+  } catch (error) {
+    console.error('[LeadershipPage] Error fetching quarterly scheduled hours:', error);
+    setScheduledHoursError(`Failed to fetch scheduled hours: ${error.message}`);
+    return {};
+  } finally {
+    setScheduledHoursLoading(false);
+  }
+}, []);
 
-  /**
-   * Clear scheduled hours data
-   */
+  
+  const updateScheduledHoursForMonth = useCallback(async (newMonthIndex) => {
+  console.log(`[LeadershipPage] Switching to month index ${newMonthIndex} using cached quarterly data`);
+  // No API calls needed - the getScheduledHoursForMember function will automatically use the correct month from quarterly cache
+}, []);
+
+  
   const clearScheduledHoursData = useCallback(() => {
-    setScheduledHoursData({});
-    setScheduledHoursError(null);
-    ScheduledHoursService.clearCache();
-    console.log('[LeadershipPage] Cleared scheduled hours data and cache');
-  }, []);
+      setScheduledHoursData({});
+      setQuarterlyScheduledHoursData({}); // Clear quarterly cache too
+      setScheduledHoursError(null);
+      ScheduledHoursService.clearCache();
+      console.log('[LeadershipPage] Cleared scheduled hours data and quarterly cache');
+    }, []);
 
-   // ===== EFFECT HOOKS FOR SCHEDULED HOURS =====
-
-  /**
-   * Effect: Update scheduled hours when month selection changes
-   */
-  useEffect(() => {
-    if (currentUser && (Object.keys(teamData).length > 0 || allStaffMonthlyData)) {
-      updateScheduledHoursForMonth(selectedMonthIndex);
-    }
-  }, [selectedMonthIndex, currentUser, updateScheduledHoursForMonth]);
+  
+    useEffect(() => {
+      console.log(`[LeadershipPage] Month index changed to ${selectedMonthIndex}, using cached quarterly data`);
+      // No API calls needed - the getScheduledHoursForMember will automatically use the correct month
+    }, [selectedMonthIndex]);
 
   /**
    * Effect: Clear scheduled hours data when quarter/year changes
@@ -431,28 +308,25 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
           console.warn('Data structure warnings:', validation.warnings);
         }
 
-        // ===== NEW: Fetch scheduled hours for all staff members =====
+       
         if (allStaffData && allStaffData.managers) {
-          const allMembers = [];
-          Object.values(allStaffData.managers).forEach(managerData => {
-            if (managerData.studios) {
-              Object.values(managerData.studios).forEach(studioData => {
-                if (studioData.members) {
-                  allMembers.push(...studioData.members);
-                }
-              });
-            }
-          });
+            const allMembers = [];
+            Object.values(allStaffData.managers).forEach(managerData => {
+              if (managerData.studios) {
+                Object.values(managerData.studios).forEach(studioData => {
+                  if (studioData.members) {
+                    allMembers.push(...studioData.members);
+                  }
+                });
+              }
+            });
 
-          if (allMembers.length > 0) {
-            // Get the current month number for the selected month index
-            const currentMonth = ScheduledHoursService.getMonthNumberFromQuarterIndex(selectedMonthIndex, quarterString);
-            
-            console.log(`[LoadTeamData] Fetching scheduled hours for ${allMembers.length} members for month ${currentMonth}`);
-            const scheduledHoursMap = await fetchScheduledHoursForMembers(allMembers, selectedYear, currentMonth);
-            setScheduledHoursData(scheduledHoursMap);
+            if (allMembers.length > 0) {
+              console.log(`[LoadTeamData] Fetching QUARTERLY scheduled hours for ${allMembers.length} members for ${quarterString}`);
+              const quarterlyScheduledHoursMap = await fetchQuarterlyScheduledHoursForMembers(allMembers, selectedYear, quarterString);
+              setQuarterlyScheduledHoursData(quarterlyScheduledHoursMap);
+            }
           }
-        }
         
         setAllStaffMonthlyData(allStaffData);
 
@@ -470,6 +344,9 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
             setMonths(getQuarterMonths(quarterNum));
           }
         }
+        console.log('Sample member from allStaffData:', 
+  allStaffData.managers[Object.keys(allStaffData.managers)[0]]?.studios[Object.keys(allStaffData.managers[Object.keys(allStaffData.managers)[0]]?.studios || {})[0]]?.members[0]
+);
         setTeamData({}); // Clear teamData for all groups view
         setIsLoading(false);
         return;
@@ -518,12 +395,11 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
         `Found ${members.length} team members for group manager: ${userGroupManager}`
       );
 
-      // ===== NEW: Fetch scheduled hours for team members FIRST =====
-      const currentMonth = ScheduledHoursService.getMonthNumberFromQuarterIndex(selectedMonthIndex, quarterString);
-      console.log(`[LoadTeamData] Fetching scheduled hours for ${members.length} team members for month ${currentMonth}`);
-      
-      const scheduledHoursMap = await fetchScheduledHoursForMembers(members, selectedYear, currentMonth);
-      setScheduledHoursData(scheduledHoursMap);
+       // ===== OPTIMIZED: Fetch quarterly scheduled hours for team members =====
+        console.log(`[LoadTeamData] Fetching QUARTERLY scheduled hours for ${members.length} team members for ${quarterString}`);
+
+        const quarterlyScheduledHoursMap = await fetchQuarterlyScheduledHoursForMembers(members, selectedYear, quarterString);
+        setQuarterlyScheduledHoursData(quarterlyScheduledHoursMap);
 
       const monthlyData = await GLTeamService.getTeamMonthlyAllocationsWithDetails(
         groupManagerEmail,
@@ -585,41 +461,9 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
         //let scheduledHours = 40.0;
          // ===== UPDATED: Get scheduled hours from API data instead of hardcoded 40 =====
         const scheduledHours = getScheduledHoursForMember(member);
-        console.log(`Processing member: ${member.name}, Studio: ${studio}, Scheduled Hours: ${scheduledHours} (from API: ${!!scheduledHoursMap[member.contact_id || member.email]?.success})`);
-
-        // if (
-        //   member.scheduled_hours !== null &&
-        //   member.scheduled_hours !== undefined
-        // ) {
-        //   scheduledHours = Number(member.scheduled_hours);
-
-        //   if (isNaN(scheduledHours)) {
-        //     console.warn(
-        //       `Invalid hours value for ${member.name}: ${member.scheduled_hours}, using default 40`
-        //     );
-        //     scheduledHours = 40.0;
-        //   }
-        // }
-
-        // console.log(
-        //   `Processing member: ${
-        //     member.name
-        //   }, Studio: ${studio}, Hours: ${scheduledHours} (type: ${typeof scheduledHours})`
-        // );
-
-        // if (!allGroupsData[groupManager].studios[studio]) {
-        //   allGroupsData[groupManager].studios[studio] = {
-        //     members: [],
-        //     totalHours: 0,
-        //     scheduledHours: 0,
-        //     directHours: 0,
-        //     ptoHours: 0,
-        //     overheadHours: 0,
-        //     availableHours: 0, 
-        //     studioLeader: member.studio_leader || 'Unassigned',
-        //     discipline: member.discipline || ''//new
-        //   };
-        // }
+        // console.log(`Processing member: ${member.name}, Studio: ${studio}, Scheduled Hours: ${scheduledHours} (from API: ${!!scheduledHoursMap[member.contact_id || member.email]?.success})`);
+        console.log(`Processing member: ${member.name}, Studio: ${studio}, Scheduled Hours: ${scheduledHours} (from API: ${!!quarterlyScheduledHoursData[member.contact_id || member.email]?.success})`);
+        
         if (!allGroupsData[groupManager].studios[studio]) {
           allGroupsData[groupManager].studios[studio] = {
             members: [],
@@ -788,8 +632,10 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
           opportunityRows: memberOpportunityRows, // Keep separate for detailed view
           studioLeader: member.studio_leader || 'Unassigned',
           discipline: member.discipline || '',
-          scheduledHoursApiData: scheduledHoursMap[member.contact_id || member.email]?.scheduledHoursData,
-          scheduledHoursSource: scheduledHoursMap[member.contact_id || member.email]?.success ? 'API' : 'fallback'
+          // scheduledHoursApiData: scheduledHoursMap[member.contact_id || member.email]?.scheduledHoursData,
+          // scheduledHoursSource: scheduledHoursMap[member.contact_id || member.email]?.success ? 'API' : 'fallback'
+          scheduledHoursInfo: quarterlyScheduledHoursData[member.contact_id || member.email]?.quarterlyScheduledHoursData,
+          scheduledHoursSource: quarterlyScheduledHoursData[member.contact_id || member.email]?.success ? 'API' : 'fallback'
         });
 
         allGroupsData[groupManager].studios[studio].totalHours += totalHours;
@@ -845,7 +691,7 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
     } finally {
       setIsLoading(false);
     }
-  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear, selectedMonthIndex,fetchScheduledHoursForMembers]);
+  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear, selectedMonthIndex,fetchQuarterlyScheduledHoursForMembers]);
 
   useEffect(() => {
     if (!currentUser) {
@@ -853,52 +699,7 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
     }
     loadTeamData();  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear]);
 
-    useEffect(() => {
-  const fetchScheduledHoursAfterDataLoad = async () => {
-    if (!currentUser) return;
-    
-    const quarterString = typeof selectedQuarter === 'number' ? `Q${selectedQuarter}` : selectedQuarter;
-    const currentMonth = ScheduledHoursService.getMonthNumberFromQuarterIndex(selectedMonthIndex, quarterString);
-    
-    let membersToFetch = [];
-    
-    if (showAllGroups && allStaffMonthlyData?.managers) {
-      // Extract members from all staff data
-      Object.values(allStaffMonthlyData.managers).forEach(managerData => {
-        if (managerData.studios) {
-          Object.values(managerData.studios).forEach(studioData => {
-            if (studioData.members) {
-              membersToFetch.push(...studioData.members);
-            }
-          });
-        }
-      });
-    } else if (Object.keys(teamData).length > 0) {
-      // Extract members from team data
-      Object.values(teamData).forEach(managerData => {
-        if (managerData.studios) {
-          Object.values(managerData.studios).forEach(studioData => {
-            if (studioData.members) {
-              membersToFetch.push(...studioData.members);
-            }
-          });
-        }
-      });
-    }
-    
-    if (membersToFetch.length > 0) {
-      console.log(`[Effect] Fetching scheduled hours for ${membersToFetch.length} members for month ${currentMonth}`);
-      const newScheduledHoursMap = await fetchScheduledHoursForMembers(membersToFetch, selectedYear, currentMonth);
-      setScheduledHoursData(newScheduledHoursMap);
-    }
-  };
-  
-  // Only fetch scheduled hours after we have team data
-  if ((showAllGroups && allStaffMonthlyData) || (!showAllGroups && Object.keys(teamData).length > 0)) {
-    fetchScheduledHoursAfterDataLoad();
-  }
-}, [currentUser, selectedQuarter, selectedYear, selectedMonthIndex, showAllGroups, allStaffMonthlyData, teamData, fetchScheduledHoursForMembers]);
-  
+
   const handleQuarterChange = useCallback((quarter, year) => {
     console.log("Quarter changed in LeadershipPage:", {
       quarter,
@@ -978,21 +779,7 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
                   Group By Team
                 </button>
 
-                {/* <button
-                  className={`view-control-btn ${
-                    viewMode === "projects" ? "active" : ""
-                  } ${showAllGroups ? "disabled" : ""}`}
-                  onClick={() => !showAllGroups && setViewMode("projects")}
-                  disabled={showAllGroups}
-                  title={
-                    showAllGroups
-                      ? "Projects view not available when viewing all groups"
-                      : ""
-                  }
-                >
-                  Group By Projects
-                </button> */}
-              </div>
+               </div>
             )}
 
             {error && <div className="error-message">{error}</div>}
@@ -1038,7 +825,8 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
 
                       // Group staff by manager using utility function
                       const groupedByManager = groupStaffByManager(normalizedStaffMembers);
-                      console.log('Staff grouped by manager:', groupedByManager);                      // Calculate summary for each group using utility function
+                      console.log('Staff grouped by manager:', groupedByManager);                      
+                      // Calculate summary for each group using utility function
                       const groupSummaries = Object.entries(groupedByManager).map(([manager, members]) => {
 
                         let totalScheduledHours = 0;
@@ -1359,21 +1147,7 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
             })}
         </tbody>
       </table>
-                  {/* //       .map(([manager, data], index) => (
-                  //         <tr key={index}>
-                  //           <td>{manager}</td>
-                  //           <td className="number-cell">{data.memberCount}</td>
-                  //           <td className="number-cell">{formatter.format(data.scheduledHours)}</td>
-                  //           <td className="number-cell">{formatter.format(data.directHours)}</td>
-                  //           <td className="number-cell">{formatter.format(data.ptoHours)}</td>
-                  //           <td className="number-cell">{formatter.format(data.overheadHours)}</td>
-                  //           <td className={`number-cell available-hours-cell ${data.availableHours === 0 ? 'zero-hours' : ''}`}>{formatter.format(data.availableHours)}</td>
-                  //           <td className="number-cell"><strong>{formatter.format(data.totalHours)}</strong></td>
-                  //           <td className="number-cell"><strong>{formatPercent(data.ratioB)}</strong></td>
-                  //         </tr>
-                  //       ))}
-                  //   </tbody>
-                  // </table> */}
+                 
                 </div>
                 {/* Collapsible group for each manager */}
                 {Object.entries(teamData)

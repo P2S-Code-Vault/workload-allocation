@@ -282,6 +282,132 @@ export class ScheduledHoursService {
     return defaultValue;
   }
 
+
+/**
+ * Batch fetch quarterly scheduled hours for multiple team members (OPTIMIZED VERSION)
+ * This fetches quarterly data once and caches it for all month selections
+ * @param {Array} members - Array of team member objects with contact_id or email
+ * @param {number} year - Year (e.g., 2025)
+ * @param {string} quarter - Quarter (Q1, Q2, Q3, Q4)
+ * @returns {Promise<Object>} Object mapping member keys to their quarterly scheduled hours
+ */
+static async batchFetchQuarterlyScheduledHours(members, year, quarter) {
+  console.log(`[ScheduledHoursService] Batch fetching QUARTERLY scheduled hours for ${members.length} members`);
+  console.log(`[ScheduledHoursService] Parameters: year=${year}, quarter=${quarter}`);
+  
+  const promises = members.map(async (member) => {
+    try {
+      let scheduledHoursData;
+      const memberKey = member.contact_id || member.contactId || member.id || member.email;
+      
+      if (member.contact_id || member.contactId || member.id) {
+        const contactId = member.contact_id || member.contactId || member.id;
+        scheduledHoursData = await this.getQuarterlyScheduledHours(contactId, year, quarter);
+      } else if (member.email) {
+        scheduledHoursData = await this.getQuarterlyScheduledHoursByEmail(member.email, year, quarter);
+      }
+      
+      return {
+        memberKey,
+        member,
+        quarterlyScheduledHoursData: scheduledHoursData,
+        success: true
+      };
+    } catch (error) {
+      console.warn(`[ScheduledHoursService] Failed to fetch quarterly scheduled hours for member ${member.name || member.email}:`, error);
+      return {
+        memberKey: member.contact_id || member.contactId || member.id || member.email,
+        member,
+        quarterlyScheduledHoursData: null,
+        error: error.message,
+        success: false
+      };
+    }
+  });
+
+  const results = await Promise.all(promises);
+  
+  // Convert results array to object mapping
+  const scheduledHoursMap = {};
+  results.forEach(({ memberKey, member, quarterlyScheduledHoursData, error, success }) => {
+    scheduledHoursMap[memberKey] = {
+      member,
+      quarterlyScheduledHoursData,
+      error,
+      success
+    };
+  });
+
+  const successCount = results.filter(r => r.success).length;
+  const errorCount = results.filter(r => !r.success).length;
+  
+  console.log(`[ScheduledHoursService] Quarterly batch fetch completed. Success: ${successCount}, Errors: ${errorCount}`);
+  
+  return scheduledHoursMap;
+}
+
+/**
+ * Extract monthly scheduled hours from quarterly data
+ * @param {Object} quarterlyData - Quarterly scheduled hours data
+ * @param {number} monthIndex - 0-based month index within the quarter (0, 1, 2)
+ * @param {number} defaultValue - Default value if data is not available
+ * @returns {number} Scheduled hours for the specific month
+ */
+static extractMonthlyFromQuarterly(quarterlyData, monthIndex = 0, defaultValue = 40.0) {
+  if (!quarterlyData) {
+    return defaultValue;
+  }
+
+  // quarterlyData should have month1, month2, month3 structure
+  const monthKey = `month${monthIndex + 1}`;
+  
+  if (quarterlyData[monthKey] && quarterlyData[monthKey].scheduled_hours !== undefined) {
+    return parseFloat(quarterlyData[monthKey].scheduled_hours) || defaultValue;
+  }
+
+  // Fallback: if we have total_scheduled_hours, divide by 3 (rough approximation)
+  if (quarterlyData.total_scheduled_hours !== undefined) {
+    return parseFloat(quarterlyData.total_scheduled_hours) / 3 || defaultValue;
+  }
+
+  return defaultValue;
+}
+
+/**
+ * Optimized function to get scheduled hours for a member using quarterly cache
+ * @param {Object} member - Member object
+ * @param {Object} quarterlyScheduledHoursData - Quarterly data cache
+ * @param {number} monthIndex - 0-based month index (0, 1, 2)
+ * @param {number} defaultValue - Default value
+ * @returns {number} Scheduled hours for the specific month
+ */
+static getScheduledHoursForMemberOptimized(member, quarterlyScheduledHoursData, monthIndex = 0, defaultValue = 40.0) {
+  const memberKey = member.contact_id || member.contactId || member.id || member.email;
+  const memberQuarterlyData = quarterlyScheduledHoursData[memberKey];
+  
+  if (memberQuarterlyData && memberQuarterlyData.success && memberQuarterlyData.quarterlyScheduledHoursData) {
+    const monthlyHours = this.extractMonthlyFromQuarterly(
+      memberQuarterlyData.quarterlyScheduledHoursData, 
+      monthIndex, 
+      defaultValue
+    );
+    console.log(`[ScheduledHoursService] Using quarterly API scheduled hours for ${member.name || memberKey}, month ${monthIndex + 1}: ${monthlyHours}`);
+    return monthlyHours;
+  }
+  
+  // Fallback to member data if available
+  if (member.scheduled_hours !== null && member.scheduled_hours !== undefined) {
+    const memberHours = parseFloat(member.scheduled_hours);
+    if (!isNaN(memberHours)) {
+      console.log(`[ScheduledHoursService] Using fallback scheduled hours for ${member.name || memberKey}: ${memberHours}`);
+      return memberHours;
+    }
+  }
+  
+  console.log(`[ScheduledHoursService] Using default scheduled hours for ${member.name || memberKey}: ${defaultValue}`);
+  return defaultValue;
+}
+
   // ===== Cache Management Methods =====
 
   /**
