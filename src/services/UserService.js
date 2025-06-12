@@ -48,12 +48,12 @@ export class UserService {
       localStorage.setItem('userGroupNo', userData.GroupNo !== null ? String(userData.GroupNo) : '');
       localStorage.setItem('userStudioNo', userData.StudioNo !== null ? String(userData.StudioNo) : '');
       localStorage.setItem('userStudioIdentifier', userData.studio_identifier || '');
-      
-      // Store the complete user details object for easy access
+        // Store the complete user details object for easy access
       const userDetailsObj = {
         email,
         name: userData.name || '',
         contact_id: userData.contact_id || '',
+        labor_category: userData.labor_category || userData.laborCategory || '',
         scheduledHours: userData.scheduled_hours !== null && userData.scheduled_hours !== undefined 
           ? userData.scheduled_hours 
           : 40,
@@ -161,11 +161,11 @@ export class UserService {
       console.log("No user details found in localStorage");
       return null;
     }
-    
-    const userDetails = {
+      const userDetails = {
       email,
       name,
       contact_id,
+      labor_category: '',  // Will be populated from StaffService if needed
       scheduledHours,
       isGroupManager,
       GroupName,

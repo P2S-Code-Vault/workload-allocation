@@ -743,8 +743,7 @@ static async deleteAllocation(allocationId, type = 'milestone') {
     return await response.json();
   }
 
- 
-  static async getAllocationsByQuarter(email, year, quarter) {
+   static async getAllocationsByQuarter(email, year, quarter) {
   if (!email || !year || !quarter) {
     throw new Error("Missing required parameters for getAllocationsByQuarter");
   }
@@ -788,6 +787,86 @@ static async deleteAllocation(allocationId, type = 'milestone') {
   
   return Array.isArray(data) ? data : (data ? [data] : []);
 }
+
+  static async getAllocationsByQuarterWithDetails(email, year, quarter) {
+    if (!email || !year || !quarter) {
+      throw new Error("Missing required parameters for getAllocationsByQuarterWithDetails");
+    }
+    
+    console.log("=== getAllocationsByQuarterWithDetails DEBUG ===");
+    console.log("Input params:", { email, year, quarter });
+    
+    // Step 1: Get basic allocations data
+    const allocations = await this.getAllocationsByQuarter(email, year, quarter);
+    console.log("Basic allocations fetched:", allocations.length);
+    
+    if (!allocations || allocations.length === 0) {
+      console.log("No allocations found, returning empty array");
+      return [];
+    }
+    
+    // Step 2: Extract unique milestone IDs
+    const milestoneIds = new Set();
+    allocations.forEach(allocation => {
+      if (allocation.milestone_id) {
+        milestoneIds.add(allocation.milestone_id);
+      }
+    });
+    
+    console.log("Found unique milestone IDs:", Array.from(milestoneIds));
+    
+    // Step 3: Fetch detailed milestone information
+    const milestoneDetailsPromises = Array.from(milestoneIds).map(async (milestoneId) => {
+      try {
+        const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.MILESTONE_BY_ID(milestoneId)}`);
+        if (!response.ok) {
+          console.warn(`Failed to fetch milestone details for ID ${milestoneId}`);
+          return { id: milestoneId, details: null };
+        }
+        const details = await response.json();
+        return { id: milestoneId, details };
+      } catch (error) {
+        console.warn(`Failed to fetch details for milestone ${milestoneId}:`, error);
+        return { id: milestoneId, details: null };
+      }
+    });
+    
+    const milestoneDetailsResults = await Promise.all(milestoneDetailsPromises);
+    const milestoneDetailsMap = new Map();
+    milestoneDetailsResults.forEach(({ id, details }) => {
+      milestoneDetailsMap.set(id, details);
+    });
+    
+    console.log("Milestone details fetched for IDs:", Array.from(milestoneDetailsMap.keys()));
+    
+    // Step 4: Enhance allocations with milestone details
+    const enhancedAllocations = allocations.map(allocation => {
+      const milestoneDetails = milestoneDetailsMap.get(allocation.milestone_id);
+      if (milestoneDetails) {
+        console.log(`Enhancing allocation for milestone ${allocation.milestone_id} with details:`, milestoneDetails);
+        return {
+          ...allocation,
+          // Add detailed milestone information
+          project_number: milestoneDetails.project_number,
+          project_name: milestoneDetails.project_name,
+          milestone_name: milestoneDetails.milestone_name,
+          project_manager: milestoneDetails.project_manager,
+          act_mult_rate: milestoneDetails.act_mult_rate,
+          contract_labor: milestoneDetails.contract_labor,
+          forecast_pm_labor: milestoneDetails.forecast_pm_labor,
+          milestone_status: milestoneDetails.milestone_status,
+          // Keep original fields for backward compatibility
+          proj_id: milestoneDetails.project_number,
+        };
+      }
+      return allocation;
+    });
+    
+    console.log("Enhanced allocations with milestone details:", enhancedAllocations.length);
+    console.log("=== END getAllocationsByQuarterWithDetails DEBUG ===");
+    
+    return enhancedAllocations;
+  }
 
   static async getOpportunitiesByQuarter(email, year, quarter) {
   if (!email || !year || !quarter) {

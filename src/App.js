@@ -543,11 +543,9 @@ const MainContent = React.forwardRef((props, ref) => {
         } finally {
           setIsSaving(false);
         }
-      };
-
-      originalSave();
+      };      originalSave();
     },
-    [rows, selectedYear, selectedQuarter, currentUser]
+    [rows, opportunityRows, selectedYear, selectedQuarter, currentUser]
   );
 
   // Debug the dependencies in the allocation loading effect
@@ -598,10 +596,8 @@ const MainContent = React.forwardRef((props, ref) => {
     // If it's a number, convert to Q format
     if (typeof apiQuarter === 'number') {
       apiQuarter = 'Q' + apiQuarter;
-    }
-
-    // Fetch project allocations (milestone projections)
-    ProjectDataService.getAllocationsByQuarter(
+    }    // Fetch project allocations (milestone projections) with detailed milestone information
+    ProjectDataService.getAllocationsByQuarterWithDetails(
       currentUser,
       selectedYear,
       apiQuarter
@@ -1205,14 +1201,13 @@ const deleteOpportunityRow = useCallback(async (index) => {
                 </tbody>
               </table>
 
-              {/* Opportunities Table */}
-              <table className="resource-table opportunities-table">
+              {/* Opportunities Table */}              <table className="resource-table opportunities-table">
                 <thead>
                   <tr>
                     <th>Opportunity No.</th>
                     <th>Opportunity Name</th>
                     <th>Proposal Champion</th>
-                    <th>Estimated Fee Proposed</th>
+                    <th>Projected Fee</th>
                     <th style={{ width: "110px" }}>{monthCol}</th>
                     <th style={{ width: "110px" }}>{month1Col}</th>
                     <th style={{ width: "110px" }}>{month2Col}</th>

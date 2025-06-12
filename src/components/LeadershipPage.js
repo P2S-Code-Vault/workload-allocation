@@ -405,14 +405,15 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
         groupManagerEmail,
         selectedYear,
         quarterString
-      );
-
-      // Also fetch monthly opportunities
+      );      // Also fetch monthly opportunities
       const opportunitiesData = await GLTeamService.getMonthlyOpportunities(
         groupManagerEmail,
         selectedYear,
         quarterString
       );
+
+      console.log('[LeadershipPage] Raw opportunities data:', opportunitiesData);
+      console.log('[LeadershipPage] Opportunities sample:', opportunitiesData?.monthly_opportunities?.monthly_data ? Object.values(opportunitiesData.monthly_opportunities.monthly_data)[0]?.slice(0, 2) : 'No opportunities data');
 
       // Use backend's expected_months for month selector
       setMonths(monthlyData.expected_months || [1, 2, 3]);
@@ -533,23 +534,26 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
                         ra_date: allocation.ra_date,
                         modified_by: allocation.modified_by,
                         type: 'milestone' // Add type to distinguish from opportunities
-                      }));
-
-        // Process opportunities for this member
+                      }));        // Process opportunities for this member
         const memberOpportunities = monthOpportunities.filter(
           (o) => o.contact_id === member.contact_id
         );
-        const memberOpportunityRows = memberOpportunities.map((opportunity) => ({
+
+        console.log(`[LeadershipPage] Member ${member.name} opportunities:`, memberOpportunities);
+        if (memberOpportunities.length > 0) {
+          console.log(`[LeadershipPage] First opportunity fields:`, Object.keys(memberOpportunities[0]));
+          console.log(`[LeadershipPage] First opportunity data:`, memberOpportunities[0]);
+        }        const memberOpportunityRows = memberOpportunities.map((opportunity) => ({
           // Core identifiers
           ra_id: opportunity.ra_id,
           opportunity_id: opportunity.opportunity_id,
           contact_id: opportunity.contact_id,
           
-          // Project/Opportunity Information
-          projectNumber: `OPP-${opportunity.opportunity_id}`, // Prefix to distinguish from projects
-          projectName: `Opportunity ${opportunity.opportunity_id}`, // Will be enhanced with actual opportunity details
-          milestone: '', // Opportunities don't have milestones
-          pm: '', // Will be enhanced with opportunity details
+          // Project/Opportunity Information - try different possible field names
+          projectNumber: opportunity.opportunity_number || opportunity.opp_number || opportunity.number || `OPP-${opportunity.opportunity_id}`,
+          projectName: opportunity.opportunity_name || opportunity.opp_name || opportunity.name || `Opportunity ${opportunity.opportunity_id}`,
+          milestone: opportunity.opportunity_name || opportunity.opp_name || opportunity.name || `Opportunity ${opportunity.opportunity_id}`, // Same as projectName for consistency with milestones
+          pm: opportunity.proposal_champion || opportunity.champion || '', // Use proposal champion as PM equivalent
           
           // Hours Information
           hours: parseFloat(opportunity.hours || 0),
@@ -1395,8 +1399,7 @@ const CollapsibleMember = ({ member, formatter, formatPercent, navigate, isEdita
               <div className="time-entries-section">
                 <h5>Opportunities</h5>
                 {sortedOpportunityRows.length === 0 ? (
-                  <div className="no-entries">No opportunity entries found</div>
-                ) : (
+                  <div className="no-entries">No opportunity entries found</div>                ) : (
                   sortedOpportunityRows.map((entry, i) => (
                     <div key={`opportunity-${i}`} className="time-entry">
                       <span className="project-number">{entry.projectNumber}</span>

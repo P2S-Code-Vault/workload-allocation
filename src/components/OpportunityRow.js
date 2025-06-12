@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { FaTrash } from "react-icons/fa";
 import { ProjectSearchService } from "../services/ProjectSearchService";
+import { UserService } from "../services/UserService";
+import { getUserRate, calculateProjectedFee, formatCurrency } from "../utils/rateUtils";
 import "./TableRow.css";
 
 const OpportunityRow = ({
@@ -9,13 +11,14 @@ const OpportunityRow = ({
   updateOpportunityRow,
   deleteOpportunityRow,
   isLoading
-}) => {
-  const [suggestions, setSuggestions] = useState([]);
+}) => {  const [suggestions, setSuggestions] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const [isSearching, setIsSearching] = useState(false);
   const [hasError, setHasError] = useState(false);
   const [userInteracted, setUserInteracted] = useState(false);
+  const [userRate, setUserRate] = useState(0);
+  const [projectedFee, setProjectedFee] = useState(0);
   const dropdownRef = useRef(null);
   const inputRef = useRef(null);
 
@@ -30,6 +33,32 @@ const OpportunityRow = ({
       setSearchTerm(row.opportunityNumber || "");
     }
   }, [row.opportunityNumber, searchTerm]);
+
+  // Get user rate on component mount
+  useEffect(() => {
+    const fetchUserRate = async () => {
+      try {
+        const userDetails = UserService.getCurrentUserDetails();
+        if (userDetails) {
+          const rate = await getUserRate(userDetails);
+          setUserRate(rate);
+        }
+      } catch (error) {
+        console.error("Error fetching user rate:", error);
+        setUserRate(0);
+      }
+    };
+    fetchUserRate();
+  }, []);
+
+  // Calculate projected fee whenever hours or rate changes
+  useEffect(() => {
+    const totalHours = (parseFloat(row.month) || 0) + 
+                      (parseFloat(row.month1) || 0) + 
+                      (parseFloat(row.month2) || 0);
+    const calculatedFee = calculateProjectedFee(totalHours, userRate);
+    setProjectedFee(calculatedFee);
+  }, [row.month, row.month1, row.month2, userRate]);
 
   useEffect(() => {
     if (!searchTerm || searchTerm.length < 2 || !userInteracted) {
@@ -56,7 +85,6 @@ const OpportunityRow = ({
     }, 300);
     return () => clearTimeout(delayDebounceFn);
   }, [searchTerm, userInteracted]);
-
   const handleOpportunityNumberChange = (e) => {
     const value = e.target.value;
     console.log("[OpportunityRow] handleOpportunityNumberChange called with value:", value);
@@ -66,7 +94,7 @@ const OpportunityRow = ({
     if (value !== row.opportunityNumber) {
       updateOpportunityRow(index, "opportunityName", "");
       updateOpportunityRow(index, "proposalChampion", "");
-      updateOpportunityRow(index, "estimatedFee", "");
+      // Don't clear estimatedFee - projected fee calculation will handle it
     }
   };
 
@@ -93,12 +121,11 @@ const OpportunityRow = ({
       }
     }
   };
-
   const handleOpportunitySelect = (opp) => {
     updateOpportunityRow(index, "opportunityNumber", opp.OpportunityNumber || "");
     updateOpportunityRow(index, "opportunityName", opp.Opportunity_Name_from_Lead__c || "");
     updateOpportunityRow(index, "proposalChampion", opp.ProposalChampion || "");
-    updateOpportunityRow(index, "estimatedFee", opp.P2SEstimatedFeeProposed || "");
+    // Don't update estimatedFee - let projected fee calculation handle it
     setSearchTerm(opp.OpportunityNumber || "");
     setShowDropdown(false);
     setUserInteracted(false); // Prevent dropdown from reopening immediately
@@ -166,12 +193,17 @@ const OpportunityRow = ({
       </td>
       <td>
         <input type="text" value={row.opportunityName || ""} readOnly className="centered-input" />
-      </td>
-      <td>
+      </td>      <td>
         <input type="text" value={row.proposalChampion || ""} readOnly className="centered-input" />
       </td>
       <td>
-        <input type="text" value={row.estimatedFee || ""} readOnly className="centered-input" />
+        <input 
+          type="text" 
+          value={formatCurrency(projectedFee)} 
+          readOnly 
+          className="centered-input" 
+          title={`Based on ${((parseFloat(row.month) || 0) + (parseFloat(row.month1) || 0) + (parseFloat(row.month2) || 0))} hours × $${userRate}/hour`}
+        />
       </td>
       <td style={{ width: "110px" }}>
         <input
