@@ -40,6 +40,12 @@ const API_CONFIG = {
       ALL_STAFF_WORKLOAD_SUMMARY: '/all-staff/workload/summary', // year, quarter
       ALL_STAFF_WORKLOAD_MANAGER: managerName => `/all-staff/workload/manager/${encodeURIComponent(managerName)}`,
       ALL_STAFF_WORKLOAD_STUDIOS: '/all-staff/workload/studios', // year, quarter
+      //scheduled hours endpoints
+      CONTACT_MONTHLY_SCHEDULED_HOURS: contactId => `/contacts/${contactId}/scheduled-hours/monthly`,
+      CONTACT_QUARTERLY_SCHEDULED_HOURS: contactId => `/contacts/${contactId}/scheduled-hours/quarterly`,
+      CONTACT_MONTHLY_SCHEDULED_HOURS_BY_EMAIL: email => `/contacts/by-email/${encodeURIComponent(email)}/scheduled-hours/monthly`,
+      CONTACT_QUARTERLY_SCHEDULED_HOURS_BY_EMAIL: email => `/contacts/by-email/${encodeURIComponent(email)}/scheduled-hours/quarterly`,
+      CONTACT_SCHEDULED_HOURS_SUMMARY: contactId => `/contacts/${contactId}/scheduled-hours/summary`,
     },
     
     // HTTP status codes

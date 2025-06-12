@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback } from "react";
 import { UserService } from "../services/UserService";
 import { GLTeamService } from "../services/GLTeamService";
+import { ScheduledHoursService } from "../services/ScheduledHoursService";
 import QuarterPicker from "./QuarterPicker";
 import "./LeadershipPage.css";
 import API_CONFIG from "../services/apiConfig";
@@ -27,6 +28,14 @@ const LeadershipPage = ({ navigate }) => {
 
   const [months, setMonths] = useState(getQuarterMonths(getCurrentQuarter()));
   const [allStaffMonthlyData, setAllStaffMonthlyData] = useState(null);
+
+  // const [scheduledHoursData, setScheduledHoursData] = useState({});
+  // const [scheduledHoursLoading, setScheduledHoursLoading] = useState(false);
+  // const [scheduledHoursError, setScheduledHoursError] = useState(null);
+  const [scheduledHoursData, setScheduledHoursData] = useState({});
+  const [quarterlyScheduledHoursData, setQuarterlyScheduledHoursData] = useState({}); // NEW: Cache quarterly data
+  const [scheduledHoursLoading, setScheduledHoursLoading] = useState(false);
+  const [scheduledHoursError, setScheduledHoursError] = useState(null);
 
   useEffect(() => {
     const userDetails = UserService.getCurrentUserDetails();
@@ -69,9 +78,164 @@ const LeadershipPage = ({ navigate }) => {
     }
   }
 
+    const getScheduledHoursForMember = useCallback((member) => {
+      return ScheduledHoursService.getScheduledHoursForMemberOptimized(
+        member, 
+        quarterlyScheduledHoursData, 
+        selectedMonthIndex, 
+        40.0
+      );
+    }, [quarterlyScheduledHoursData, selectedMonthIndex]);
+
+  
+  /**
+ * Calculate total scheduled hours for a studio
+ * @param {Object} studioData - Studio data with members array
+ * @returns {number} Total scheduled hours for the studio
+ */
+const calculateStudioScheduledHours = useCallback((studioData) => {
+  if (!studioData.members || studioData.members.length === 0) {
+    return 0;
+  }
+  
+  return studioData.members.reduce((total, member) => {
+    return total + getScheduledHoursForMember(member);
+  }, 0);
+}, [getScheduledHoursForMember]);
+
+/**
+ * Calculate total scheduled hours for a manager's entire team
+ * @param {Object} managerData - Manager data with studios object
+ * @returns {number} Total scheduled hours for the manager's team
+ */
+const calculateManagerScheduledHours = useCallback((managerData) => {
+  if (!managerData.studios) {
+    return 0;
+  }
+  
+  return Object.values(managerData.studios).reduce((total, studioData) => {
+    return total + calculateStudioScheduledHours(studioData);
+  }, 0);
+}, [calculateStudioScheduledHours]);
+
+ 
+  const getScheduledHoursSummary = useCallback((members) => {
+  let totalScheduledHours = 0;
+  let apiDataCount = 0;
+  let fallbackDataCount = 0;
+  let errorCount = 0;
+  
+  members.forEach(member => {
+    const memberKey = member.contact_id || member.contactId || member.id || member.email;
+    const quarterlyScheduledHoursInfo = quarterlyScheduledHoursData[memberKey];
+    
+    if (quarterlyScheduledHoursInfo && quarterlyScheduledHoursInfo.success) {
+      apiDataCount++;
+      const monthlyHours = ScheduledHoursService.extractMonthlyFromQuarterly(
+        quarterlyScheduledHoursInfo.quarterlyScheduledHoursData, 
+        selectedMonthIndex, 
+        40.0
+      );
+      totalScheduledHours += monthlyHours;
+    } else if (quarterlyScheduledHoursInfo && !quarterlyScheduledHoursInfo.success) {
+      errorCount++;
+      totalScheduledHours += getScheduledHoursForMember(member); // Use fallback
+    } else {
+      fallbackDataCount++;
+      totalScheduledHours += getScheduledHoursForMember(member); // Use fallback
+    }
+  });
+  
+  return {
+    totalScheduledHours,
+    apiDataCount,
+    fallbackDataCount,
+    errorCount,
+    totalMembers: members.length
+  };
+}, [quarterlyScheduledHoursData, getScheduledHoursForMember, selectedMonthIndex]);
+
+ 
+  const fetchQuarterlyScheduledHoursForMembers = useCallback(async (members, year, quarter) => {
+  if (!members || members.length === 0) {
+    console.log('[LeadershipPage] No members to fetch quarterly scheduled hours for');
+    return {};
+  }
+  
+  setScheduledHoursLoading(true);
+  setScheduledHoursError(null);
+  
+  try {
+    console.log(`[LeadershipPage] Fetching QUARTERLY scheduled hours for ${members.length} members, ${year}-${quarter}`);
+    
+    const quarterlyScheduledHoursMap = await ScheduledHoursService.batchFetchQuarterlyScheduledHours(
+      members, 
+      year, 
+      quarter
+    );
+    
+    // Log results summary
+    const successCount = Object.values(quarterlyScheduledHoursMap).filter(r => r.success).length;
+    const errorCount = Object.values(quarterlyScheduledHoursMap).filter(r => !r.success).length;
+    
+    console.log(`[LeadershipPage] Quarterly scheduled hours fetch completed. Success: ${successCount}, Errors: ${errorCount}`);
+    
+    if (errorCount > 0) {
+      console.warn(`[LeadershipPage] ${errorCount} quarterly scheduled hours requests failed`);
+      setScheduledHoursError(`Failed to fetch scheduled hours for ${errorCount} out of ${members.length} members`);
+    }
+    
+    return quarterlyScheduledHoursMap;
+    
+  } catch (error) {
+    console.error('[LeadershipPage] Error fetching quarterly scheduled hours:', error);
+    setScheduledHoursError(`Failed to fetch scheduled hours: ${error.message}`);
+    return {};
+  } finally {
+    setScheduledHoursLoading(false);
+  }
+}, []);
+
+  
+  const updateScheduledHoursForMonth = useCallback(async (newMonthIndex) => {
+  console.log(`[LeadershipPage] Switching to month index ${newMonthIndex} using cached quarterly data`);
+  // No API calls needed - the getScheduledHoursForMember function will automatically use the correct month from quarterly cache
+}, []);
+
+  
+  const clearScheduledHoursData = useCallback(() => {
+      setScheduledHoursData({});
+      setQuarterlyScheduledHoursData({}); // Clear quarterly cache too
+      setScheduledHoursError(null);
+      ScheduledHoursService.clearCache();
+      console.log('[LeadershipPage] Cleared scheduled hours data and quarterly cache');
+    }, []);
+
+  
+    useEffect(() => {
+      console.log(`[LeadershipPage] Month index changed to ${selectedMonthIndex}, using cached quarterly data`);
+      // No API calls needed - the getScheduledHoursForMember will automatically use the correct month
+    }, [selectedMonthIndex]);
+
+  /**
+   * Effect: Clear scheduled hours data when quarter/year changes
+   */
+  useEffect(() => {
+    clearScheduledHoursData();
+  }, [selectedQuarter, selectedYear, clearScheduledHoursData]);
+
+  /**
+   * Effect: Clear scheduled hours data when switching between views
+   */
+  useEffect(() => {
+    clearScheduledHoursData();
+  }, [showAllGroups, clearScheduledHoursData]);
+
+
   const loadTeamData = useCallback(async () => {
     setIsLoading(true);
     setError(null);
+    setScheduledHoursError(null);
 
     try {
       console.log(
@@ -87,9 +251,12 @@ const LeadershipPage = ({ navigate }) => {
       if (!userGroupManager && !showAllGroups) {
         console.log("User is not assigned to any group");
         setTeamData({});
+        setScheduledHoursData({});
         setIsLoading(false);
         return;
-      }      if (showAllGroups) {
+      }      
+      
+      if (showAllGroups) {
         // Fetch all staff monthly workload for all groups
         console.log('Fetching all staff monthly workload for all groups...');
         const allStaffData = await GLTeamService.getAllStaffMonthlyWorkload(
@@ -140,6 +307,26 @@ const LeadershipPage = ({ navigate }) => {
         if (validation.warnings.length > 0) {
           console.warn('Data structure warnings:', validation.warnings);
         }
+
+       
+        if (allStaffData && allStaffData.managers) {
+            const allMembers = [];
+            Object.values(allStaffData.managers).forEach(managerData => {
+              if (managerData.studios) {
+                Object.values(managerData.studios).forEach(studioData => {
+                  if (studioData.members) {
+                    allMembers.push(...studioData.members);
+                  }
+                });
+              }
+            });
+
+            if (allMembers.length > 0) {
+              console.log(`[LoadTeamData] Fetching QUARTERLY scheduled hours for ${allMembers.length} members for ${quarterString}`);
+              const quarterlyScheduledHoursMap = await fetchQuarterlyScheduledHoursForMembers(allMembers, selectedYear, quarterString);
+              setQuarterlyScheduledHoursData(quarterlyScheduledHoursMap);
+            }
+          }
         
         setAllStaffMonthlyData(allStaffData);
 
@@ -157,6 +344,9 @@ const LeadershipPage = ({ navigate }) => {
             setMonths(getQuarterMonths(quarterNum));
           }
         }
+        console.log('Sample member from allStaffData:', 
+  allStaffData.managers[Object.keys(allStaffData.managers)[0]]?.studios[Object.keys(allStaffData.managers[Object.keys(allStaffData.managers)[0]]?.studios || {})[0]]?.members[0]
+);
         setTeamData({}); // Clear teamData for all groups view
         setIsLoading(false);
         return;
@@ -196,6 +386,7 @@ const LeadershipPage = ({ navigate }) => {
           "No team members found for your group. You might not be assigned to a group yet."
         );
         setTeamData({});
+        setScheduledHoursData({}); 
         setIsLoading(false);
         return;
       }
@@ -204,13 +395,11 @@ const LeadershipPage = ({ navigate }) => {
         `Found ${members.length} team members for group manager: ${userGroupManager}`
       );
 
-      // Remove unused emails variable
-      // const emails = members.map((member) => member.email);      // Use the new monthly allocations method
-      // const monthlyData = await GLTeamService.getTeamMonthlyAllocations(
-      //   groupManagerEmail,
-      //   selectedYear,
-      //   quarterString
-      // );
+       // ===== OPTIMIZED: Fetch quarterly scheduled hours for team members =====
+        console.log(`[LoadTeamData] Fetching QUARTERLY scheduled hours for ${members.length} team members for ${quarterString}`);
+
+        const quarterlyScheduledHoursMap = await fetchQuarterlyScheduledHoursForMembers(members, selectedYear, quarterString);
+        setQuarterlyScheduledHoursData(quarterlyScheduledHoursMap);
 
       const monthlyData = await GLTeamService.getTeamMonthlyAllocationsWithDetails(
         groupManagerEmail,
@@ -269,41 +458,12 @@ const LeadershipPage = ({ navigate }) => {
           return;
         }
 
-        let scheduledHours = 40.0;
-
-        if (
-          member.scheduled_hours !== null &&
-          member.scheduled_hours !== undefined
-        ) {
-          scheduledHours = Number(member.scheduled_hours);
-
-          if (isNaN(scheduledHours)) {
-            console.warn(
-              `Invalid hours value for ${member.name}: ${member.scheduled_hours}, using default 40`
-            );
-            scheduledHours = 40.0;
-          }
-        }
-
-        console.log(
-          `Processing member: ${
-            member.name
-          }, Studio: ${studio}, Hours: ${scheduledHours} (type: ${typeof scheduledHours})`
-        );
-
-        // if (!allGroupsData[groupManager].studios[studio]) {
-        //   allGroupsData[groupManager].studios[studio] = {
-        //     members: [],
-        //     totalHours: 0,
-        //     scheduledHours: 0,
-        //     directHours: 0,
-        //     ptoHours: 0,
-        //     overheadHours: 0,
-        //     availableHours: 0, 
-        //     studioLeader: member.studio_leader || 'Unassigned',
-        //     discipline: member.discipline || ''//new
-        //   };
-        // }
+        //let scheduledHours = 40.0;
+         // ===== UPDATED: Get scheduled hours from API data instead of hardcoded 40 =====
+        const scheduledHours = getScheduledHoursForMember(member);
+        // console.log(`Processing member: ${member.name}, Studio: ${studio}, Scheduled Hours: ${scheduledHours} (from API: ${!!scheduledHoursMap[member.contact_id || member.email]?.success})`);
+        console.log(`Processing member: ${member.name}, Studio: ${studio}, Scheduled Hours: ${scheduledHours} (from API: ${!!quarterlyScheduledHoursData[member.contact_id || member.email]?.success})`);
+        
         if (!allGroupsData[groupManager].studios[studio]) {
           allGroupsData[groupManager].studios[studio] = {
             members: [],
@@ -454,22 +614,28 @@ const LeadershipPage = ({ navigate }) => {
           )
           .reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);//check with team
         const totalHours =
-          directHours + ptoHours + overheadHours;        allGroupsData[groupManager].studios[studio].members.push({
+          directHours + ptoHours + overheadHours;        
+          
+          allGroupsData[groupManager].studios[studio].members.push({
           id: member.id,
           name: member.name,
           email: member.email,
           laborCategory: member.labor_category || "",
-          scheduledHours: scheduledHours,
+          scheduledHours: scheduledHours, //uses API now
           directHours,
           ptoHours,
           overheadHours,          availableHours, //new
           totalHours,
-          ratioB: calculateRatioB(directHours, scheduledHours, ptoHours),
+          ratioB: calculateRatioB(directHours, scheduledHours, ptoHours), //uses API for scd hrs.
           rows: allMemberRows, // Use combined rows instead of just memberRows
           milestoneRows: memberRows, // Keep separate for detailed view
           opportunityRows: memberOpportunityRows, // Keep separate for detailed view
           studioLeader: member.studio_leader || 'Unassigned',
-          discipline: member.discipline || ''
+          discipline: member.discipline || '',
+          // scheduledHoursApiData: scheduledHoursMap[member.contact_id || member.email]?.scheduledHoursData,
+          // scheduledHoursSource: scheduledHoursMap[member.contact_id || member.email]?.success ? 'API' : 'fallback'
+          scheduledHoursInfo: quarterlyScheduledHoursData[member.contact_id || member.email]?.quarterlyScheduledHoursData,
+          scheduledHoursSource: quarterlyScheduledHoursData[member.contact_id || member.email]?.success ? 'API' : 'fallback'
         });
 
         allGroupsData[groupManager].studios[studio].totalHours += totalHours;
@@ -513,6 +679,10 @@ const LeadershipPage = ({ navigate }) => {
         "FINAL DATA STRUCTURE:",
         JSON.stringify(allGroupsData, null, 2)
       );
+      // ===== NEW: Log scheduled hours summary =====
+      const scheduledHoursSummary = getScheduledHoursSummary(members);
+      console.log("Scheduled Hours Summary:", scheduledHoursSummary);
+
       setTeamData(allGroupsData);
     } catch (err) {
       console.error("Error loading team data:", err);
@@ -521,14 +691,15 @@ const LeadershipPage = ({ navigate }) => {
     } finally {
       setIsLoading(false);
     }
-  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear, selectedMonthIndex]);
+  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear, selectedMonthIndex,fetchQuarterlyScheduledHoursForMembers]);
 
   useEffect(() => {
     if (!currentUser) {
       return;
     }
-    loadTeamData();  }, [currentUser, selectedGroup, showAllGroups, loadTeamData]);
-  
+    loadTeamData();  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear]);
+
+
   const handleQuarterChange = useCallback((quarter, year) => {
     console.log("Quarter changed in LeadershipPage:", {
       quarter,
@@ -608,21 +779,7 @@ const LeadershipPage = ({ navigate }) => {
                   Group By Team
                 </button>
 
-                {/* <button
-                  className={`view-control-btn ${
-                    viewMode === "projects" ? "active" : ""
-                  } ${showAllGroups ? "disabled" : ""}`}
-                  onClick={() => !showAllGroups && setViewMode("projects")}
-                  disabled={showAllGroups}
-                  title={
-                    showAllGroups
-                      ? "Projects view not available when viewing all groups"
-                      : ""
-                  }
-                >
-                  Group By Projects
-                </button> */}
-              </div>
+               </div>
             )}
 
             {error && <div className="error-message">{error}</div>}
@@ -668,10 +825,40 @@ const LeadershipPage = ({ navigate }) => {
 
                       // Group staff by manager using utility function
                       const groupedByManager = groupStaffByManager(normalizedStaffMembers);
-                      console.log('Staff grouped by manager:', groupedByManager);                      // Calculate summary for each group using utility function
+                      console.log('Staff grouped by manager:', groupedByManager);                      
+                      // Calculate summary for each group using utility function
                       const groupSummaries = Object.entries(groupedByManager).map(([manager, members]) => {
+
+                        let totalScheduledHours = 0;
+                        let apiScheduledCount = 0;
+                        let fallbackScheduledCount = 0;
+
+                        members.forEach(member => {
+                          const memberKey = member.contactId || member.contact_id || member.id || member.email;
+                          const scheduledHoursInfo = scheduledHoursData[memberKey];
+                          
+                          if (scheduledHoursInfo && scheduledHoursInfo.success && scheduledHoursInfo.scheduledHoursData) {
+                            // Use API data
+                            const apiHours = ScheduledHoursService.extractScheduledHours(scheduledHoursInfo.scheduledHoursData, 40.0);
+                            totalScheduledHours += apiHours;
+                            apiScheduledCount++;
+                            console.log(`[Summary] Using API scheduled hours for ${member.name}: ${apiHours}`);
+                          } else {
+                            // Use fallback (member data or default)
+                            const fallbackHours = member.scheduled_hours || member.weeklyScheduledHours || 40.0;
+                            totalScheduledHours += fallbackHours;
+                            fallbackScheduledCount++;
+                            console.log(`[Summary] Using fallback scheduled hours for ${member.name}: ${fallbackHours}`);
+                          }
+                        });
+
                         const summary = calculateGroupSummary(members);
                         summary.manager = manager;
+
+                        summary.scheduled_hours = totalScheduledHours; // ===== UPDATED: Use API scheduled hours =====
+                        summary.apiScheduledCount = apiScheduledCount;
+                        summary.fallbackScheduledCount = fallbackScheduledCount;
+
                         // Try to get group number from the original allStaffMonthlyData
                         if (allStaffMonthlyData.managers && allStaffMonthlyData.managers[manager]) {
                           summary.groupNo = allStaffMonthlyData.managers[manager].groupNo;
@@ -684,7 +871,14 @@ const LeadershipPage = ({ navigate }) => {
                               {showAllGroups && <th>Group</th>}
                               <th>Group Leader</th>
                               <th>Team Members</th>
-                              <th>Scheduled Hours</th>
+
+                              <th>
+                                Scheduled Hours
+                                {/* ===== NEW: Add tooltip showing API vs fallback data ===== */}
+                                {scheduledHoursLoading && <span className="loading-indicator"> ⏳</span>}
+                                {scheduledHoursError && <span className="error-indicator" title={scheduledHoursError}> ⚠️</span>}
+                              </th>
+
                               <th>Direct Hours</th>
                               <th>PTO/HOL</th>
                               <th>Indirect Hours</th>
@@ -692,7 +886,9 @@ const LeadershipPage = ({ navigate }) => {
                               <th>Total Hours</th>
                               <th>Utilization Ratio</th>
                             </tr>
-                          </thead>                          <tbody>                            {groupSummaries
+                          </thead>                          
+                          <tbody>                            
+                          {groupSummaries
                               .sort((a, b) => {
                                 if (showAllGroups && a.groupNo && b.groupNo) {
                                   // Sort by group number when showing all groups
@@ -710,7 +906,17 @@ const LeadershipPage = ({ navigate }) => {
                                   {showAllGroups && <td>{summary.groupNo || 'N/A'}</td>}
                                   <td>{summary.manager}</td>
                                   <td className="number-cell">{summary.memberCount}</td>
-                                  <td className="number-cell">{formatter.format(summary.scheduled_hours)}</td>
+                                  
+                                  <td className="number-cell">
+                                    {/* ===== UPDATED: Show API vs fallback indicator ===== */}
+                                    <span title={`API: ${summary.apiScheduledCount || 0}, Fallback: ${summary.fallbackScheduledCount || 0}`}>
+                                      {formatter.format(summary.scheduled_hours)}
+                                      {summary.apiScheduledCount > 0 && summary.fallbackScheduledCount > 0 && (
+                                        <span className="mixed-data-indicator">*</span>
+                                      )}
+                                    </span>
+                                  </td>
+
                                   <td className="number-cell">{formatter.format(summary.direct_hours)}</td>
                                   <td className="number-cell">{formatter.format(summary.pto_holiday_hours)}</td>
                                   <td className="number-cell">{formatter.format(summary.indirect_hours)}</td>
@@ -819,6 +1025,10 @@ const LeadershipPage = ({ navigate }) => {
                               formatPercent={formatPercent}
                               navigate={navigate}
                               isEditable={false} // Read-only for all groups view
+                              scheduledHoursLoading={scheduledHoursLoading}
+                              scheduledHoursError={scheduledHoursError}
+                              calculateStudioScheduledHours={calculateStudioScheduledHours}
+                              getScheduledHoursForMember={getScheduledHoursForMember} 
                             />
                           ));
                       })()}
@@ -870,7 +1080,14 @@ const LeadershipPage = ({ navigate }) => {
                       <tr className="project-metrics">
                         <th>Group Leader</th>
                         <th>Team Members</th>
-                        <th>Scheduled Hours</th>
+                        
+                        <th>
+                          Scheduled Hours
+                          {/* ===== NEW: Add status indicators ===== */}
+                          {scheduledHoursLoading && <span className="loading-indicator"> ⏳</span>}
+                          {scheduledHoursError && <span className="error-indicator" title={scheduledHoursError}> ⚠️</span>}
+                        </th>
+
                         <th>Direct Hours</th>
                         <th>PTO/HOL</th>
                         <th>Indirect Hours</th>
@@ -894,21 +1111,43 @@ const LeadershipPage = ({ navigate }) => {
                           if (isNaN(numB)) return -1;
                           return numA - numB;
                         })
-                        .map(([manager, data], index) => (
-                          <tr key={index}>
-                            <td>{manager}</td>
-                            <td className="number-cell">{data.memberCount}</td>
-                            <td className="number-cell">{formatter.format(data.scheduledHours)}</td>
-                            <td className="number-cell">{formatter.format(data.directHours)}</td>
-                            <td className="number-cell">{formatter.format(data.ptoHours)}</td>
-                            <td className="number-cell">{formatter.format(data.overheadHours)}</td>
-                            <td className={`number-cell available-hours-cell ${data.availableHours === 0 ? 'zero-hours' : ''}`}>{formatter.format(data.availableHours)}</td>
-                            <td className="number-cell"><strong>{formatter.format(data.totalHours)}</strong></td>
-                            <td className="number-cell"><strong>{formatPercent(data.ratioB)}</strong></td>
-                          </tr>
-                        ))}
-                    </tbody>
-                  </table>
+                        .map(([manager, data], index) => {
+        // ===== UPDATED: Calculate scheduled hours using API data =====
+        const allMembers = [];
+        Object.values(data.studios).forEach(studio => {
+          allMembers.push(...studio.members);
+        });
+        
+        const scheduledHoursSummary = getScheduledHoursSummary(allMembers);
+        const actualScheduledHours = scheduledHoursSummary.totalScheduledHours;
+        
+        return (
+                <tr key={index}>
+                  <td>{manager}</td>
+                  <td className="number-cell">{data.memberCount}</td>
+                  <td className="number-cell">
+                    {/* ===== UPDATED: Show actual calculated scheduled hours ===== */}
+                    <span title={`API: ${scheduledHoursSummary.apiDataCount}, Fallback: ${scheduledHoursSummary.fallbackDataCount}, Errors: ${scheduledHoursSummary.errorCount}`}>
+                      {formatter.format(actualScheduledHours)}
+                      {scheduledHoursSummary.apiDataCount > 0 && scheduledHoursSummary.fallbackDataCount > 0 && (
+                        <span className="mixed-data-indicator">*</span>
+                      )}
+                    </span>
+                  </td>
+                  <td className="number-cell">{formatter.format(data.directHours)}</td>
+                  <td className="number-cell">{formatter.format(data.ptoHours)}</td>
+                  <td className="number-cell">{formatter.format(data.overheadHours)}</td>
+                  <td className={`number-cell available-hours-cell ${data.availableHours === 0 ? 'zero-hours' : ''}`}>
+                    {formatter.format(data.availableHours)}
+                  </td>
+                  <td className="number-cell"><strong>{formatter.format(data.totalHours)}</strong></td>
+                  <td className="number-cell"><strong>{formatPercent(data.ratioB)}</strong></td>
+                </tr>
+              );
+            })}
+        </tbody>
+      </table>
+                 
                 </div>
                 {/* Collapsible group for each manager */}
                 {Object.entries(teamData)
@@ -934,6 +1173,10 @@ const LeadershipPage = ({ navigate }) => {
                       formatPercent={formatPercent}
                       navigate={navigate}
                       isEditable={true}
+                      scheduledHoursLoading={scheduledHoursLoading}
+                      scheduledHoursError={scheduledHoursError}
+                      calculateStudioScheduledHours={calculateStudioScheduledHours}
+                      getScheduledHoursForMember={getScheduledHoursForMember}
                     />
                   ))}
               </div>
@@ -946,7 +1189,7 @@ const LeadershipPage = ({ navigate }) => {
 };
 
 // CollapsibleGroup, CollapsibleStudio, CollapsibleMember components from RA app version
-const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent, navigate, isEditable = true }) => {
+const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent, navigate, isEditable = true,scheduledHoursLoading,scheduledHoursError,calculateStudioScheduledHours,getScheduledHoursForMember }) => {
   const [isExpanded, setIsExpanded] = React.useState(true);
   return (
     <div className="collapsible-group">
@@ -962,7 +1205,13 @@ const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent, navi
                 <th>Studio Leader</th>
                 <th>Discipline</th>
                 <th>Team Members</th>
-                <th>Scheduled Hours</th>
+                {/* <th>Scheduled Hours</th> */}
+                <th>
+                  Scheduled Hours
+                  {/* ===== NEW: Add status indicators ===== */}
+                  {scheduledHoursLoading && <span className="loading-indicator"> ⏳</span>}
+                  {scheduledHoursError && <span className="error-indicator" title={scheduledHoursError}> ⚠️</span>}
+                </th>
                 <th>Direct Hours</th>
                 <th>PTO/HOL</th>
                 <th>Indirect Hours</th>
@@ -975,12 +1224,19 @@ const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent, navi
               {Object.entries(managerData.studios).map(([studio, studioData], index) => {
                 const studioLeaderName = studioData.studioLeader || (studioData.members.length > 0 && studioData.members[0].studioLeader) || 'Unassigned';
                 const discipline = studioData.discipline || '';
+                // ===== UPDATED: Calculate studio scheduled hours using API data =====
+                const studioScheduledHours = calculateStudioScheduledHours(studioData);
                 return (
                   <tr key={index}>
                     <td>{studioLeaderName}</td>
                     <td>{discipline}</td>
                     <td className="number-cell">{studioData.members.length}</td>
-                    <td className="number-cell">{formatter.format(studioData.scheduledHours)}</td>
+                    {/* <td className="number-cell">{formatter.format(studioData.scheduledHours)}</td>
+                     */}
+                     <td className="number-cell">
+                      {/* ===== UPDATED: Use calculated scheduled hours ===== */}
+                      {formatter.format(studioScheduledHours)}
+                    </td>
                     <td className="number-cell">{formatter.format(studioData.directHours)}</td>
                     <td className="number-cell">{formatter.format(studioData.ptoHours)}</td>
                     <td className="number-cell">{formatter.format(studioData.overheadHours)}</td>
@@ -1001,6 +1257,7 @@ const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent, navi
               formatPercent={formatPercent}
               navigate={navigate}
               isEditable={isEditable}
+              getScheduledHoursForMember={getScheduledHoursForMember}
             />
           ))}
         </div>
@@ -1009,7 +1266,7 @@ const CollapsibleGroup = ({ manager, managerData, formatter, formatPercent, navi
   );
 };
 
-const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent, navigate, isEditable = true }) => {
+const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent, navigate, isEditable = true,getScheduledHoursForMember}) => {
   const [isExpanded, setIsExpanded] = React.useState(true);
   const studioLeaderName =studioData.studioLeader || 'Unassigned';
   const discipline = studioData.discipline || (studioData.members.length > 0 && studioData.members[0].discipline) || '';
@@ -1046,6 +1303,7 @@ const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent, navig
                   formatPercent={formatPercent}
                   navigate={navigate}
                   isEditable={isEditable}
+                  getScheduledHoursForMember={getScheduledHoursForMember}
                 />
               ))}
           </tbody>
@@ -1055,11 +1313,12 @@ const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent, navig
   );
 };
 
-const CollapsibleMember = ({ member, formatter, formatPercent, navigate, isEditable = true }) => {
+const CollapsibleMember = ({ member, formatter, formatPercent, navigate, isEditable = true,getScheduledHoursForMember}) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
   const sortedMilestoneRows = [...(member.milestoneRows || [])].sort((a, b) => a.projectNumber.localeCompare(b.projectNumber));
   const sortedOpportunityRows = [...(member.opportunityRows || [])].sort((a, b) => a.projectNumber.localeCompare(b.projectNumber));
-  
+  // ===== UPDATED: Get scheduled hours from API data =====
+  const displayScheduledHours = getScheduledHoursForMember(member);
   return (
     <>
       <tr>
@@ -1067,7 +1326,13 @@ const CollapsibleMember = ({ member, formatter, formatPercent, navigate, isEdita
           {member.name}
         </td>
         <td>{member.laborCategory}</td>
-        <td className="number-cell">{formatter.format(member.scheduledHours || 0)}</td>
+        {/* <td className="number-cell">{formatter.format(member.scheduledHours || 0)}</td> */}
+        <td className="number-cell">
+          {/* ===== UPDATED: Use API scheduled hours ===== */}
+          <span title={`Source: ${member.scheduledHoursSource || 'unknown'}`}>
+            {formatter.format(displayScheduledHours)}
+          </span>
+        </td>
         <td className="number-cell">{formatter.format(member.directHours)}</td>
         <td className="number-cell">{formatter.format(member.ptoHours)}</td>
         <td className="number-cell">{formatter.format(member.overheadHours)}</td>

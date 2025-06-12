@@ -107,6 +107,7 @@ export function normalizeMonthlyWorkloadData(rawData, selectedMonthIndex = 0) {
   }
 }
 
+
 /**
  * Normalize individual member data to consistent format
  * @param {Object} member - Raw member data from backend
@@ -120,6 +121,10 @@ function normalizeMemberData(member, groupManager = null, studioName = null) {
     name: member.name || member.employee_name || '',
     email: member.email || member.employee_email || '',
     id: member.id || member.contact_id || member.email || '',
+    
+    // FIXED: Preserve contact_id for scheduled hours API
+    contact_id: member.contact_id || member.contactId || member.id || null,
+    contactId: member.contact_id || member.contactId || member.id || null, // Some code uses contactId
     
     // Group/organizational info
     group_manager: groupManager || member.group_manager || member.groupManager || member.group_leader || 'Unassigned',
