@@ -291,6 +291,68 @@ export class ScheduledHoursService {
  * @param {string} quarter - Quarter (Q1, Q2, Q3, Q4)
  * @returns {Promise<Object>} Object mapping member keys to their quarterly scheduled hours
  */
+// static async batchFetchQuarterlyScheduledHours(members, year, quarter) {
+//   console.log(`[ScheduledHoursService] Batch fetching QUARTERLY scheduled hours for ${members.length} members`);
+//   console.log(`[ScheduledHoursService] Parameters: year=${year}, quarter=${quarter}`);
+  
+//   const promises = members.map(async (member) => {
+//     try {
+//       let scheduledHoursData;
+//       const memberKey = member.contact_id || member.contactId || member.id || member.email;
+      
+//       if (member.contact_id || member.contactId || member.id) {
+//         const contactId = member.contact_id || member.contactId || member.id;
+//         scheduledHoursData = await this.getQuarterlyScheduledHours(contactId, year, quarter);
+//       } else if (member.email) {
+//         scheduledHoursData = await this.getQuarterlyScheduledHoursByEmail(member.email, year, quarter);
+//       }
+      
+//       return {
+//         memberKey,
+//         member,
+//         quarterlyScheduledHoursData: scheduledHoursData,
+//         success: true
+//       };
+//     } catch (error) {
+//       console.warn(`[ScheduledHoursService] Failed to fetch quarterly scheduled hours for member ${member.name || member.email}:`, error);
+//       return {
+//         memberKey: member.contact_id || member.contactId || member.id || member.email,
+//         member,
+//         quarterlyScheduledHoursData: null,
+//         error: error.message,
+//         success: false
+//       };
+//     }
+//   });
+
+//   const results = await Promise.all(promises);
+  
+//   // Convert results array to object mapping
+//   const scheduledHoursMap = {};
+//   results.forEach(({ memberKey, member, quarterlyScheduledHoursData, error, success }) => {
+//     scheduledHoursMap[memberKey] = {
+//       member,
+//       quarterlyScheduledHoursData,
+//       error,
+//       success
+//     };
+//   });
+
+//   const successCount = results.filter(r => r.success).length;
+//   const errorCount = results.filter(r => !r.success).length;
+  
+//   console.log(`[ScheduledHoursService] Quarterly batch fetch completed. Success: ${successCount}, Errors: ${errorCount}`);
+  
+//   return scheduledHoursMap;
+// }
+/**
+ * Batch fetch quarterly scheduled hours for multiple team members (OPTIMIZED VERSION)
+ * This fetches quarterly data once and caches it for all month selections
+ * @param {Array} members - Array of team member objects with contact_id or email
+ * @param {number} year - Year (e.g., 2025)
+ * @param {string} quarter - Quarter (Q1, Q2, Q3, Q4)
+ * @returns {Promise<Object>} Object mapping member keys to their quarterly scheduled hours
+ */
 static async batchFetchQuarterlyScheduledHours(members, year, quarter) {
   console.log(`[ScheduledHoursService] Batch fetching QUARTERLY scheduled hours for ${members.length} members`);
   console.log(`[ScheduledHoursService] Parameters: year=${year}, quarter=${quarter}`);
@@ -298,7 +360,13 @@ static async batchFetchQuarterlyScheduledHours(members, year, quarter) {
   const promises = members.map(async (member) => {
     try {
       let scheduledHoursData;
-      const memberKey = member.contact_id || member.contactId || member.id || member.email;
+      // Get all possible member keys
+      const memberKeys = [
+        member.contact_id,
+        member.contactId, 
+        member.id,
+        member.email
+      ].filter(Boolean); // Remove null/undefined values
       
       if (member.contact_id || member.contactId || member.id) {
         const contactId = member.contact_id || member.contactId || member.id;
@@ -307,41 +375,56 @@ static async batchFetchQuarterlyScheduledHours(members, year, quarter) {
         scheduledHoursData = await this.getQuarterlyScheduledHoursByEmail(member.email, year, quarter);
       }
       
-      return {
-        memberKey,
-        member,
-        quarterlyScheduledHoursData: scheduledHoursData,
-        success: true
-      };
+      // FIXED: Store data under ALL possible keys for this member
+      const results = {};
+      memberKeys.forEach(key => {
+        results[key] = {
+          member,
+          quarterlyScheduledHoursData: scheduledHoursData,
+          success: true
+        };
+      });
+      
+      return results;
+      
     } catch (error) {
       console.warn(`[ScheduledHoursService] Failed to fetch quarterly scheduled hours for member ${member.name || member.email}:`, error);
-      return {
-        memberKey: member.contact_id || member.contactId || member.id || member.email,
-        member,
-        quarterlyScheduledHoursData: null,
-        error: error.message,
-        success: false
-      };
+      
+      // FIXED: Store error under ALL possible keys for this member
+      const memberKeys = [
+        member.contact_id,
+        member.contactId, 
+        member.id,
+        member.email
+      ].filter(Boolean);
+      
+      const results = {};
+      memberKeys.forEach(key => {
+        results[key] = {
+          member,
+          quarterlyScheduledHoursData: null,
+          error: error.message,
+          success: false
+        };
+      });
+      
+      return results;
     }
   });
 
-  const results = await Promise.all(promises);
+  const resultsArray = await Promise.all(promises);
   
-  // Convert results array to object mapping
+  // FIXED: Flatten the results into a single map
   const scheduledHoursMap = {};
-  results.forEach(({ memberKey, member, quarterlyScheduledHoursData, error, success }) => {
-    scheduledHoursMap[memberKey] = {
-      member,
-      quarterlyScheduledHoursData,
-      error,
-      success
-    };
+  resultsArray.forEach(memberResults => {
+    Object.assign(scheduledHoursMap, memberResults);
   });
 
-  const successCount = results.filter(r => r.success).length;
-  const errorCount = results.filter(r => !r.success).length;
+  const successCount = Object.values(scheduledHoursMap).filter(r => r.success).length;
+  const errorCount = Object.values(scheduledHoursMap).filter(r => !r.success).length;
   
-  console.log(`[ScheduledHoursService] Quarterly batch fetch completed. Success: ${successCount}, Errors: ${errorCount}`);
+  console.log(`[ScheduledHoursService] Quarterly batch fetch completed. Total entries: ${Object.keys(scheduledHoursMap).length}`);
+  console.log(`[ScheduledHoursService] Sample keys:`, Object.keys(scheduledHoursMap).slice(0, 5));
   
   return scheduledHoursMap;
 }
@@ -354,24 +437,43 @@ static async batchFetchQuarterlyScheduledHours(members, year, quarter) {
  * @returns {number} Scheduled hours for the specific month
  */
 static extractMonthlyFromQuarterly(quarterlyData, monthIndex = 0, defaultValue = 40.0) {
+  console.log(`[ScheduledHoursService] Extracting monthly data for monthIndex ${monthIndex}:`, quarterlyData);
+  
   if (!quarterlyData) {
+    console.log(`[ScheduledHoursService] No quarterly data available, using default: ${defaultValue}`);
     return defaultValue;
   }
 
-  // quarterlyData should have month1, month2, month3 structure
+  // Check for the backend structure: quarterlyData has month1, month2, month3 properties
   const monthKey = `month${monthIndex + 1}`;
+  console.log(`[ScheduledHoursService] Looking for monthKey: ${monthKey}`);
   
+  // Backend structure: { month1: { month_number: 4, working_days: 22, scheduled_hours: 176.0 }, ... }
   if (quarterlyData[monthKey] && quarterlyData[monthKey].scheduled_hours !== undefined) {
-    return parseFloat(quarterlyData[monthKey].scheduled_hours) || defaultValue;
+    const monthlyHours = parseFloat(quarterlyData[monthKey].scheduled_hours) || defaultValue;
+    console.log(`[ScheduledHoursService] Found monthly hours in ${monthKey}: ${monthlyHours}`);
+    return monthlyHours;
+  }
+
+  // Alternative structure: check if data is directly available
+  if (quarterlyData.scheduled_hours !== undefined) {
+    const hours = parseFloat(quarterlyData.scheduled_hours) || defaultValue;
+    console.log(`[ScheduledHoursService] Found direct scheduled_hours: ${hours}`);
+    return hours;
   }
 
   // Fallback: if we have total_scheduled_hours, divide by 3 (rough approximation)
   if (quarterlyData.total_scheduled_hours !== undefined) {
-    return parseFloat(quarterlyData.total_scheduled_hours) / 3 || defaultValue;
+    const approximateHours = parseFloat(quarterlyData.total_scheduled_hours) / 3 || defaultValue;
+    console.log(`[ScheduledHoursService] Using total_scheduled_hours divided by 3: ${approximateHours}`);
+    return approximateHours;
   }
 
+  console.log(`[ScheduledHoursService] No matching structure found, using default: ${defaultValue}`);
+  console.log(`[ScheduledHoursService] Available keys in quarterlyData:`, Object.keys(quarterlyData));
   return defaultValue;
 }
+
 
 /**
  * Optimized function to get scheduled hours for a member using quarterly cache
@@ -384,6 +486,16 @@ static extractMonthlyFromQuarterly(quarterlyData, monthIndex = 0, defaultValue =
 static getScheduledHoursForMemberOptimized(member, quarterlyScheduledHoursData, monthIndex = 0, defaultValue = 40.0) {
   const memberKey = member.contact_id || member.contactId || member.id || member.email;
   const memberQuarterlyData = quarterlyScheduledHoursData[memberKey];
+  
+  // DEBUG: Log what we're working with
+  console.log(`[DEBUG] Processing member: ${member.name || memberKey}`);
+  console.log(`[DEBUG] Member key: ${memberKey}`);
+  console.log(`[DEBUG] Has quarterly data:`, !!memberQuarterlyData);
+  
+  if (memberQuarterlyData) {
+    console.log(`[DEBUG] Quarterly data success:`, memberQuarterlyData.success);
+    console.log(`[DEBUG] Quarterly data structure:`, memberQuarterlyData.quarterlyScheduledHoursData);
+  }
   
   if (memberQuarterlyData && memberQuarterlyData.success && memberQuarterlyData.quarterlyScheduledHoursData) {
     const monthlyHours = this.extractMonthlyFromQuarterly(
