@@ -833,23 +833,46 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
                         let apiScheduledCount = 0;
                         let fallbackScheduledCount = 0;
 
+                        // members.forEach(member => {
+                        //   const memberKey = member.contactId || member.contact_id || member.id || member.email;
+                        //   const scheduledHoursInfo = scheduledHoursData[memberKey];
+                          
+                        //   if (scheduledHoursInfo && scheduledHoursInfo.success && scheduledHoursInfo.scheduledHoursData) {
+                        //     // Use API data
+                        //     const apiHours = ScheduledHoursService.extractScheduledHours(scheduledHoursInfo.scheduledHoursData, 40.0);
+                        //     totalScheduledHours += apiHours;
+                        //     apiScheduledCount++;
+                        //     console.log(`[Summary] Using API scheduled hours for ${member.name}: ${apiHours}`);
+                        //   } else {
+                        //     // Use fallback (member data or default)
+                        //     const fallbackHours = member.scheduled_hours || member.weeklyScheduledHours || 40.0;
+                        //     totalScheduledHours += fallbackHours;
+                        //     fallbackScheduledCount++;
+                        //     console.log(`[Summary] Using fallback scheduled hours for ${member.name}: ${fallbackHours}`);
+                        //   }
+                        // });
                         members.forEach(member => {
                           const memberKey = member.contactId || member.contact_id || member.id || member.email;
-                          const scheduledHoursInfo = scheduledHoursData[memberKey];
                           
-                          if (scheduledHoursInfo && scheduledHoursInfo.success && scheduledHoursInfo.scheduledHoursData) {
-                            // Use API data
-                            const apiHours = ScheduledHoursService.extractScheduledHours(scheduledHoursInfo.scheduledHoursData, 40.0);
-                            totalScheduledHours += apiHours;
+                          // FIXED: Use the quarterly data and extraction logic
+                          const memberHours = ScheduledHoursService.getScheduledHoursForMemberOptimized(
+                            member, 
+                            quarterlyScheduledHoursData, 
+                            selectedMonthIndex, 
+                            40.0
+                          );
+                          
+                          // Check if this came from API or fallback
+                          const quarterlyScheduledHoursInfo = quarterlyScheduledHoursData[memberKey];
+                          if (quarterlyScheduledHoursInfo && quarterlyScheduledHoursInfo.success) {
                             apiScheduledCount++;
-                            console.log(`[Summary] Using API scheduled hours for ${member.name}: ${apiHours}`);
+                            console.log(`[Summary] Using quarterly API scheduled hours for ${member.name}: ${memberHours}`);
                           } else {
-                            // Use fallback (member data or default)
-                            const fallbackHours = member.scheduled_hours || member.weeklyScheduledHours || 40.0;
-                            totalScheduledHours += fallbackHours;
                             fallbackScheduledCount++;
-                            console.log(`[Summary] Using fallback scheduled hours for ${member.name}: ${fallbackHours}`);
+                            console.log(`[Summary] Using fallback scheduled hours for ${member.name}: ${memberHours}`);
                           }
+                          
+                          totalScheduledHours += memberHours;
                         });
 
                         const summary = calculateGroupSummary(members);
