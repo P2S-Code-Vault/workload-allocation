@@ -16,18 +16,17 @@ export class ProjectDataService {
       return `Error: ${response.status}`;
     }
   }
-
-  // Updated search method with proper error handling
-  static async searchMilestones(searchTerm, limit = 10) {
+  // Updated search method with proper error handling - now searches projects instead of milestones
+  static async searchProjects(searchTerm, limit = 10) {
     if (!searchTerm || searchTerm.length < 2) {
       return [];
     }
     
     try {
-      console.log(`Searching milestones with term: ${searchTerm}`);
+      console.log(`Searching projects with term: ${searchTerm}`);
       
       // Create a cache key for this search
-      const cacheKey = `milestone_search_${searchTerm}`;
+      const cacheKey = `project_search_${searchTerm}`;
       
       // Try cache first for better performance
       const cachedResults = this.getCachedData(cacheKey);
@@ -38,13 +37,13 @@ export class ProjectDataService {
       
       // Build the search URL with parameters
       const params = new URLSearchParams({
-        term: searchTerm,
+        search: searchTerm,
         limit: limit
       });
       
       // Use the proper endpoint from the config
-      const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.MILESTONE_SEARCH}?${params.toString()}`;
-      console.log(`Fetching milestone search from: ${url}`);
+      const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.PROJECTS}?${params.toString()}`;
+      console.log(`Fetching project search from: ${url}`);
       
       const response = await fetch(url);
       
@@ -65,25 +64,30 @@ export class ProjectDataService {
       
       return results;
     } catch (error) {
-      console.error("Error searching milestones:", error);
+      console.error("Error searching projects:", error);
       return [];
     }
   }
 
-  // Get milestone details from project number
-  static async getMilestoneDetails(projectNumber) {
+  // Backward compatibility alias - now searches projects
+  static async searchMilestones(searchTerm, limit = 10) {
+    return this.searchProjects(searchTerm, limit);
+  }
+
+  // Get project details from project number
+  static async getProjectDetails(projectNumber) {
     try {
-      console.log('Fetching milestone details for:', projectNumber);
-      const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.MILESTONES}/${encodeURIComponent(projectNumber)}`);
+      console.log('Fetching project details for:', projectNumber);
+      const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.PROJECTS_BY_NUMBER(projectNumber)}`);
 
       if (!response.ok) {
         const errorText = await this.handleErrorResponse(response);
-        throw new Error(`Milestone not found: ${errorText}`);
+        throw new Error(`Project not found: ${errorText}`);
       }
 
       return await response.json();
     } catch (error) {
-      console.error("Failed to fetch milestone details:", error);
+      console.error("Failed to fetch project details:", error);
       throw error;
     }
   }
@@ -93,23 +97,23 @@ static async getAllocations(email, startDate, endDate) {
     if (!email) {
       throw new Error("Email is required for fetching allocations");
     }
-    // Use milestone projections batch endpoint
+    // Use project projections batch endpoint for production workload
     const params = new URLSearchParams();
     params.append('email', email);
     if (startDate) params.append('start_date', startDate);
     if (endDate) params.append('end_date', endDate);
     // Always use the correct key
-    const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.MILESTONE_PROJECTIONS_BATCH}?${params.toString()}`;
+    const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.PROJECT_PROJECTIONS_BATCH}?${params.toString()}`;
     const response = await fetch(url);
     if (!response.ok) {
       const errorText = await this.handleErrorResponse(response);
-      throw new Error(`Failed to fetch milestone projections: ${errorText}`);
+      throw new Error(`Failed to fetch project projections: ${errorText}`);
     }
     const data = await response.json();
     // Normalize to array
     return Array.isArray(data) ? data : (data ? [data] : []);
   } catch (error) {
-    console.error("Error fetching milestone projections:", error);
+    console.error("Error fetching project projections:", error);
     throw error;
   }
 }
@@ -208,19 +212,19 @@ static async saveResourceAllocationByQuarter(data) {
       throw new Error("Missing required allocation data: email, project_number");
     }
 
-    // First, get the milestone from the project number
-    const milestone = await this.getMilestoneByProjectNumber(data.project_number);
-    if (!milestone) {
-      throw new Error(`Milestone not found for project number: ${data.project_number}`);
+    // First, get the project from the project number
+    const project = await this.getProjectByProjectNumber(data.project_number);
+    if (!project) {
+      throw new Error(`Project not found for project number: ${data.project_number}`);
     }
 
     // Convert quarter to actual month numbers
     const months = this.getQuarterMonths(data.quarter);
 
-    // Prepare request body matching backend MilestoneProjectionCreate schema
+    // Prepare request body matching backend ProjectProjectionCreate schema
     const requestBody = {
       email: data.email,
-      milestone_id: milestone.milestone_id,
+      project_id: project.project_id,
       quarter: data.quarter,
       year: data.year,
       month: months[0],        // First month number of quarter
@@ -238,7 +242,7 @@ static async saveResourceAllocationByQuarter(data) {
       requestBody.modified_by = currentUserDetails.contact_id;
     }
 
-    const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.MILESTONE_PROJECTIONS}`, {
+    const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.PROJECT_PROJECTIONS}`, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(requestBody)
@@ -246,18 +250,18 @@ static async saveResourceAllocationByQuarter(data) {
 
     if (!response.ok) {
       const errorText = await this.handleErrorResponse(response);
-      throw new Error(`Failed to save milestone projection: ${errorText}`);
+      throw new Error(`Failed to save project projection: ${errorText}`);
     }
 
     return await response.json();
   } catch (error) {
-    console.error("Error saving milestone projection by quarter:", error);
+    console.error("Error saving project projection by quarter:", error);
     throw error;
   }
 }
 
-// Add this method for updating existing milestone projections by quarter
-static async updateMilestoneAllocationByQuarter(allocationId, month, month1, month2, remarks) {
+// Add this method for updating existing project projections by quarter
+static async updateProjectAllocationByQuarter(allocationId, month, month1, month2, remarks) {
   try {
     if (!allocationId) throw new Error("Allocation ID is required for updates");
     
@@ -274,7 +278,7 @@ static async updateMilestoneAllocationByQuarter(allocationId, month, month1, mon
       payload.modified_by = currentUserDetails.contact_id;
     }
     
-    const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.MILESTONE_PROJECTION_BY_ID(allocationId)}`, {
+    const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.PROJECT_PROJECTION_BY_ID(allocationId)}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json", "Accept": "application/json" },
       body: JSON.stringify(payload)
@@ -282,27 +286,27 @@ static async updateMilestoneAllocationByQuarter(allocationId, month, month1, mon
     
     if (!response.ok) {
       const errorText = await response.text();
-      throw new Error(`Failed to update milestone projection: ${errorText}`);
+      throw new Error(`Failed to update project projection: ${errorText}`);
     }
     
     return await response.json();
   } catch (error) {
-    console.error("Error updating milestone projection:", error);
+    console.error("Error updating project projection:", error);
     throw error;
   }
 }
 
 // Helper method to get milestone by project number
-static async getMilestoneByProjectNumber(projectNumber) {
+static async getProjectByProjectNumber(projectNumber) {
   try {
-    const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.MILESTONES_PROJECT(projectNumber)}`);
+    const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.PROJECTS_BY_NUMBER(projectNumber)}`);
     if (!response.ok) {
       const errorText = await this.handleErrorResponse(response);
-      throw new Error(`Milestone not found: ${errorText}`);
+      throw new Error(`Project not found: ${errorText}`);
     }
     return await response.json();
   } catch (error) {
-    console.error("Error getting milestone by project number:", error);
+    console.error("Error getting project by project number:", error);
     throw error;
   }
 }
@@ -498,21 +502,21 @@ static getQuarterMonths(quarter) {
   // }
   
   // Delete milestone projection
-static async deleteMilestoneAllocation(allocationId) {
+static async deleteProjectAllocation(allocationId) {
   try {
     if (!allocationId) {
       throw new Error("Allocation ID is required");
     }
     
-    console.log(`Deleting milestone allocation ${allocationId}`);
+    console.log(`Deleting project allocation ${allocationId}`);
     
-    const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.MILESTONE_PROJECTION_BY_ID(allocationId)}`, {
+    const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.PROJECT_PROJECTION_BY_ID(allocationId)}`, {
       method: "DELETE"
     });
     
     if (!response.ok) {
       const errorText = await this.handleErrorResponse(response);
-      throw new Error(`Failed to delete milestone allocation: ${errorText}`);
+      throw new Error(`Failed to delete project allocation: ${errorText}`);
     }
     
     // Remove from cache
@@ -520,7 +524,7 @@ static async deleteMilestoneAllocation(allocationId) {
     
     return await response.json();
   } catch (error) {
-    console.error("Error deleting milestone allocation:", error);
+    console.error("Error deleting project allocation:", error);
     throw error;
   }
 }
@@ -554,12 +558,12 @@ static async deleteOpportunityAllocation(allocationId) {
 }
 
 // Generic delete method that determines the type and calls the appropriate method
-static async deleteAllocation(allocationId, type = 'milestone') {
+static async deleteAllocation(allocationId, type = 'project') {
   try {
     if (type === 'opportunity') {
       return await this.deleteOpportunityAllocation(allocationId);
     } else {
-      return await this.deleteMilestoneAllocation(allocationId);
+      return await this.deleteProjectAllocation(allocationId);
     }
   } catch (error) {
     console.error("Error in generic delete allocation:", error);
@@ -701,12 +705,11 @@ static async deleteAllocation(allocationId, type = 'milestone') {
    * Batch update milestone projections
    * @param {Array} updates - Array of objects with { ra_id, month_hours, month_hours1, month_hours2, remarks, modified_by }
    * @returns {Promise<Object>} BatchUpdateResponse
-   */
-  static async batchUpdateMilestoneProjections(updates) {
+   */  static async batchUpdateProjectProjections(updates) {
     if (!Array.isArray(updates) || updates.length === 0) {
-      throw new Error("No updates provided for batch milestone projection update");
+      throw new Error("No updates provided for batch project projection update");
     }
-    const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.MILESTONE_PROJECTIONS_BATCH}`;
+    const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.PROJECT_PROJECTIONS_BATCH}`;
     const body = { allocations: updates };
     const response = await fetch(url, {
       method: "POST",
@@ -715,7 +718,7 @@ static async deleteAllocation(allocationId, type = 'milestone') {
     });
     if (!response.ok) {
       const errorText = await this.handleErrorResponse(response);
-      throw new Error(`Batch milestone projection update failed: ${errorText}`);
+      throw new Error(`Batch project projection update failed: ${errorText}`);
     }
     return await response.json();
   }
@@ -758,17 +761,16 @@ static async deleteAllocation(allocationId, type = 'milestone') {
   if (!contactId) {
     throw new Error(`No contact_id found for email: ${email}`);
   }
-  
-  // Step 2: Fetch milestone projections for contact_id
+    // Step 2: Fetch project projections for contact_id
   const params = new URLSearchParams();
   params.append('year', year);
   params.append('quarter', quarter);
-  const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.CONTACT_MILESTONE_PROJECTIONS(contactId)}?${params.toString()}`;
+  const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.CONTACT_PROJECT_PROJECTIONS(contactId)}?${params.toString()}`;
   
   console.log("Making API call to URL:", url);
   console.log("Full URL breakdown:");
   console.log("- Base URL:", this.apiBaseUrl);
-  console.log("- Endpoint function result:", API_CONFIG.ENDPOINTS.CONTACT_MILESTONE_PROJECTIONS(contactId));
+  console.log("- Endpoint function result:", API_CONFIG.ENDPOINTS.CONTACT_PROJECT_PROJECTIONS(contactId));
   console.log("- Params:", params.toString());
   
   const response = await fetch(url);
@@ -778,7 +780,7 @@ static async deleteAllocation(allocationId, type = 'milestone') {
   if (!response.ok) {
     const errorText = await this.handleErrorResponse(response);
     console.error("API Error:", errorText);
-    throw new Error(`Failed to fetch milestone projections: ${errorText}`);
+    throw new Error(`Failed to fetch project projections: ${errorText}`);
   }
   
   const data = await response.json();
@@ -804,65 +806,61 @@ static async deleteAllocation(allocationId, type = 'milestone') {
       console.log("No allocations found, returning empty array");
       return [];
     }
-    
-    // Step 2: Extract unique milestone IDs
-    const milestoneIds = new Set();
+      // Step 2: Extract unique project IDs
+    const projectIds = new Set();
     allocations.forEach(allocation => {
-      if (allocation.milestone_id) {
-        milestoneIds.add(allocation.milestone_id);
+      if (allocation.project_id) {
+        projectIds.add(allocation.project_id);
       }
     });
     
-    console.log("Found unique milestone IDs:", Array.from(milestoneIds));
+    console.log("Found unique project IDs:", Array.from(projectIds));
     
-    // Step 3: Fetch detailed milestone information
-    const milestoneDetailsPromises = Array.from(milestoneIds).map(async (milestoneId) => {
+    // Step 3: Fetch detailed project information
+    const projectDetailsPromises = Array.from(projectIds).map(async (projectId) => {
       try {
-        const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.MILESTONE_BY_ID(milestoneId)}`);
+        const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.PROJECT_BY_ID(projectId)}`);
         if (!response.ok) {
-          console.warn(`Failed to fetch milestone details for ID ${milestoneId}`);
-          return { id: milestoneId, details: null };
+          console.warn(`Failed to fetch project details for ID ${projectId}`);
+          return { id: projectId, details: null };
         }
         const details = await response.json();
-        return { id: milestoneId, details };
+        return { id: projectId, details };
       } catch (error) {
-        console.warn(`Failed to fetch details for milestone ${milestoneId}:`, error);
-        return { id: milestoneId, details: null };
+        console.warn(`Failed to fetch details for project ${projectId}:`, error);
+        return { id: projectId, details: null };
       }
     });
     
-    const milestoneDetailsResults = await Promise.all(milestoneDetailsPromises);
-    const milestoneDetailsMap = new Map();
-    milestoneDetailsResults.forEach(({ id, details }) => {
-      milestoneDetailsMap.set(id, details);
+    const projectDetailsResults = await Promise.all(projectDetailsPromises);
+    const projectDetailsMap = new Map();
+    projectDetailsResults.forEach(({ id, details }) => {
+      projectDetailsMap.set(id, details);
     });
     
-    console.log("Milestone details fetched for IDs:", Array.from(milestoneDetailsMap.keys()));
+    console.log("Project details fetched for IDs:", Array.from(projectDetailsMap.keys()));
     
-    // Step 4: Enhance allocations with milestone details
+    // Step 4: Enhance allocations with project details
     const enhancedAllocations = allocations.map(allocation => {
-      const milestoneDetails = milestoneDetailsMap.get(allocation.milestone_id);
-      if (milestoneDetails) {
-        console.log(`Enhancing allocation for milestone ${allocation.milestone_id} with details:`, milestoneDetails);
-        return {
+      const projectDetails = projectDetailsMap.get(allocation.project_id);
+      if (projectDetails) {
+        console.log(`Enhancing allocation for project ${allocation.project_id} with details:`, projectDetails);        return {
           ...allocation,
-          // Add detailed milestone information
-          project_number: milestoneDetails.project_number,
-          project_name: milestoneDetails.project_name,
-          milestone_name: milestoneDetails.milestone_name,
-          project_manager: milestoneDetails.project_manager,
-          act_mult_rate: milestoneDetails.act_mult_rate,
-          contract_labor: milestoneDetails.contract_labor,
-          forecast_pm_labor: milestoneDetails.forecast_pm_labor,
-          milestone_status: milestoneDetails.milestone_status,
-          // Keep original fields for backward compatibility
-          proj_id: milestoneDetails.project_number,
+          // Add detailed project information
+          project_number: projectDetails.project_number,
+          project_name: projectDetails.project_name,
+          project_manager: projectDetails.project_manager,
+          project_contract_labor: projectDetails.project_contract_labor,
+          status: projectDetails.status,          // Keep original fields for backward compatibility
+          proj_id: projectDetails.project_number,
+          // For compatibility with existing code that expects milestone fields
+          contract_labor: projectDetails.project_contract_labor,
         };
       }
       return allocation;
     });
     
-    console.log("Enhanced allocations with milestone details:", enhancedAllocations.length);
+    console.log("Enhanced allocations with project details:", enhancedAllocations.length);
     console.log("=== END getAllocationsByQuarterWithDetails DEBUG ===");
     
     return enhancedAllocations;

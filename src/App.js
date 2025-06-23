@@ -412,7 +412,7 @@ const MainContent = React.forwardRef((props, ref) => {
           for (let row of updatedRows) {
             console.log(`Updating allocation with ID: ${row.id}`);
             savePromises.push(
-              ProjectDataService.updateMilestoneAllocationByQuarter(
+              ProjectDataService.updateProjectAllocationByQuarter(
                 row.id,
                 row.month,
                 row.month1,
@@ -979,11 +979,9 @@ const deleteOpportunityRow = useCallback(async (index) => {
           ) : (
             <>
               <table className="resource-table">
-                <thead>
-                  <tr>
+                <thead>                  <tr>
                     <th>Project No.</th>
                     <th>Project Name</th>
-                    <th>Milestone</th>
                     <th>Project Manager</th>
                     <th>Contract Total Labor</th>
                     <th>% EAC Labor Used</th>
@@ -1011,10 +1009,9 @@ const deleteOpportunityRow = useCallback(async (index) => {
                     />
                   ))}
                   {/* Add Direct Hours Subtotal only if there are normal rows */}
-                  {groupedRows.normalRows.length > 0 && (
-                    <tr className="direct-total">
+                  {groupedRows.normalRows.length > 0 && (                    <tr className="direct-total">
                       <td
-                        colSpan="6"
+                        colSpan="5"
                         style={{ textAlign: "right" }}
                         className="direct-total-label"
                       >
@@ -1041,9 +1038,8 @@ const deleteOpportunityRow = useCallback(async (index) => {
 
                   {/* PTO/Holiday Rows */}
                   {groupedRows.ptoRows.length > 0 && (
-                    <>
-                      <tr className="group-separator pto-section">
-                        <td colSpan="9">PTO/Holiday Time</td>
+                    <>                      <tr className="group-separator pto-section">
+                        <td colSpan="8">PTO/Holiday Time</td>
                       </tr>
                       {groupedRows.ptoRows.map((row, index) => (
                         <TableRow
@@ -1056,7 +1052,7 @@ const deleteOpportunityRow = useCallback(async (index) => {
                           currentUser={currentUser}
                         />
                       ))}                      <tr className="pto-total">
-                        <td colSpan="6" className="pto-total-label" style={{ textAlign: "right", fontWeight: "bold" }}>
+                        <td colSpan="5" className="pto-total-label" style={{ textAlign: "right", fontWeight: "bold" }}>
                           Total:
                         </td>
                         <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
@@ -1081,9 +1077,8 @@ const deleteOpportunityRow = useCallback(async (index) => {
 
                   {/* Leave Without Pay Rows */}
                   {groupedRows.lwopRows.length > 0 && (
-                    <>
-                      <tr className="group-separator lwop-section">
-                        <td colSpan="9">Leave Without Pay</td>
+                    <>                      <tr className="group-separator lwop-section">
+                        <td colSpan="8">Leave Without Pay</td>
                       </tr>
                       {groupedRows.lwopRows.map((row, index) => (
                         <TableRow
@@ -1096,7 +1091,7 @@ const deleteOpportunityRow = useCallback(async (index) => {
                           currentUser={currentUser}
                         />
                       ))}                      <tr className="lwop-total">
-                        <td colSpan="6" className="lwop-total-label" style={{ textAlign: "right", fontWeight: "bold" }}>
+                        <td colSpan="5" className="lwop-total-label" style={{ textAlign: "right", fontWeight: "bold" }}>
                           Total:
                         </td>
                         <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
@@ -1121,9 +1116,8 @@ const deleteOpportunityRow = useCallback(async (index) => {
 
                   {/* Administrative Rows (0000-0000) */}
                   {groupedRows.adminRows.length > 0 && (
-                    <>
-                      <tr className="group-separator">
-                        <td colSpan="9">Indirect Time</td>
+                    <>                      <tr className="group-separator">
+                        <td colSpan="8">Indirect Time</td>
                       </tr>
                       {groupedRows.adminRows.map((row, index) => (
                         <TableRow
@@ -1135,9 +1129,8 @@ const deleteOpportunityRow = useCallback(async (index) => {
                           isLoading={isLoading}
                           currentUser={currentUser}
                         />
-                      ))}
-                      <tr className="overhead-total">
-                        <td colSpan="6" className="overhead-total-label" style={{ textAlign: "right", fontWeight: "bold" }}>
+                      ))}                      <tr className="overhead-total">
+                        <td colSpan="5" className="overhead-total-label" style={{ textAlign: "right", fontWeight: "bold" }}>
                           Total:
                         </td>
                         <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
@@ -1161,9 +1154,8 @@ const deleteOpportunityRow = useCallback(async (index) => {
                   )}
                   {/* Available Hours Rows */}
                   {groupedRows.availableHoursRows.length > 0 && (
-                    <>
-                      <tr className="group-separator available-hours-section">
-                        <td colSpan="9">Available Hours</td>
+                    <>                      <tr className="group-separator available-hours-section">
+                        <td colSpan="8">Available Hours</td>
                       </tr>
                       {groupedRows.availableHoursRows.map((row, index) => (
                         <TableRow
@@ -1176,7 +1168,7 @@ const deleteOpportunityRow = useCallback(async (index) => {
                           currentUser={currentUser}
                         />
                       ))}                      <tr className="available-hours-total">
-                        <td colSpan="6" className="available-hours-total-label" style={{ textAlign: "right", fontWeight: "bold" }}>
+                        <td colSpan="5" className="available-hours-total-label" style={{ textAlign: "right", fontWeight: "bold" }}>
                           Total:
                         </td>
                         <td style={{ textAlign: "center", fontWeight: "bold", width: "110px" }}>
@@ -1311,7 +1303,7 @@ const deleteOpportunityRow = useCallback(async (index) => {
                   className="add-btn"
                   disabled={isSaving || isLoading}
                 >
-                  Add Milestone Row
+                  Add Project Row
                 </button>
                 <button
                   onClick={addOpportunityRow}

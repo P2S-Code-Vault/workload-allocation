@@ -40,13 +40,12 @@ const TableRow = ({
     document.addEventListener("mousedown", handleClickOutside);
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
-
   // Sync row.projectNumber to searchTerm when it changes externally
   useEffect(() => {
     if (row.projectNumber !== searchTerm) {
       setSearchTerm(row.projectNumber || "");
     }
-  }, [row.projectNumber]);
+  }, [row.projectNumber, searchTerm]);
 
   // Perform search when searchTerm changes (with debounce)
   useEffect(() => {
@@ -141,19 +140,16 @@ const TableRow = ({
 
         if (results.length > 0) {
           // If we found results, select the first one
-          handleProjectSelect(results[0]);
-        } else {
+          handleProjectSelect(results[0]);        } else {
           // Try the API as backup if no results in CSV
           try {
-            const milestone = await ProjectDataService.getMilestoneDetails(
+            const project = await ProjectDataService.getProjectDetails(
               searchTerm
-            );
-            updateRow(index, "projectNumber", milestone.project_number);
-            updateRow(index, "projectName", milestone.project_name);
-            updateRow(index, "milestone", milestone.milestone_name);
-            updateRow(index, "pm", milestone.project_manager);
-            updateRow(index, "labor", milestone.contract_labor);
-            updateRow(index, "pctLaborUsed", milestone.forecast_pm_labor * 100);
+            );            updateRow(index, "projectNumber", project.project_number);
+            updateRow(index, "projectName", project.project_name);
+            updateRow(index, "pm", project.project_manager);
+            updateRow(index, "labor", project.project_contract_labor);
+            updateRow(index, "pctLaborUsed", 0); // Calculate this based on project data
           } catch (apiError) {
             console.error("Failed to find project in CSV or API:", apiError);
             setHasError(true);
@@ -179,12 +175,9 @@ const TableRow = ({
       console.log("Raw Pct Labor Used:", project["Pct Labor Used"]);
 
       const pctLaborUsed = parseFloat(project["Pct Labor Used"]) || 0;
-      console.log("Parsed pctLaborUsed:", pctLaborUsed);
-
-      // Update with the selected project data
+      console.log("Parsed pctLaborUsed:", pctLaborUsed);      // Update with the selected project data
       updateRow(index, "projectNumber", project["Project Number"]);
       updateRow(index, "projectName", project["Project Name"]);
-      updateRow(index, "milestone", project["Milestone"]);
       updateRow(index, "pm", project["PM"]);
       updateRow(index, "labor", project["Labor"]);
       updateRow(index, "pctLaborUsed", pctLaborUsed); // Use the parsed value
@@ -383,19 +376,7 @@ const TableRow = ({
               : ""
           }
           readOnly
-        />
-      </td>
-      <td>
-        <input
-          type="text"
-          value={
-            row.projectNumber?.startsWith("0000-0000")
-              ? (row.milestone ? row.milestone : "-")
-              : row.milestone || ""
-          }
-          readOnly
-        />
-      </td>
+        />      </td>
       <td>
         <input
           type="text"

@@ -9,8 +9,7 @@ const API_CONFIG = {
       CONTACTS: '/contacts', // for GET /contacts?search=...&group_manager=...
       CONTACT_BY_EMAIL: email => `/contacts/email/${encodeURIComponent(email)}`,
       CONTACTS_SAME_GROUP: contactId => `/contacts/${contactId}/same-group`,
-      CONTACTS_SAME_GROUP_BY_EMAIL: email => `/contacts/by-email/${encodeURIComponent(email)}/same-group`,
-      MILESTONES_ACTIVE_ALL: '/milestones/active-all',
+      CONTACTS_SAME_GROUP_BY_EMAIL: email => `/contacts/by-email/${encodeURIComponent(email)}/same-group`,      MILESTONES_ACTIVE_ALL: '/milestones/active-all',
       MILESTONES_PROJECT: projectNumber => `/milestones/project/${projectNumber}`,
       MILESTONES: '/milestones', // for GET /milestones?search=...&project_manager=...&active_only=...&limit=...
       MILESTONE_BY_ID: milestoneId => `/milestones/${milestoneId}`,
@@ -46,6 +45,24 @@ const API_CONFIG = {
       CONTACT_MONTHLY_SCHEDULED_HOURS_BY_EMAIL: email => `/contacts/by-email/${encodeURIComponent(email)}/scheduled-hours/monthly`,
       CONTACT_QUARTERLY_SCHEDULED_HOURS_BY_EMAIL: email => `/contacts/by-email/${encodeURIComponent(email)}/scheduled-hours/quarterly`,
       CONTACT_SCHEDULED_HOURS_SUMMARY: contactId => `/contacts/${contactId}/scheduled-hours/summary`,
+      
+      // Project endpoints (replacing milestone endpoints for production workload)
+      PROJECTS_ACTIVE_ALL: '/projects/active-all',
+      PROJECTS_BY_NUMBER: projectNumber => `/projects/number/${projectNumber}`,
+      PROJECTS_MANAGERS: '/projects/managers',
+      PROJECTS: '/projects', // for GET /projects?search=...&project_manager=...&active_only=...&limit=...
+      PROJECT_BY_ID: projectId => `/projects/${projectId}`,
+      PROJECT_PROJECTIONS: '/project-projections',
+      PROJECT_PROJECTION_BY_ID: raId => `/project-projections/${raId}`,
+      CONTACT_PROJECT_PROJECTIONS: contactId => `/contacts/${contactId}/project-projections`,
+      PROJECT_PROJECTIONS_BY_PROJECT: projectId => `/projects/${projectId}/projections`,
+      PROJECT_PROJECTIONS_BATCH: '/project-projections/batch',
+      
+      // GL project endpoints (replacing milestone endpoints for production workload)
+      GL_PROJECTS_QUARTERLY: '/gl/projects/quarterly', // group_manager_email, year, quarter
+      GL_PROJECTS_MONTHLY: '/gl/projects/monthly', // group_manager_email, year, quarter
+      GL_WORKLOAD_COMBINED_WITH_PROJECTS: '/gl/workload/combined-with-projects', // group_manager_email, year, quarter
+      GL_WORKLOAD_BATCH_UPDATE_WITH_PROJECTS: '/gl/workload/batch-update-with-projects', // POST with group_manager_email
     },
     
     // HTTP status codes

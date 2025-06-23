@@ -31,8 +31,7 @@ const LeadershipPage = ({ navigate }) => {
 
   // const [scheduledHoursData, setScheduledHoursData] = useState({});
   // const [scheduledHoursLoading, setScheduledHoursLoading] = useState(false);
-  // const [scheduledHoursError, setScheduledHoursError] = useState(null);
-  const [scheduledHoursData, setScheduledHoursData] = useState({});
+  // const [scheduledHoursError, setScheduledHoursError] = useState(null);  // const [scheduledHoursData, setScheduledHoursData] = useState({});
   const [quarterlyScheduledHoursData, setQuarterlyScheduledHoursData] = useState({}); // NEW: Cache quarterly data
   const [scheduledHoursLoading, setScheduledHoursLoading] = useState(false);
   const [scheduledHoursError, setScheduledHoursError] = useState(null);
@@ -202,9 +201,8 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
   // No API calls needed - the getScheduledHoursForMember function will automatically use the correct month from quarterly cache
 }, []);
 
-  
-  const clearScheduledHoursData = useCallback(() => {
-      setScheduledHoursData({});
+    const clearScheduledHoursData = useCallback(() => {
+      // setScheduledHoursData({});
       setQuarterlyScheduledHoursData({}); // Clear quarterly cache too
       setScheduledHoursError(null);
       ScheduledHoursService.clearCache();
@@ -246,15 +244,13 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
       const userGroupManager = currentUser.groupManager;
 
       // Fix: Only declare quarterString once
-      const quarterString = typeof selectedQuarter === 'number' ? `Q${selectedQuarter}` : selectedQuarter;
-
-      if (!userGroupManager && !showAllGroups) {
+      const quarterString = typeof selectedQuarter === 'number' ? `Q${selectedQuarter}` : selectedQuarter;      if (!userGroupManager && !showAllGroups) {
         console.log("User is not assigned to any group");
         setTeamData({});
-        setScheduledHoursData({});
+        // setScheduledHoursData({});
         setIsLoading(false);
         return;
-      }      
+      }
       
       if (showAllGroups) {
         // Fetch all staff monthly workload for all groups
@@ -384,9 +380,8 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
         console.log("No team members found for this group");
         setError(
           "No team members found for your group. You might not be assigned to a group yet."
-        );
-        setTeamData({});
-        setScheduledHoursData({}); 
+        );        setTeamData({});
+        // setScheduledHoursData({});
         setIsLoading(false);
         return;
       }
@@ -399,29 +394,68 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
         console.log(`[LoadTeamData] Fetching QUARTERLY scheduled hours for ${members.length} team members for ${quarterString}`);
 
         const quarterlyScheduledHoursMap = await fetchQuarterlyScheduledHoursForMembers(members, selectedYear, quarterString);
-        setQuarterlyScheduledHoursData(quarterlyScheduledHoursMap);
-
-      const monthlyData = await GLTeamService.getTeamMonthlyAllocationsWithDetails(
+        setQuarterlyScheduledHoursData(quarterlyScheduledHoursMap);      // Fetch production projects (replacing milestones for production work)
+      const projectData = await GLTeamService.getTeamMonthlyProjectAllocationsWithDetails(
         groupManagerEmail,
         selectedYear,
         quarterString
-      );      // Also fetch monthly opportunities
-      const opportunitiesData = await GLTeamService.getMonthlyOpportunities(
+      );
+      
+      // Keep milestones for non-production work (PTO, holidays, overhead)
+      const milestoneData = await GLTeamService.getTeamMonthlyAllocationsWithDetails(
         groupManagerEmail,
         selectedYear,
         quarterString
       );
 
+      // Also fetch monthly opportunities
+      const opportunitiesData = await GLTeamService.getMonthlyOpportunities(
+        groupManagerEmail,
+        selectedYear,
+        quarterString
+      );      console.log('[LeadershipPage] Raw project data:', projectData);
+      console.log('[LeadershipPage] Raw milestone data (for PTO/overhead):', milestoneData);
       console.log('[LeadershipPage] Raw opportunities data:', opportunitiesData);
+
+      // Combine project and milestone data for processing
+      const combinedData = {
+        expected_months: projectData.expected_months || milestoneData.expected_months || [1, 2, 3],
+        monthly_data: {}
+      };
+
+      // Merge project data and milestone data (milestones for PTO/overhead only)
+      const monthKeys = ['month1', 'month2', 'month3'];
+      monthKeys.forEach(monthKey => {
+        const projectAllocations = (projectData.monthly_data && projectData.monthly_data[monthKey]) || [];
+        const milestoneAllocations = (milestoneData.monthly_data && milestoneData.monthly_data[monthKey]) || [];
+        
+        // Filter milestones to only include non-production items (PTO, holidays, overhead)  
+        const nonProductionMilestones = milestoneAllocations.filter(allocation => {
+          const projectNumber = allocation.project_number || '';
+          return projectNumber.startsWith('0000-0000') || 
+                 projectNumber.includes('PTO') || 
+                 projectNumber.includes('HOL') || 
+                 projectNumber.includes('SIC') || 
+                 projectNumber.includes('LWOP') || 
+                 projectNumber.includes('JURY') ||
+                 projectNumber.includes('OVERHEAD') ||
+                 projectNumber.includes('INDIRECT');
+        });
+        
+        // Combine projects (production) with filtered milestones (non-production)
+        combinedData.monthly_data[monthKey] = [...projectAllocations, ...nonProductionMilestones];
+      });
+
+      console.log('[LeadershipPage] Combined data:', combinedData);
+      console.log('[LeadershipPage] Project sample:', projectData?.monthly_data ? Object.values(projectData.monthly_data)[0]?.slice(0, 2) : 'No project data');
       console.log('[LeadershipPage] Opportunities sample:', opportunitiesData?.monthly_opportunities?.monthly_data ? Object.values(opportunitiesData.monthly_opportunities.monthly_data)[0]?.slice(0, 2) : 'No opportunities data');
 
-      // Use backend's expected_months for month selector
-      setMonths(monthlyData.expected_months || [1, 2, 3]);
+      // Use combined data's expected_months for month selector
+      setMonths(combinedData.expected_months);
 
-      // Instead of milestones, use monthlyData.monthly_data for allocations
       // Determine which month key to use based on selectedMonthIndex
       const monthKey = `month${selectedMonthIndex + 1}`;
-      const monthAllocations = (monthlyData.monthly_data && monthlyData.monthly_data[monthKey]) || [];
+      const monthAllocations = combinedData.monthly_data[monthKey] || [];
       const monthOpportunities = (opportunitiesData.monthly_opportunities && opportunitiesData.monthly_opportunities.monthly_data && opportunitiesData.monthly_opportunities.monthly_data[monthKey]) || [];
 
       const allGroupsData = {};
@@ -489,21 +523,22 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
         }        // FIX: Use contact_id for matching allocations
         const memberAllocations = monthAllocations.filter(
           (a) => a.contact_id === member.contact_id
-        );
-        const memberRows = memberAllocations.map((allocation) => ({
+        );        const memberRows = memberAllocations.map((allocation) => ({
               // Core identifiers
                         ra_id: allocation.ra_id,
+                        // Handle both project_id (from projects) and milestone_id (from milestones)
+                        project_id: allocation.project_id,
                         milestone_id: allocation.milestone_id,
                         contact_id: allocation.contact_id,
                         
                         // Project/Milestone Information (now with detailed data)
                         projectNumber: allocation.project_number || allocation.proj_id || "",
                         projectName: allocation.project_name || "",
-                        milestone: allocation.milestone_name || "",
+                        milestone: allocation.milestone_name || allocation.project_name || "",
                         pm: allocation.project_manager || "",
                         
                         // Financial Information
-                        labor: parseFloat(allocation.contract_labor || allocation.labor || 0),
+                        labor: parseFloat(allocation.contract_labor || allocation.project_contract_labor || allocation.labor || 0),
                         pctLaborUsed: parseFloat(allocation.forecast_pm_labor || allocation.percentLaborUsed || 0) * 100,
                         
                         // Hours Information
@@ -525,16 +560,16 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
                         year: allocation.year,
                         month: allocation.month,
                         
-                        // Milestone status and billing info
-                        milestone_status: allocation.milestone_status,
+                        // Project/Milestone status and billing info
+                        milestone_status: allocation.milestone_status || allocation.status,
                         is_billable: allocation.is_billable,
                         act_mult_rate: allocation.act_mult_rate,
                         
                         // Dates and metadata
                         ra_date: allocation.ra_date,
                         modified_by: allocation.modified_by,
-                        type: 'milestone' // Add type to distinguish from opportunities
-                      }));        // Process opportunities for this member
+                        type: allocation.project_id ? 'project' : 'milestone' // Distinguish between projects and milestones
+                      }));// Process opportunities for this member
         const memberOpportunities = monthOpportunities.filter(
           (o) => o.contact_id === member.contact_id
         );
@@ -579,7 +614,7 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
         
         const directHours = allMemberRows
           .filter((row) => {
-            // Include opportunities (they are direct hours) and milestone rows that don't start with "0000-0000"
+            // Include opportunities (they are direct hours) and project/milestone rows that don't start with "0000-0000"
             return row.type === 'opportunity' || !row.projectNumber.startsWith("0000-0000");
           })
           .reduce((sum, row) => sum + (parseFloat(row.hours) || 0), 0);
@@ -632,7 +667,7 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
           totalHours,
           ratioB: calculateRatioB(directHours, scheduledHours, ptoHours), //uses API for scd hrs.
           rows: allMemberRows, // Use combined rows instead of just memberRows
-          milestoneRows: memberRows, // Keep separate for detailed view
+          milestoneRows: memberRows, // Keep separate for detailed view (includes both projects and milestones)
           opportunityRows: memberOpportunityRows, // Keep separate for detailed view
           studioLeader: member.studio_leader || 'Unassigned',
           discipline: member.discipline || '',
@@ -695,13 +730,13 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
     } finally {
       setIsLoading(false);
     }
-  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear, selectedMonthIndex,fetchQuarterlyScheduledHoursForMembers]);
-
-  useEffect(() => {
+  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear, selectedMonthIndex, fetchQuarterlyScheduledHoursForMembers, getScheduledHoursForMember, getScheduledHoursSummary, quarterlyScheduledHoursData]);  useEffect(() => {
     if (!currentUser) {
       return;
     }
-    loadTeamData();  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear]);
+    loadTeamData();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear]);
 
 
   const handleQuarterChange = useCallback((quarter, year) => {
@@ -1342,7 +1377,7 @@ const CollapsibleStudio = ({ studio, studioData, formatter, formatPercent, navig
 
 const CollapsibleMember = ({ member, formatter, formatPercent, navigate, isEditable = true,getScheduledHoursForMember}) => {
   const [isExpanded, setIsExpanded] = React.useState(false);
-  const sortedMilestoneRows = [...(member.milestoneRows || [])].sort((a, b) => a.projectNumber.localeCompare(b.projectNumber));
+  const sortedProjectRows = [...(member.milestoneRows || [])].sort((a, b) => a.projectNumber.localeCompare(b.projectNumber));
   const sortedOpportunityRows = [...(member.opportunityRows || [])].sort((a, b) => a.projectNumber.localeCompare(b.projectNumber));
   // ===== UPDATED: Get scheduled hours from API data =====
   const displayScheduledHours = getScheduledHoursForMember(member);
@@ -1377,15 +1412,13 @@ const CollapsibleMember = ({ member, formatter, formatPercent, navigate, isEdita
       {isExpanded && (
         <tr className="member-details">
           <td colSpan="10">
-            <div className="time-entries">
-              {/* Milestones Section */}
+            <div className="time-entries">              {/* Projects Section */}
               <div className="time-entries-section">
-                <h5>Milestones</h5>
-                {sortedMilestoneRows.length === 0 ? (
-                  <div className="no-entries">No milestone entries found</div>
+                <h5>Projects</h5>                {sortedProjectRows.length === 0 ? (
+                  <div className="no-entries">No project entries found</div>
                 ) : (
-                  sortedMilestoneRows.map((entry, i) => (
-                    <div key={`milestone-${i}`} className="time-entry">
+                  sortedProjectRows.map((entry, i) => (
+                    <div key={`project-${i}`} className="time-entry">
                       <span className="project-number">{entry.projectNumber}</span>
                       <span className="project-name">{entry.milestone}</span>
                       <span className="remarks">{entry.remarks}</span>
