@@ -5,9 +5,9 @@ import { ScheduledHoursService } from "../services/ScheduledHoursService";
 import QuarterPicker from "./QuarterPicker";
 import "./LeadershipPage.css";
 import API_CONFIG from "../services/apiConfig";
-import { getCurrentQuarterString, getCurrentYear, getQuarterMonths, getCurrentQuarter } from "../utils/dateUtils";
+import { getCurrentQuarterString, getCurrentYear } from "../utils/dateUtils";
 import { 
-  normalizeMonthlyWorkloadData, 
+  normalizeQuarterlyWorkloadData,
   groupStaffByManager, 
   calculateGroupSummary, 
   validateMonthlyData 
@@ -24,9 +24,7 @@ const LeadershipPage = ({ navigate }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [groupList, setGroupList] = useState([]);
   const [showAllGroups, setShowAllGroups] = useState(false);
-  const [selectedMonthIndex, setSelectedMonthIndex] = useState(0);
 
-  const [months, setMonths] = useState(getQuarterMonths(getCurrentQuarter()));
   const [allStaffMonthlyData, setAllStaffMonthlyData] = useState(null);
 
   // const [scheduledHoursData, setScheduledHoursData] = useState({});
@@ -81,10 +79,10 @@ const LeadershipPage = ({ navigate }) => {
       return ScheduledHoursService.getScheduledHoursForMemberOptimized(
         member, 
         quarterlyScheduledHoursData, 
-        selectedMonthIndex, 
+        0, // Default to first month for quarterly data
         40.0
       );
-    }, [quarterlyScheduledHoursData, selectedMonthIndex]);
+    }, [quarterlyScheduledHoursData]);
 
   
   /**
@@ -102,22 +100,6 @@ const calculateStudioScheduledHours = useCallback((studioData) => {
   }, 0);
 }, [getScheduledHoursForMember]);
 
-/**
- * Calculate total scheduled hours for a manager's entire team
- * @param {Object} managerData - Manager data with studios object
- * @returns {number} Total scheduled hours for the manager's team
- */
-const calculateManagerScheduledHours = useCallback((managerData) => {
-  if (!managerData.studios) {
-    return 0;
-  }
-  
-  return Object.values(managerData.studios).reduce((total, studioData) => {
-    return total + calculateStudioScheduledHours(studioData);
-  }, 0);
-}, [calculateStudioScheduledHours]);
-
- 
   const getScheduledHoursSummary = useCallback((members) => {
   let totalScheduledHours = 0;
   let apiDataCount = 0;
@@ -132,7 +114,7 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
       apiDataCount++;
       const monthlyHours = ScheduledHoursService.extractMonthlyFromQuarterly(
         quarterlyScheduledHoursInfo.quarterlyScheduledHoursData, 
-        selectedMonthIndex, 
+        0, // Default to first month for quarterly data
         40.0
       );
       totalScheduledHours += monthlyHours;
@@ -152,7 +134,7 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
     errorCount,
     totalMembers: members.length
   };
-}, [quarterlyScheduledHoursData, getScheduledHoursForMember, selectedMonthIndex]);
+}, [quarterlyScheduledHoursData, getScheduledHoursForMember]);
 
  
   const fetchQuarterlyScheduledHoursForMembers = useCallback(async (members, year, quarter) => {
@@ -195,12 +177,6 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
   }
 }, []);
 
-  
-  const updateScheduledHoursForMonth = useCallback(async (newMonthIndex) => {
-  console.log(`[LeadershipPage] Switching to month index ${newMonthIndex} using cached quarterly data`);
-  // No API calls needed - the getScheduledHoursForMember function will automatically use the correct month from quarterly cache
-}, []);
-
     const clearScheduledHoursData = useCallback(() => {
       // setScheduledHoursData({});
       setQuarterlyScheduledHoursData({}); // Clear quarterly cache too
@@ -208,12 +184,6 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
       ScheduledHoursService.clearCache();
       console.log('[LeadershipPage] Cleared scheduled hours data and quarterly cache');
     }, []);
-
-  
-    useEffect(() => {
-      console.log(`[LeadershipPage] Month index changed to ${selectedMonthIndex}, using cached quarterly data`);
-      // No API calls needed - the getScheduledHoursForMember will automatically use the correct month
-    }, [selectedMonthIndex]);
 
   /**
    * Effect: Clear scheduled hours data when quarter/year changes
@@ -253,13 +223,13 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
       }
       
       if (showAllGroups) {
-        // Fetch all staff monthly workload for all groups
-        console.log('Fetching all staff monthly workload for all groups...');
-        const allStaffData = await GLTeamService.getAllStaffMonthlyWorkload(
+        // Fetch all staff quarterly workload for all groups
+        console.log('Fetching all staff quarterly workload for all groups...');
+        const allStaffData = await GLTeamService.getAllStaffQuarterlyWorkload(
           selectedYear,
           quarterString
         );
-        console.log('All staff monthly workload data received:', allStaffData);
+        console.log('All staff quarterly workload data received:', allStaffData);
         
         // Add detailed structure inspection
         if (allStaffData && allStaffData.managers) {
@@ -326,19 +296,9 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
         
         setAllStaffMonthlyData(allStaffData);
 
-        // Set months for selector based on the received data structure
+        // Set quarterly data
         if (allStaffData) {
-          if (allStaffData.expectedMonths) {
-            setMonths(allStaffData.expectedMonths);
-          } else if (allStaffData.expected_months) {
-            setMonths(allStaffData.expected_months);
-          } else {
-            // Fallback to quarter months if not provided
-            const quarterNum = typeof selectedQuarter === 'number' ? selectedQuarter : 
-              selectedQuarter === 'Q1' ? 1 : selectedQuarter === 'Q2' ? 2 : 
-              selectedQuarter === 'Q3' ? 3 : 4;
-            setMonths(getQuarterMonths(quarterNum));
-          }
+          console.log('Quarterly data loaded successfully');
         }
         console.log('Sample member from allStaffData:', 
   allStaffData.managers[Object.keys(allStaffData.managers)[0]]?.studios[Object.keys(allStaffData.managers[Object.keys(allStaffData.managers)[0]]?.studios || {})[0]]?.members[0]
@@ -450,11 +410,8 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
       console.log('[LeadershipPage] Project sample:', projectData?.monthly_data ? Object.values(projectData.monthly_data)[0]?.slice(0, 2) : 'No project data');
       console.log('[LeadershipPage] Opportunities sample:', opportunitiesData?.monthly_opportunities?.monthly_data ? Object.values(opportunitiesData.monthly_opportunities.monthly_data)[0]?.slice(0, 2) : 'No opportunities data');
 
-      // Use combined data's expected_months for month selector
-      setMonths(combinedData.expected_months);
-
-      // Determine which month key to use based on selectedMonthIndex
-      const monthKey = `month${selectedMonthIndex + 1}`;
+      // Use quarterly data directly without month selection
+      const monthKey = `month1`; // Default to first month for quarterly aggregation
       const monthAllocations = combinedData.monthly_data[monthKey] || [];
       const monthOpportunities = (opportunitiesData.monthly_opportunities && opportunitiesData.monthly_opportunities.monthly_data && opportunitiesData.monthly_opportunities.monthly_data[monthKey]) || [];
 
@@ -730,7 +687,7 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
     } finally {
       setIsLoading(false);
     }
-  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear, selectedMonthIndex, fetchQuarterlyScheduledHoursForMembers, getScheduledHoursForMember, getScheduledHoursSummary, quarterlyScheduledHoursData]);  useEffect(() => {
+  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear, fetchQuarterlyScheduledHoursForMembers, getScheduledHoursForMember, getScheduledHoursSummary, quarterlyScheduledHoursData]);  useEffect(() => {
     if (!currentUser) {
       return;
     }
@@ -747,9 +704,7 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
 
     setSelectedQuarter(quarter);
     setSelectedYear(year);
-    // Update months when quarter changes
-    const quarterNum = quarter === 'Q1' ? 1 : quarter === 'Q2' ? 2 : quarter === 'Q3' ? 3 : quarter === 'Q4' ? 4 : quarter;
-    setMonths(getQuarterMonths(quarterNum));
+    // Quarterly data doesn't need month updates
   }, []); // Empty dependency array since this function doesn't depend on any props or state
 
   const extractGroupNames = (teamData) => {
@@ -825,39 +780,26 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
 
             {isLoading ? (
               <div className="loading-indicator">Loading team data...</div>            ) : showAllGroups ? (
-              allStaffMonthlyData ? (
-                <div className="group-summary">
-                  <div className="project-summary">
-                    <div className="pm-dashboard-title">
-                      All Groups Summary
-                      <div className="month-selector">
-                        {/* Month selector buttons */}
-                        {months.map((monthNum, idx) => (
-                          <button
-                            key={monthNum}
-                            className={`view-control-btn ${selectedMonthIndex === idx ? "active" : ""}`}
-                            onClick={() => setSelectedMonthIndex(idx)}
-                          >
-                            {new Date(2000, monthNum - 1, 1).toLocaleString('default', { month: 'long' })}
-                          </button>
-                        ))}
+              allStaffMonthlyData ? (                  <div className="group-summary">
+                    <div className="project-summary">
+                      <div className="pm-dashboard-title">
+                        All Groups Summary ({selectedQuarter} {selectedYear})
                       </div>
-                    </div>
                     
                     {/* Group-by-group summary table for All Groups view */}
                     {(() => {
                       console.log('Processing all staff data for summary table...');
                       console.log('AllStaffMonthlyData structure:', allStaffMonthlyData);
                       
-                      // Use utility functions to normalize and process the data
-                      const normalizedStaffMembers = normalizeMonthlyWorkloadData(allStaffMonthlyData, selectedMonthIndex);
+                      // Use utility functions to normalize quarterly data (no month selection needed)
+                      const normalizedStaffMembers = normalizeQuarterlyWorkloadData(allStaffMonthlyData);
                       console.log('Normalized staff members:', normalizedStaffMembers);
                       
                       if (normalizedStaffMembers.length === 0) {
                         return (
                           <div className="no-data-message">
-                            <p>No data found for this month/quarter.</p>
-                            <p>Debug info: selectedMonthIndex = {selectedMonthIndex}, dataStructure = {Object.keys(allStaffMonthlyData).join(', ')}</p>
+                            <p>No data found for this quarter.</p>
+                            <p>Debug info: dataStructure = {Object.keys(allStaffMonthlyData).join(', ')}</p>
                           </div>
                         );
                       }
@@ -897,7 +839,7 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
                           const memberHours = ScheduledHoursService.getScheduledHoursForMemberOptimized(
                             member, 
                             quarterlyScheduledHoursData, 
-                            selectedMonthIndex, 
+                            0, // Default to first month for quarterly data
                             40.0
                           );
                           
@@ -993,19 +935,19 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
                     })()}                    {/* Collapsible groups for each manager */}
                     <div className="collapsible-group-list">
                       {(() => {
-                        console.log('Rendering collapsible groups for selectedMonthIndex:', selectedMonthIndex);
+                        console.log('Rendering collapsible groups for quarterly data');
                         
-                        // Use utility function to normalize and extract staff members for the selected month
-                        const allStaffMembers = normalizeMonthlyWorkloadData(allStaffMonthlyData, selectedMonthIndex);
+                        // Use utility function to normalize quarterly data
+                        const allStaffMembers = normalizeQuarterlyWorkloadData(allStaffMonthlyData);
                         console.log('Staff members for collapsible view:', allStaffMembers);
                         
                         if (allStaffMembers.length === 0) {
                           return (
                             <div className="no-data-message">
-                              <p>No staff members found for the selected month.</p>
+                              <p>No staff members found for the selected quarter.</p>
                               <p>This could be due to:</p>
                               <ul>
-                                <li>No data available for {new Date(2000, months[selectedMonthIndex] - 1, 1).toLocaleString('default', { month: 'long' })}</li>
+                                <li>No data available for {selectedQuarter} {selectedYear}</li>
                                 <li>Data processing issues in utility functions</li>
                                 <li>Backend data structure changes</li>
                               </ul>
@@ -1123,19 +1065,7 @@ const calculateManagerScheduledHours = useCallback((managerData) => {
               <div className="group-summary">
                 <div className="project-summary">
                   <div className="pm-dashboard-title">
-                    Group Summary
-                    <div className="month-selector">
-                      {/* Month selector buttons */}
-                      {months.map((monthNum, idx) => (
-                        <button
-                          key={monthNum}
-                          className={`view-control-btn ${selectedMonthIndex === idx ? "active" : ""}`}
-                          onClick={() => setSelectedMonthIndex(idx)}
-                        >
-                          {new Date(2000, monthNum - 1, 1).toLocaleString('default', { month: 'long' })}
-                        </button>
-                      ))}
-                    </div>
+                    Group Summary ({selectedQuarter} {selectedYear})
                   </div>
                   <table className="summary-table">
                     <thead>

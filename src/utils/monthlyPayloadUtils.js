@@ -1,5 +1,5 @@
 /**
- * Utility functions for processing monthly payload data from the backend
+ * Utility functions for processing monthly and quarterly payload data from the backend
  */
 
 /**
@@ -159,6 +159,117 @@ function normalizeMemberData(member, groupManager = null, studioName = null) {
 }
 
 /**
+ * Normalize quarterly workload data to a consistent format
+ * @param {Object} rawData - Raw data from getAllStaffQuarterlyWorkload API
+ * @returns {Array} Normalized array of staff members with consistent structure
+ */
+export function normalizeQuarterlyWorkloadData(rawData) {
+  console.log('Normalizing quarterly workload data:', {
+    rawData: rawData,
+    hasManagers: !!rawData?.managers,
+    managersCount: rawData?.managers ? Object.keys(rawData.managers).length : 0
+  });
+  
+  if (!rawData) {
+    console.warn('No raw data provided to normalize');
+    return [];
+  }
+
+  const allStaffMembers = [];
+
+  try {
+    // Handle quarterly data structure: { managers: { "Manager Name": { studios: { "Studio Name": { members: [...] } } } } }
+    if (rawData.managers) {
+      console.log('Processing managers structure with', Object.keys(rawData.managers).length, 'managers');
+      Object.entries(rawData.managers).forEach(([managerName, managerData]) => {
+        console.log(`Processing manager: ${managerName}`, {
+          hasStudios: !!managerData.studios,
+          studiosCount: managerData.studios ? Object.keys(managerData.studios).length : 0,
+          memberCount: managerData.memberCount,
+          groupNo: managerData.groupNo
+        });
+        
+        // Process studios structure for quarterly data
+        if (managerData.studios) {
+          Object.entries(managerData.studios).forEach(([studioName, studioData]) => {
+            console.log(`Processing studio: ${studioName}`, {
+              hasMembers: !!studioData.members,
+              membersCount: studioData.members ? studioData.members.length : 0,
+              studioLeader: studioData.studioLeader
+            });
+            if (studioData.members && Array.isArray(studioData.members)) {
+              studioData.members.forEach(member => {
+                // Normalize quarterly member data
+                console.log(`Adding member: ${member.name} from ${studioName}`);
+                allStaffMembers.push(normalizeQuarterlyMemberData(member, managerName, studioName, managerData.groupNo));
+              });
+            }
+          });
+        }
+      });
+    }
+
+    console.log(`Normalized ${allStaffMembers.length} staff members from quarterly data`);
+    return allStaffMembers;
+
+  } catch (error) {
+    console.error('Error normalizing quarterly workload data:', error);
+    return [];
+  }
+}
+
+/**
+ * Normalize individual quarterly member data to consistent format
+ * @param {Object} member - Raw member data from quarterly backend
+ * @param {string} groupManager - Group manager name
+ * @param {string} studioName - Studio name
+ * @param {number} groupNo - Group number
+ * @returns {Object} Normalized member data
+ */
+function normalizeQuarterlyMemberData(member, groupManager, studioName, groupNo) {
+  const normalized = {
+    // Basic info
+    name: member.name || '',
+    email: member.email || '',
+    id: member.contactId || member.email || '',
+    
+    // Contact ID fields for scheduled hours API
+    contact_id: member.contactId || null,
+    contactId: member.contactId || null,
+    
+    // Group/organizational info
+    group_manager: groupManager || 'Unassigned',
+    studio: studioName || 'Unassigned',
+    studio_leader: member.studioLeader || 'Unassigned',
+    labor_category: member.laborCategory || '',
+    discipline: member.discipline || '',
+    groupNo: groupNo,
+    
+    // Quarterly hours data - map from quarterly response fields
+    scheduled_hours: parseFloat(member.weeklyScheduledHours || member.quarterlyScheduledHours / 13 || 40) || 40,
+    direct_hours: parseFloat(member.directHours || 0) || 0,
+    pto_holiday_hours: parseFloat(member.ptoHours || 0) || 0,
+    indirect_hours: parseFloat(member.overheadHours || 0) || 0,
+    available_hours: parseFloat(member.availableHours || 0) || 0,
+    
+    // Quarterly totals
+    quarterlyScheduledHours: parseFloat(member.quarterlyScheduledHours || 0) || 0,
+    totalQuarterHours: parseFloat(member.totalQuarterHours || 0) || 0,
+    utilization: parseFloat(member.utilization || 0) || 0,
+    
+    // Additional data
+    isGroupManager: member.isGroupManager || false,
+    projectProjections: member.projectProjections || []
+  };
+
+  // Calculate total hours and ratio
+  normalized.total_hours = normalized.direct_hours + normalized.pto_holiday_hours + normalized.indirect_hours;
+  normalized.ratio_b = calculateRatioB(normalized.direct_hours, normalized.scheduled_hours, normalized.pto_holiday_hours);
+
+  return normalized;
+}
+
+/**
  * Group staff members by their group manager
  * @param {Array} staffMembers - Array of normalized staff members
  * @returns {Object} Staff members grouped by manager
@@ -259,4 +370,16 @@ export function validateMonthlyData(data) {
   }
 
   return result;
+}
+
+/**
+ * Calculate Ratio B for a member
+ * @param {number} directHours - Direct hours
+ * @param {number} scheduledHours - Scheduled hours
+ * @param {number} ptoHours - PTO hours
+ * @returns {number} Calculated Ratio B
+ */
+function calculateRatioB(directHours, scheduledHours, ptoHours) {
+  const denominator = scheduledHours - ptoHours;
+  return denominator > 0 ? directHours / denominator : 0;
 }

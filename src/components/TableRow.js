@@ -88,7 +88,6 @@ const TableRow = ({
     // Clear related fields when project number changes
     if (value !== row.projectNumber) {
       updateRow(index, "projectName", "");
-      updateRow(index, "milestone", "");
       updateRow(index, "pm", "");
       updateRow(index, "labor", "");
       updateRow(index, "pctLaborUsed", "");
@@ -331,7 +330,7 @@ const TableRow = ({
               placeholder={
                 isLoading
                   ? "Loading..."
-                  : "Search by number, name, or milestone..."
+                  : "Search by project number or name..."
               }
               disabled={isLoading}
               ref={projectInputRef}
@@ -356,8 +355,8 @@ const TableRow = ({
                   <div className="suggestion-project-name">
                     {highlightMatch(project["Project Name"], searchTerm)}
                   </div>
-                  <div className="suggestion-milestone">
-                    {highlightMatch(project["Milestone"], searchTerm)}
+                  <div className="suggestion-project-number">
+                    {highlightMatch(project["Project Number"], searchTerm)}
                   </div>
                 </div>
               ))}

@@ -15,11 +15,11 @@ export class ProjectSearchService {
     if (this.loadPromise) return this.loadPromise;
 
     this.isLoading = true;
-    console.log('Initializing project search service with CSV data');
+    console.log('Initializing project search service with Projects CSV data');
 
     try {
-      // Store the promise to prevent multiple loads
-      this.loadPromise = loadMilestonesFromCSV('/data/Milestones.csv');
+      // Store the promise to prevent multiple loads - now loads from Projects.csv
+      this.loadPromise = loadMilestonesFromCSV('/Projects.csv');
       this.projectData = await this.loadPromise;
       
       console.log(`Loaded ${this.projectData.length} project records for search`);
@@ -51,7 +51,7 @@ export class ProjectSearchService {
     }
   }
 
-  // Search for projects that match the search term across project number, name, and milestone
+  // Search for projects that match the search term across project number and name
   static async searchProjects(searchTerm) {
     if (!searchTerm || searchTerm.length < 2) {
       return [];
@@ -76,22 +76,13 @@ export class ProjectSearchService {
         project['Project Name']?.toLowerCase().startsWith(searchTermLower)
       );
       
-      // Then look for milestone names that start with the search term (medium priority)
-      const milestoneStartsWithMatches = this.projectData.filter(project => 
-        !project['Project Number'].toLowerCase().startsWith(searchTermLower) &&
-        !project['Project Name']?.toLowerCase().startsWith(searchTermLower) &&
-        project['Milestone']?.toLowerCase().startsWith(searchTermLower)
-      );
-      
-      // Then look for partial matches in project number, name, and milestone (lowest priority)
+      // Then look for partial matches in project number and name (lowest priority)
       const partialMatches = this.projectData.filter(project => 
         !project['Project Number'].toLowerCase().startsWith(searchTermLower) &&
         !project['Project Name']?.toLowerCase().startsWith(searchTermLower) &&
-        !project['Milestone']?.toLowerCase().startsWith(searchTermLower) &&
         (
           project['Project Number'].toLowerCase().includes(searchTermLower) ||
-          project['Project Name']?.toLowerCase().includes(searchTermLower) ||
-          project['Milestone']?.toLowerCase().includes(searchTermLower)
+          project['Project Name']?.toLowerCase().includes(searchTermLower)
         )
       );
       
@@ -99,11 +90,10 @@ export class ProjectSearchService {
       const matches = [
         ...numberStartsWithMatches,
         ...nameStartsWithMatches, 
-        ...milestoneStartsWithMatches,
         ...partialMatches
       ];
 
-      console.log(`Found ${matches.length} projects matching "${searchTerm}" across project number, name, and milestone`);
+      console.log(`Found ${matches.length} projects matching "${searchTerm}" across project number and name`);
       
       // Limit the results to avoid overwhelming the UI
       return matches.slice(0, 40);

@@ -458,6 +458,22 @@ export class GLTeamService {
   }
 
   /**
+   * Get all staff quarterly projects workload for a given year and quarter (for 'All Groups' view)
+   * @param {number|string} year
+   * @param {string} quarter (e.g., 'Q1', 'Q2')
+   * @returns {Promise<Object>} backend response for all staff quarterly projects workload
+   */
+  static async getAllStaffQuarterlyWorkload(year, quarter) {
+    console.log('[GLTeamService] getAllStaffQuarterlyWorkload called with:', { year, quarter });
+    const url = `${API_CONFIG.BASE_URL}/all-staff/projects/workload/quarterly?year=${year}&quarter=${quarter}`;
+    console.log('[GLTeamService] Fetching all staff quarterly workload URL:', url);
+    const response = await fetch(url);
+    if (!response.ok) throw new Error(`Failed to fetch all staff quarterly workload: ${response.status}`);
+    return await response.json();
+  }
+
+  /**
+   * @deprecated Use getAllStaffQuarterlyWorkload instead
    * Get all staff monthly workload for a given year and quarter (for 'All Groups' view)
    * @param {number|string} year
    * @param {string} quarter (e.g., 'Q1')
@@ -465,11 +481,8 @@ export class GLTeamService {
    */
   static async getAllStaffMonthlyWorkload(year, quarter) {
     console.log('[GLTeamService] getAllStaffMonthlyWorkload called with:', { year, quarter });
-    const url = `${API_CONFIG.BASE_URL}/all-staff/workload/monthly?year=${year}&quarter=${quarter}`;
-    console.log('[GLTeamService] Fetching all staff monthly workload URL:', url);
-    const response = await fetch(url);
-    if (!response.ok) throw new Error(`Failed to fetch all staff monthly workload: ${response.status}`);
-    return await response.json();
+    console.warn('[GLTeamService] getAllStaffMonthlyWorkload is deprecated, use getAllStaffQuarterlyWorkload instead');
+    return this.getAllStaffQuarterlyWorkload(year, quarter);
   }
 
   // Cache helper methods

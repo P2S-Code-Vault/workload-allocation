@@ -596,7 +596,7 @@ const MainContent = React.forwardRef((props, ref) => {
     // If it's a number, convert to Q format
     if (typeof apiQuarter === 'number') {
       apiQuarter = 'Q' + apiQuarter;
-    }    // Fetch project allocations (milestone projections) with detailed milestone information
+    }    // Fetch project allocations (project projections) with detailed project information
     ProjectDataService.getAllocationsByQuarterWithDetails(
       currentUser,
       selectedYear,
@@ -604,24 +604,23 @@ const MainContent = React.forwardRef((props, ref) => {
     )
       .then((allocationsData) => {
          const dataArray = Array.isArray(allocationsData) ? allocationsData : [];
-          console.log("=== MILESTONE FETCH DEBUG ===");
+          console.log("=== PROJECT FETCH DEBUG ===");
           console.log("Raw allocations data:", allocationsData);
           console.log("Data array length:", dataArray.length);
           if (dataArray.length > 0) {
             console.log("First allocation item:", JSON.stringify(dataArray[0], null, 2));
             console.log("Available fields:", Object.keys(dataArray[0]));
           }
-          console.log("=== END MILESTONE DEBUG ===");
+          console.log("=== END PROJECT DEBUG ===");
         if (dataArray.length > 0) {
           const newRows = dataArray.map((allocation) => ({
             id: allocation.ra_id,
             resource: currentUser,
             projectNumber: allocation.proj_id || allocation.project_number,
             projectName: allocation.project_name || "",
-            milestone: allocation.milestone_name || "",
             pm: allocation.project_manager || "",
-            labor: allocation.contract_labor || 0,
-            pctLaborUsed: (allocation.forecast_pm_labor || 0) * 100,
+            labor: allocation.project_contract_labor || allocation.contract_labor || 0,
+            pctLaborUsed: 0, // This will be calculated from project data when needed
             hours: allocation.ra_hours || allocation.hours || 0,
             remarks: allocation.ra_remarks || allocation.remarks || "",
             month: allocation.month_hours || 0,
@@ -635,7 +634,6 @@ const MainContent = React.forwardRef((props, ref) => {
               resource: currentUser,
               projectNumber: "",
               projectName: "",
-              milestone: "",
               pm: "",
               labor: "",
               pctLaborUsed: "",
@@ -657,7 +655,6 @@ const MainContent = React.forwardRef((props, ref) => {
             resource: currentUser,
             projectNumber: "",
             projectName: "",
-            milestone: "",
             pm: "",
             labor: "",
             pctLaborUsed: "",
@@ -729,7 +726,6 @@ const MainContent = React.forwardRef((props, ref) => {
         resource: currentUser,
         projectNumber: "",
         projectName: "",
-        milestone: "",
         pm: "",
         labor: "",
         pctLaborUsed: "",
@@ -786,13 +782,13 @@ const MainContent = React.forwardRef((props, ref) => {
         setIsSaving(true);
         setSaveError(null);
 
-        // Use the milestone-specific delete method
-        await ProjectDataService.deleteMilestoneAllocation(rowToDelete.id);
+        // Use the project-specific delete method
+        await ProjectDataService.deleteProjectAllocation(rowToDelete.id);
 
         setRows((prevRows) => prevRows.filter((_, i) => i !== index));
-        console.log(`Deleted milestone allocation with ID: ${rowToDelete.id}`);
+        console.log(`Deleted project allocation with ID: ${rowToDelete.id}`);
       } catch (error) {
-        console.error("Failed to delete milestone allocation:", error);
+        console.error("Failed to delete project allocation:", error);
         setSaveError("Failed to delete: " + error.message);
       } finally {
         setIsSaving(false);

@@ -1,6 +1,6 @@
 import Papa from 'papaparse';
 
-export async function loadMilestonesFromCSV(csvPath) {
+export async function loadProjectsFromCSV(csvPath) {
   try {
     const response = await fetch(csvPath);
     const csvText = await response.text();
@@ -14,19 +14,27 @@ export async function loadMilestonesFromCSV(csvPath) {
       console.error("CSV parse errors:", errors);
     }
     
-    // Transform the CSV data to match the expected format
+    // Transform the CSV data to match the expected format for Projects.csv
     return data.map(item => ({
-      'Project Number': item.project_number,
-      'Project Name': item.project_name,
-      'Milestone': item.milestone_name,
-      'PM': item.project_manager,
-      'Labor': parseFloat(item.contract_labor) || 0,
-      'Pct Labor Used': parseFloat(item.forecast_pm_labor) * 100 || 0
+      'Project Number': item.ProjectNumber,
+      'Project Name': item.ProjectName,
+      'PM': item.ProjectManager,
+      'Labor': parseFloat(item.ProjectContractLabor) || 0,
+      'Pct Labor Used': 0, // This will be calculated from API data when needed
+      'ProjectID': item.ProjectID,
+      'Status': item.Status,
+      'GroupNo': item.GroupNo
     }));
   } catch (error) {
-    console.error("Error loading CSV:", error);
+    console.error("Error loading Projects CSV:", error);
     return [];
   }
+}
+
+// Keep the old function name for backward compatibility
+export async function loadMilestonesFromCSV(csvPath) {
+  // Now load from Projects.csv instead of Milestones.csv
+  return loadProjectsFromCSV('/Projects.csv');
 }
 
 export async function loadOpportunitiesFromCSV(csvPath) {
