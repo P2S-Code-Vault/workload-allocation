@@ -3,6 +3,7 @@ import "./App.css";
 import headerLogo from "./P2S_Legence_Logo_White.png";
 import TableRow from "./components/TableRow";
 import { ProjectDataService } from "./services/ProjectDataService";
+import { WorkloadPreloadService } from "./services/WorkloadPreloadService";
 import { UserService } from "./services/UserService";
 import { GLService } from "./services/GLService";
 import { StaffService } from "./services/StaffService";
@@ -91,6 +92,7 @@ const MainContent = React.forwardRef((props, ref) => {
   const [selectedQuarter, setSelectedQuarter] = useState(getCurrentQuarterString());
   const [selectedYear, setSelectedYear] = useState(getCurrentYear());
   const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
+  const [usePreloadService, setUsePreloadService] = useState(true); // New flag to use WorkloadPreloadService
   const [teamMembers, setTeamMembers] = useState([]);
   const [selectedTeamMember, setSelectedTeamMember] = useState(null);
   const [isLoadingTeamMembers, setIsLoadingTeamMembers] = useState(false);
@@ -596,57 +598,163 @@ const MainContent = React.forwardRef((props, ref) => {
     // If it's a number, convert to Q format
     if (typeof apiQuarter === 'number') {
       apiQuarter = 'Q' + apiQuarter;
-    }    // Fetch project allocations (project projections) with detailed project information
-    ProjectDataService.getAllocationsByQuarterWithDetails(
-      currentUser,
-      selectedYear,
-      apiQuarter
-    )
-      .then((allocationsData) => {
-         const dataArray = Array.isArray(allocationsData) ? allocationsData : [];
-          console.log("=== PROJECT FETCH DEBUG ===");
-          console.log("Raw allocations data:", allocationsData);
-          console.log("Data array length:", dataArray.length);
-          if (dataArray.length > 0) {
-            console.log("First allocation item:", JSON.stringify(dataArray[0], null, 2));
-            console.log("Available fields:", Object.keys(dataArray[0]));
+    }    // Fetch project allocations using the new preload service or fallback to original
+    if (usePreloadService) {
+      console.log("Using WorkloadPreloadService to fetch data");
+      WorkloadPreloadService.preloadActiveProjects(currentUser, selectedYear, apiQuarter)
+        .then((preloadData) => {
+          console.log("=== PRELOAD SERVICE DEBUG ===");
+          console.log("Preload data received:", preloadData);
+          console.log("Project rows:", preloadData.projectRows);
+          console.log("Stats:", preloadData.stats);
+          console.log("=== END PRELOAD DEBUG ===");
+
+          if (preloadData.projectRows && preloadData.projectRows.length > 0) {
+            setRows(preloadData.projectRows);
+          } else {
+            // Create empty rows if no data
+            setRows(
+              [...Array(3)].map(() => ({
+                resource: currentUser,
+                projectNumber: "",
+                projectName: "",
+                pm: "",
+                labor: "",
+                pctLaborUsed: "",
+                month: "",
+                month1: "",
+                month2: "",
+                remarks: "",
+              }))
+            );
           }
-          console.log("=== END PROJECT DEBUG ===");
-        if (dataArray.length > 0) {
-          const newRows = dataArray.map((allocation) => ({
-            id: allocation.ra_id,
-            resource: currentUser,
-            projectNumber: allocation.proj_id || allocation.project_number,
-            projectName: allocation.project_name || "",
-            pm: allocation.project_manager || "",
-            labor: allocation.project_contract_labor || allocation.contract_labor || 0,
-            pctLaborUsed: 0, // This will be calculated from project data when needed
-            hours: allocation.ra_hours || allocation.hours || 0,
-            remarks: allocation.ra_remarks || allocation.remarks || "",
-            month: allocation.month_hours || 0,
-            month1: allocation.month_hours1 || 0,
-            month2: allocation.month_hours2 || 0,
-          }));
-          setRows(newRows);
-        } else {
-          setRows(
-            [...Array(3)].map(() => ({
+          setHasLoadedInitialData(true);
+          setIsLoading(false);
+        })
+        .catch((err) => {
+          console.error("WorkloadPreloadService failed, falling back to original service:", err);
+          // Fallback to original service
+          setUsePreloadService(false);
+          
+          // Retry with original service immediately
+          ProjectDataService.getAllocationsByQuarterWithDetails(
+            currentUser,
+            selectedYear,
+            apiQuarter
+          )
+            .then((allocationsData) => {
+               const dataArray = Array.isArray(allocationsData) ? allocationsData : [];
+                console.log("=== FALLBACK PROJECT FETCH DEBUG ===");
+                console.log("Raw allocations data:", allocationsData);
+                console.log("Data array length:", dataArray.length);
+                console.log("=== END FALLBACK PROJECT DEBUG ===");
+              if (dataArray.length > 0) {
+                const newRows = dataArray.map((allocation) => ({
+                  id: allocation.ra_id,
+                  resource: currentUser,
+                  projectNumber: allocation.proj_id || allocation.project_number,
+                  projectName: allocation.project_name || "",
+                  pm: allocation.project_manager || "",
+                  labor: allocation.project_contract_labor || allocation.contract_labor || 0,
+                  pctLaborUsed: 0,
+                  hours: allocation.ra_hours || allocation.hours || 0,
+                  remarks: allocation.ra_remarks || allocation.remarks || "",
+                  month: allocation.month_hours || 0,
+                  month1: allocation.month_hours1 || 0,
+                  month2: allocation.month_hours2 || 0,
+                }));
+                setRows(newRows);
+              } else {
+                setRows(
+                  [...Array(3)].map(() => ({
+                    resource: currentUser,
+                    projectNumber: "",
+                    projectName: "",
+                    pm: "",
+                    labor: "",
+                    pctLaborUsed: "",
+                    month: "",
+                    month1: "",
+                    month2: "",
+                    remarks: "",
+                  }))
+                );
+              }
+              setHasLoadedInitialData(true);
+              setIsLoading(false);
+            })
+            .catch((fallbackErr) => {
+              console.error("Both services failed:", fallbackErr);
+              setLoadError("Failed to load data: " + fallbackErr.message);
+              setRows(
+                [...Array(3)].map(() => ({
+                  resource: currentUser,
+                  projectNumber: "",
+                  projectName: "",
+                  pm: "",
+                  labor: "",
+                  pctLaborUsed: "",
+                  month: "",
+                  month1: "",
+                  month2: "",
+                  remarks: "",
+                }))
+              );
+              setIsLoading(false);
+            });
+        });
+    } else {
+      // Original data loading logic
+      ProjectDataService.getAllocationsByQuarterWithDetails(
+        currentUser,
+        selectedYear,
+        apiQuarter
+      )
+        .then((allocationsData) => {
+           const dataArray = Array.isArray(allocationsData) ? allocationsData : [];
+            console.log("=== PROJECT FETCH DEBUG ===");
+            console.log("Raw allocations data:", allocationsData);
+            console.log("Data array length:", dataArray.length);
+            if (dataArray.length > 0) {
+              console.log("First allocation item:", JSON.stringify(dataArray[0], null, 2));
+              console.log("Available fields:", Object.keys(dataArray[0]));
+            }
+            console.log("=== END PROJECT DEBUG ===");
+          if (dataArray.length > 0) {
+            const newRows = dataArray.map((allocation) => ({
+              id: allocation.ra_id,
               resource: currentUser,
-              projectNumber: "",
-              projectName: "",
-              pm: "",
-              labor: "",
-              pctLaborUsed: "",
-              month: "",
-              month1: "",
-              month2: "",
-              remarks: "",
-            }))
-          );
-        }
-        setHasLoadedInitialData(true);
-        setIsLoading(false);
-      })
+              projectNumber: allocation.proj_id || allocation.project_number,
+              projectName: allocation.project_name || "",
+              pm: allocation.project_manager || "",
+              labor: allocation.project_contract_labor || allocation.contract_labor || 0,
+              pctLaborUsed: 0, // This will be calculated from project data when needed
+              hours: allocation.ra_hours || allocation.hours || 0,
+              remarks: allocation.ra_remarks || allocation.remarks || "",
+              month: allocation.month_hours || 0,
+              month1: allocation.month_hours1 || 0,
+              month2: allocation.month_hours2 || 0,
+            }));
+            setRows(newRows);
+          } else {
+            setRows(
+              [...Array(3)].map(() => ({
+                resource: currentUser,
+                projectNumber: "",
+                projectName: "",
+                pm: "",
+                labor: "",
+                pctLaborUsed: "",
+                month: "",
+                month1: "",
+                month2: "",
+                remarks: "",
+              }))
+            );
+          }
+          setHasLoadedInitialData(true);
+          setIsLoading(false);
+        })
       .catch((err) => {
         console.error("Error loading allocations:", err);
         setLoadError("Failed to load data: " + err.message);
@@ -666,6 +774,7 @@ const MainContent = React.forwardRef((props, ref) => {
         );
         setIsLoading(false);
       });
+    }
 
     // Fetch opportunity projections for the opportunities table
     ProjectDataService.getOpportunitiesByQuarter(
@@ -717,7 +826,7 @@ const MainContent = React.forwardRef((props, ref) => {
     return () => {
       // isMounted = false;
     };
-  }, [currentUser, selectedQuarter, selectedYear, hasLoadedInitialData]);
+  }, [currentUser, selectedQuarter, selectedYear, hasLoadedInitialData, usePreloadService]);
   // Rest of the component remains the same
   const addRow = useCallback(() => {
     setRows((prevRows) => [
@@ -975,7 +1084,8 @@ const deleteOpportunityRow = useCallback(async (index) => {
           ) : (
             <>
               <table className="resource-table">
-                <thead>                  <tr>
+                <thead>
+                  <tr>
                     <th>Project No.</th>
                     <th>Project Name</th>
                     <th>Project Manager</th>

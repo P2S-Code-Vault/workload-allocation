@@ -35,10 +35,15 @@ const API_CONFIG = {
       GL_ACCESS_CHECK: '/gl/access-check', // GET with email
       // All-staff endpoints
       ALL_STAFF_WORKLOAD_QUARTERLY: '/all-staff/workload/quarterly', // year, quarter
+      ALL_STAFF_PROJECTS_WORKLOAD_QUARTERLY: '/all-staff/projects/workload/quarterly', // year, quarter (NEW)
       ALL_STAFF_WORKLOAD_MONTHLY: '/all-staff/workload/monthly', // year, quarter
       ALL_STAFF_WORKLOAD_SUMMARY: '/all-staff/workload/summary', // year, quarter
       ALL_STAFF_WORKLOAD_MANAGER: managerName => `/all-staff/workload/manager/${encodeURIComponent(managerName)}`,
       ALL_STAFF_WORKLOAD_STUDIOS: '/all-staff/workload/studios', // year, quarter
+      
+      // User group projects endpoints
+      CONTACTS_GROUP_PROJECTS_EXTENDED: email => `/contacts/by-email/${encodeURIComponent(email)}/group-projects/extended`, // include_user_projects param
+      
       //scheduled hours endpoints
       CONTACT_MONTHLY_SCHEDULED_HOURS: contactId => `/contacts/${contactId}/scheduled-hours/monthly`,
       CONTACT_QUARTERLY_SCHEDULED_HOURS: contactId => `/contacts/${contactId}/scheduled-hours/quarterly`,
