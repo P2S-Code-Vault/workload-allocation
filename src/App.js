@@ -1,3 +1,4 @@
+<<<<<<< Updated upstream
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import './App.css';
 import headerLogo from './P2S_Legence_Logo_White.png';
@@ -13,6 +14,26 @@ import { startOfWeek, endOfWeek, addWeeks, subWeeks } from 'date-fns';
 import TeamMemberSelector from './components/TeamMemberSelector';
 import API_CONFIG from './services/apiConfig';
 import TeamEdit from './components/teamedit';
+=======
+import React, { useState, useEffect, useCallback, useRef } from "react";
+import "./App.css";
+import headerLogo from "./P2S_Legence_Logo_White.png";
+import TableRow from "./components/TableRow";
+import { ProjectDataService } from "./services/ProjectDataService";
+import { WorkloadPreloadService } from "./services/WorkloadPreloadService";
+import { UserService } from "./services/UserService";
+import { GLService } from "./services/GLService";
+import { StaffService } from "./services/StaffService";
+import QuarterPicker from "./components/QuarterPicker";
+import Login from "./components/Login";
+import PMPage from "./components/PMPage";
+import LeadershipPage from "./components/LeadershipPage";
+import format from "date-fns/format";
+import TeamMemberSelector from "./components/TeamMemberSelector";
+import TeamEdit from "./components/teamedit";
+import OpportunityRow from "./components/OpportunityRow";
+import { getCurrentQuarterString, getCurrentYear } from "./utils/dateUtils";
+>>>>>>> Stashed changes
 
 // Header Component
 const Header = ({ currentView,onNavigate, onLogout }) => {
@@ -86,7 +107,11 @@ const MainContent = React.forwardRef((props, ref) => {
   const [weekStartDate, setWeekStartDate] = useState(null);
   const [weekEndDate, setWeekEndDate] = useState(null);
   const [hasLoadedInitialData, setHasLoadedInitialData] = useState(false);
+<<<<<<< Updated upstream
   const [isGroupLeader, setIsGroupLeader] = useState(false);
+=======
+  const [usePreloadService] = useState(true); // New flag to control preload usage
+>>>>>>> Stashed changes
   const [teamMembers, setTeamMembers] = useState([]);
   const [selectedTeamMember, setSelectedTeamMember] = useState(null);
   const [showTeamDropdown, setShowTeamDropdown] = useState(false);
@@ -455,6 +480,7 @@ const resetToCurrentUser = () => {
 
     setRows([]); // Clear rows when loading new data
 
+<<<<<<< Updated upstream
     const formattedStartDate = format(weekStartDate, 'yyyy-MM-dd');
     const formattedEndDate = format(weekEndDate, 'yyyy-MM-dd');
 
@@ -537,11 +563,247 @@ const resetToCurrentUser = () => {
       setIsLoading(false);  // Ensure we exit loading state
     });
     
+=======
+    // Keep quarter in Q format since database stores 'Q1', 'Q2', etc.
+    let apiQuarter = selectedQuarter;
+    // Ensure it's in Q format
+    if (typeof apiQuarter === 'string' && !apiQuarter.startsWith('Q')) {
+      apiQuarter = 'Q' + apiQuarter;
+    }
+    // If it's a number, convert to Q format
+    if (typeof apiQuarter === 'number') {
+      apiQuarter = 'Q' + apiQuarter;
+    }    // Fetch project allocations using the new preload service
+    if (usePreloadService) {
+      // Use the new preload service to get all active projects
+      WorkloadPreloadService.preloadActiveProjects(currentUser, selectedYear, apiQuarter)
+        .then((preloadData) => {
+          console.log("=== PRELOAD SERVICE DEBUG ===");
+          console.log("Preload data:", preloadData);
+          console.log("Project rows:", preloadData.projectRows);
+          console.log("Stats:", preloadData.stats);
+          console.log("=== END PRELOAD DEBUG ===");
+
+          if (preloadData.projectRows && preloadData.projectRows.length > 0) {
+            setRows(preloadData.projectRows);
+          } else {
+            // Create empty rows if no data
+            setRows(
+              [...Array(3)].map(() => ({
+                resource: currentUser,
+                projectNumber: "",
+                projectName: "",
+                pm: "",
+                labor: "",
+                pctLaborUsed: "",
+                month: "",
+                month1: "",
+                month2: "",
+                remarks: "",
+              }))
+            );
+          }
+          setHasLoadedInitialData(true);
+          setIsLoading(false);
+        })
+        .catch((err) => {
+          console.error("Error loading preloaded data, falling back to original service:", err);
+          // Fallback to original service immediately in the same effect
+          ProjectDataService.getAllocationsByQuarterWithDetails(
+            currentUser,
+            selectedYear,
+            apiQuarter
+          )
+            .then((allocationsData) => {
+               const dataArray = Array.isArray(allocationsData) ? allocationsData : [];
+                console.log("=== FALLBACK PROJECT FETCH DEBUG ===");
+                console.log("Raw allocations data:", allocationsData);
+                console.log("Data array length:", dataArray.length);
+                console.log("=== END FALLBACK PROJECT DEBUG ===");
+              if (dataArray.length > 0) {
+                const newRows = dataArray.map((allocation) => ({
+                  id: allocation.ra_id,
+                  resource: currentUser,
+                  projectNumber: allocation.proj_id || allocation.project_number,
+                  projectName: allocation.project_name || "",
+                  pm: allocation.project_manager || "",
+                  labor: allocation.project_contract_labor || allocation.contract_labor || 0,
+                  pctLaborUsed: 0,
+                  hours: allocation.ra_hours || allocation.hours || 0,
+                  remarks: allocation.ra_remarks || allocation.remarks || "",
+                  month: allocation.month_hours || 0,
+                  month1: allocation.month_hours1 || 0,
+                  month2: allocation.month_hours2 || 0,
+                }));
+                setRows(newRows);
+              } else {
+                setRows(
+                  [...Array(3)].map(() => ({
+                    resource: currentUser,
+                    projectNumber: "",
+                    projectName: "",
+                    pm: "",
+                    labor: "",
+                    pctLaborUsed: "",
+                    month: "",
+                    month1: "",
+                    month2: "",
+                    remarks: "",
+                  }))
+                );
+              }
+              setHasLoadedInitialData(true);
+              setIsLoading(false);
+            })
+            .catch((fallbackErr) => {
+              console.error("Fallback service also failed:", fallbackErr);
+              setLoadError("Failed to load data: " + fallbackErr.message);
+              setRows(
+                [...Array(3)].map(() => ({
+                  resource: currentUser,
+                  projectNumber: "",
+                  projectName: "",
+                  pm: "",
+                  labor: "",
+                  pctLaborUsed: "",
+                  month: "",
+                  month1: "",
+                  month2: "",
+                  remarks: "",
+                }))
+              );
+              setIsLoading(false);
+            });
+        });
+    } else {
+      // Original data loading logic as fallback
+      ProjectDataService.getAllocationsByQuarterWithDetails(
+        currentUser,
+        selectedYear,
+        apiQuarter
+      )
+        .then((allocationsData) => {
+           const dataArray = Array.isArray(allocationsData) ? allocationsData : [];
+            console.log("=== PROJECT FETCH DEBUG ===");
+            console.log("Raw allocations data:", allocationsData);
+            console.log("Data array length:", dataArray.length);
+            if (dataArray.length > 0) {
+              console.log("First allocation item:", JSON.stringify(dataArray[0], null, 2));
+              console.log("Available fields:", Object.keys(dataArray[0]));
+            }
+            console.log("=== END PROJECT DEBUG ===");
+          if (dataArray.length > 0) {
+            const newRows = dataArray.map((allocation) => ({
+              id: allocation.ra_id,
+              resource: currentUser,
+              projectNumber: allocation.proj_id || allocation.project_number,
+              projectName: allocation.project_name || "",
+              pm: allocation.project_manager || "",
+              labor: allocation.project_contract_labor || allocation.contract_labor || 0,
+              pctLaborUsed: 0, // This will be calculated from project data when needed
+              hours: allocation.ra_hours || allocation.hours || 0,
+              remarks: allocation.ra_remarks || allocation.remarks || "",
+              month: allocation.month_hours || 0,
+              month1: allocation.month_hours1 || 0,
+              month2: allocation.month_hours2 || 0,
+            }));
+            setRows(newRows);
+          } else {
+            setRows(
+              [...Array(3)].map(() => ({
+                resource: currentUser,
+                projectNumber: "",
+                projectName: "",
+                pm: "",
+                labor: "",
+                pctLaborUsed: "",
+                month: "",
+                month1: "",
+                month2: "",
+                remarks: "",
+              }))
+            );
+          }
+          setHasLoadedInitialData(true);
+          setIsLoading(false);
+        })
+        .catch((err) => {
+          console.error("Error loading allocations:", err);
+          setLoadError("Failed to load data: " + err.message);
+          setRows(
+            [...Array(3)].map(() => ({
+              resource: currentUser,
+              projectNumber: "",
+              projectName: "",
+              pm: "",
+              labor: "",
+              pctLaborUsed: "",
+              month: "",
+              month1: "",
+              month2: "",
+              remarks: "",
+            }))
+          );
+          setIsLoading(false);
+        });
+    }
+
+    // Fetch opportunity projections for the opportunities table
+    ProjectDataService.getOpportunitiesByQuarter(
+      currentUser,
+      selectedYear,
+      apiQuarter
+    )
+      .then((oppsData) => {
+        const dataArray = Array.isArray(oppsData) ? oppsData : [];
+          console.log("=== OPPORTUNITY FETCH DEBUG ===");
+          console.log("Raw opportunities data:", oppsData);
+          console.log("Data array length:", dataArray.length);
+          if (dataArray.length > 0) {
+            console.log("First opportunity item:", JSON.stringify(dataArray[0], null, 2));
+            console.log("Available fields:", Object.keys(dataArray[0]));
+          }
+          console.log("=== END OPPORTUNITY DEBUG ===");
+        if (dataArray.length > 0) {
+          const newOppRows = dataArray.map((opp) => ({
+            id: opp.ra_id,
+            opportunityNumber: opp.opportunity_number || "",
+            opportunityName: opp.opportunity_name || "",
+            proposalChampion: opp.proposal_champion || "",
+            estimatedFee: opp.estimated_fee || "",
+            remarks: opp.remarks || "",
+            month: opp.month_hours || 0,
+            month1: opp.month_hours1 || 0,
+            month2: opp.month_hours2 || 0,
+          }));
+          setOpportunityRows(newOppRows);
+        } else {
+          setOpportunityRows([
+            { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+            { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+            { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+          ]);
+        }
+      })
+      .catch((err) => {
+        console.error("Error loading opportunities:", err);
+        setOpportunityRows([
+          { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+          { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+          { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+        ]);
+      });
+
+>>>>>>> Stashed changes
     // Return cleanup function to prevent state updates after unmounting
     return () => {
       isMounted = false;
     };
+<<<<<<< Updated upstream
   }, [currentUser, weekStartDate, weekEndDate, hasLoadedInitialData]);
+=======
+  }, [currentUser, selectedQuarter, selectedYear, hasLoadedInitialData, usePreloadService]);
+>>>>>>> Stashed changes
   // Rest of the component remains the same
   const addRow = useCallback(() => {
     setRows(prevRows => [...prevRows, {
