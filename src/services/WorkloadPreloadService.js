@@ -87,8 +87,42 @@ export class WorkloadPreloadService {
   }
 
   /**
+   * Get user and group opportunities with extended information
+   * @param {string} email - User email
+   * @param {boolean} includeUserOpportunities - Whether to include user's individual opportunities
+   * @returns {Promise<Object>} Object containing user, group_members, group_opportunities, and user_managed_opportunities
+   */
+  static async getUserGroupOpportunitiesExtended(email, includeUserOpportunities = true) {
+    try {
+      console.log(`Fetching group opportunities for user: ${email}`);
+      
+      const params = new URLSearchParams({
+        include_user_opportunities: includeUserOpportunities.toString()
+      });
+      
+      const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.CONTACTS_GROUP_OPPORTUNITIES_EXTENDED(email)}?${params.toString()}`;
+      console.log(`Fetching from: ${url}`);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorText = await this.handleErrorResponse(response);
+        throw new Error(`Failed to fetch user group opportunities: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log(`Received group opportunities data:`, data);
+      
+      return data;
+    } catch (error) {
+      console.error("Error fetching user group opportunities:", error);
+      throw error;
+    }
+  }
+
+  /**
    * Preload all active projects for a user and their group
-   * Combines data from both the quarterly workload and user's group projects
+   * Combines data from both existing allocations and user's group projects
    * @param {string} userEmail - User email
    * @param {number} year - The year
    * @param {string} quarter - The quarter
@@ -99,121 +133,376 @@ export class WorkloadPreloadService {
       console.log(`Preloading active projects for ${userEmail} in ${quarter} ${year}`);
       
       // Fetch both data sources in parallel
-      const [quarterlyWorkload, userGroupData] = await Promise.all([
+      const [quarterlyWorkload, userGroupData, existingAllocations] = await Promise.all([
         this.getAllProjectsWorkloadQuarterly(year, quarter),
-        this.getUserGroupProjectsExtended(userEmail, true)
+        this.getUserGroupProjectsExtended(userEmail, true),
+        this.getExistingProjectAllocations(userEmail, year, quarter)
       ]);
       
       console.log('Quarterly workload data received:', quarterlyWorkload?.length || 0, 'items');
       console.log('User group data received:', userGroupData);
+      console.log('Existing allocations received:', existingAllocations?.length || 0, 'items');
       
-      // Extract relevant projects from the quarterly workload
-      const userProjects = new Set();
-      const groupProjects = new Set();
-      
-      // Add user's group projects and user-managed projects from the extended data
-      if (userGroupData.group_projects && Array.isArray(userGroupData.group_projects)) {
-        userGroupData.group_projects.forEach(project => {
-          groupProjects.add(project.project_number);
-        });
-      }
-      
-      // Add user's individual managed projects if available
-      if (userGroupData.user_managed_projects && Array.isArray(userGroupData.user_managed_projects)) {
-        userGroupData.user_managed_projects.forEach(project => {
-          userProjects.add(project.project_number);
-        });
-      }
-      
-      console.log(`Found ${userProjects.size} user projects and ${groupProjects.size} group projects`);
-      console.log('User projects:', Array.from(userProjects));
-      console.log('Group projects sample:', Array.from(groupProjects).slice(0, 10));
-      
-      // Create table rows directly from project information instead of relying on existing allocations
+      // Create table rows by merging existing allocations and group/user-managed projects
       const projectRows = [];
+      const addedProjectNumbers = new Set(); // Track projects we've already added to avoid duplicates
       
-      // Add rows for user's managed projects (these are the user's individual projects)
-      if (userGroupData.user_managed_projects && Array.isArray(userGroupData.user_managed_projects)) {
-        console.log(`Processing ${userGroupData.user_managed_projects.length} user managed projects`);
-        userGroupData.user_managed_projects.forEach(project => {
-          // Check if there's existing allocation data for this project
-          const existingAllocation = quarterlyWorkload.find(allocation => 
-            allocation.project_number === project.project_number && 
-            allocation.contact_email === userEmail
-          );
-          
-          projectRows.push({
-            id: existingAllocation?.ra_id || existingAllocation?.id || `${project.project_number}_${userEmail}`,
-            resource: userEmail,
-            projectNumber: project.project_number,
-            projectName: project.project_name || '',
-            pm: project.project_manager || '',
-            labor: project.project_contract_labor || 0,
-            pctLaborUsed: 0,
-            hours: existingAllocation?.total_hours || existingAllocation?.ra_hours || 0,
-            remarks: existingAllocation?.remarks || existingAllocation?.ra_remarks || '',
-            month: existingAllocation?.month_1_hours || existingAllocation?.month_hours || 0,
-            month1: existingAllocation?.month_2_hours || existingAllocation?.month_hours1 || 0,
-            month2: existingAllocation?.month_3_hours || existingAllocation?.month_hours2 || 0,
-          });
-        });
-      }
-      
-      console.log(`Added ${projectRows.length} user managed project rows`);
-      
-      // Add group projects that the user can potentially work on
-      if (userGroupData.group_projects && Array.isArray(userGroupData.group_projects)) {
-        console.log(`Processing ${userGroupData.group_projects.length} group projects`);
-        // Add all group projects (or limit to a reasonable number if too many)
-        const groupProjectsToAdd = userGroupData.group_projects
-          .filter(project => !userProjects.has(project.project_number)) // Don't duplicate user projects
-          .slice(0, 20); // Limit to 20 to avoid overwhelming the UI, but show more than 5
-          
-        console.log(`Will add ${groupProjectsToAdd.length} group projects to table`);
+      // STEP 1: Add ALL existing allocations from the direct allocation endpoint first
+      // This ensures we capture PTO, holidays, non-production, and all other existing allocations
+      if (existingAllocations && Array.isArray(existingAllocations)) {
+        console.log(`Processing ${existingAllocations.length} existing allocations for user`);
         
-        groupProjectsToAdd.forEach(project => {
-          // Check if there's existing allocation data for this project
-          const existingAllocation = quarterlyWorkload.find(allocation => 
-            allocation.project_number === project.project_number && 
-            allocation.contact_email === userEmail
-          );
+        existingAllocations.forEach(allocation => {
+          // Try to find matching project from group/user data for enhanced project info
+          let projectInfo = null;
           
-          // Add all group projects - both with and without existing allocations
+          // Look for matching user project
+          if (userGroupData.user_managed_projects && Array.isArray(userGroupData.user_managed_projects)) {
+            projectInfo = userGroupData.user_managed_projects.find(project => 
+              project.project_number === (allocation.proj_id || allocation.project_number)
+            );
+          }
+          
+          // If not found in user projects, look in group projects
+          if (!projectInfo && userGroupData.group_projects && Array.isArray(userGroupData.group_projects)) {
+            projectInfo = userGroupData.group_projects.find(project => 
+              project.project_number === (allocation.proj_id || allocation.project_number)
+            );
+          }
+          
+          const projectNumber = allocation.proj_id || allocation.project_number;
+          
           projectRows.push({
-            id: existingAllocation?.ra_id || existingAllocation?.id || `${project.project_number}_${userEmail}`,
+            id: allocation.ra_id || allocation.id || `${projectNumber}_${userEmail}`,
+            resource: userEmail,
+            projectNumber: projectNumber,
+            projectName: projectInfo?.project_name || allocation.project_name || '',
+            pm: projectInfo?.project_manager || allocation.project_manager || '',
+            labor: projectInfo?.project_contract_labor || allocation.project_contract_labor || allocation.contract_labor || 0,
+            pctLaborUsed: 0,
+            hours: allocation.ra_hours || allocation.hours || 0,
+            remarks: allocation.ra_remarks || allocation.remarks || '',
+            month: allocation.month_hours || 0,
+            month1: allocation.month_hours1 || 0,
+            month2: allocation.month_hours2 || 0,
+          });
+          
+          addedProjectNumbers.add(projectNumber);
+        });
+      }
+      
+      console.log(`Added ${projectRows.length} existing allocation rows`);
+      
+      // STEP 2: Add additional rows from quarterly workload that might not be in existing allocations
+      if (quarterlyWorkload && Array.isArray(quarterlyWorkload)) {
+        const userAllocationsFromWorkload = quarterlyWorkload.filter(allocation => 
+          allocation.contact_email === userEmail && 
+          !addedProjectNumbers.has(allocation.project_number)
+        );
+        
+        console.log(`Processing ${userAllocationsFromWorkload.length} additional allocations from quarterly workload`);
+        
+        userAllocationsFromWorkload.forEach(allocation => {
+          // Try to find matching project from group/user data for enhanced project info
+          let projectInfo = null;
+          
+          // Look for matching user project
+          if (userGroupData.user_managed_projects && Array.isArray(userGroupData.user_managed_projects)) {
+            projectInfo = userGroupData.user_managed_projects.find(project => 
+              project.project_number === allocation.project_number
+            );
+          }
+          
+          // If not found in user projects, look in group projects
+          if (!projectInfo && userGroupData.group_projects && Array.isArray(userGroupData.group_projects)) {
+            projectInfo = userGroupData.group_projects.find(project => 
+              project.project_number === allocation.project_number
+            );
+          }
+          
+          projectRows.push({
+            id: allocation.ra_id || allocation.id || `${allocation.project_number}_${userEmail}`,
+            resource: userEmail,
+            projectNumber: allocation.project_number,
+            projectName: projectInfo?.project_name || allocation.project_name || '',
+            pm: projectInfo?.project_manager || allocation.project_manager || '',
+            labor: projectInfo?.project_contract_labor || allocation.project_contract_labor || allocation.contract_labor || 0,
+            pctLaborUsed: 0,
+            hours: allocation.total_hours || allocation.ra_hours || 0,
+            remarks: allocation.remarks || allocation.ra_remarks || '',
+            month: allocation.month_1_hours || allocation.month_hours || 0,
+            month1: allocation.month_2_hours || allocation.month_hours1 || 0,
+            month2: allocation.month_3_hours || allocation.month_hours2 || 0,
+          });
+          
+          addedProjectNumbers.add(allocation.project_number);
+        });
+      }
+      
+      // STEP 2: Add user's managed projects that don't already have allocations
+      if (userGroupData.user_managed_projects && Array.isArray(userGroupData.user_managed_projects)) {
+        const newUserProjects = userGroupData.user_managed_projects.filter(project => 
+          !addedProjectNumbers.has(project.project_number)
+        );
+        
+        console.log(`Processing ${newUserProjects.length} new user managed projects (without existing allocations)`);
+        
+        newUserProjects.forEach(project => {
+          projectRows.push({
+            id: `${project.project_number}_${userEmail}`,
             resource: userEmail,
             projectNumber: project.project_number,
             projectName: project.project_name || '',
             pm: project.project_manager || '',
             labor: project.project_contract_labor || 0,
             pctLaborUsed: 0,
-            hours: existingAllocation?.total_hours || existingAllocation?.ra_hours || 0,
-            remarks: existingAllocation?.remarks || existingAllocation?.ra_remarks || '',
-            month: existingAllocation?.month_1_hours || existingAllocation?.month_hours || 0,
-            month1: existingAllocation?.month_2_hours || existingAllocation?.month_hours1 || 0,
-            month2: existingAllocation?.month_3_hours || existingAllocation?.month_hours2 || 0,
+            hours: 0, // No existing allocation
+            remarks: '',
+            month: 0,
+            month1: 0,
+            month2: 0,
           });
+          
+          addedProjectNumbers.add(project.project_number);
         });
       }
       
-      console.log(`Total project rows created: ${projectRows.length} (user managed + group projects)`);
+      // STEP 3: Add group projects that don't already have allocations (limited to prevent UI overload)
+      if (userGroupData.group_projects && Array.isArray(userGroupData.group_projects)) {
+        const newGroupProjects = userGroupData.group_projects
+          .filter(project => !addedProjectNumbers.has(project.project_number))
+          .slice(0, 20); // Limit to 20 to avoid overwhelming the UI
+          
+        console.log(`Processing ${newGroupProjects.length} new group projects (without existing allocations)`);
+        
+        newGroupProjects.forEach(project => {
+          projectRows.push({
+            id: `${project.project_number}_${userEmail}`,
+            resource: userEmail,
+            projectNumber: project.project_number,
+            projectName: project.project_name || '',
+            pm: project.project_manager || '',
+            labor: project.project_contract_labor || 0,
+            pctLaborUsed: 0,
+            hours: 0, // No existing allocation
+            remarks: '',
+            month: 0,
+            month1: 0,
+            month2: 0,
+          });
+          
+          addedProjectNumbers.add(project.project_number);
+        });
+      }
+      
+      console.log(`Total project rows created: ${projectRows.length}`);
+      console.log(`Breakdown: ${existingAllocations?.length || 0} direct allocations, ${quarterlyWorkload?.filter(a => a.contact_email === userEmail && !addedProjectNumbers.has(a.project_number))?.length || 0} additional workload, ${userGroupData.user_managed_projects?.length || 0} user projects, ${userGroupData.group_projects?.length || 0} group projects`);
       console.log('Sample project row:', projectRows[0]);
       
       return {
         projectRows,
         userGroupData,
         quarterlyWorkload,
+        existingAllocations,
         stats: {
-          totalQuarterlyAllocations: quarterlyWorkload.length,
-          userProjects: userProjects.size,
-          groupProjects: groupProjects.size,
-          userProjectRows: projectRows.length
+          totalQuarterlyAllocations: quarterlyWorkload?.length || 0,
+          directAllocations: existingAllocations?.length || 0,
+          userQuarterlyAllocations: quarterlyWorkload?.filter(a => a.contact_email === userEmail)?.length || 0,
+          userProjects: userGroupData.user_managed_projects?.length || 0,
+          groupProjects: userGroupData.group_projects?.length || 0,
+          totalProjectRows: projectRows.length,
+          existingAllocationsPreserved: existingAllocations?.length || 0
         }
       };
       
     } catch (error) {
       console.error("Error preloading active projects:", error);
       throw error;
+    }
+  }
+
+  /**
+   * Preload all active opportunities for a user and their group
+   * @param {string} userEmail - User email
+   * @param {number} year - The year
+   * @param {string} quarter - The quarter
+   * @returns {Promise<Object>} Object containing preloaded opportunity data
+   */
+  static async preloadActiveOpportunities(userEmail, year, quarter) {
+    try {
+      console.log(`Preloading active opportunities for ${userEmail} in ${quarter} ${year}`);
+      
+      // Fetch both opportunities data sources in parallel
+      const [existingOpportunityAllocations, userGroupOpportunityData] = await Promise.all([
+        // Get existing opportunity allocations using the original endpoint
+        this.getExistingOpportunityAllocations(userEmail, year, quarter),
+        this.getUserGroupOpportunitiesExtended(userEmail, true)
+      ]);
+      
+      console.log('Existing opportunity allocations received:', existingOpportunityAllocations?.length || 0, 'items');
+      console.log('User group opportunity data received:', userGroupOpportunityData);
+      
+      // Create opportunity rows by merging existing allocations and group/user-managed opportunities
+      const opportunityRows = [];
+      const addedOpportunityNumbers = new Set(); // Track opportunities we've already added to avoid duplicates
+      
+      // STEP 1: Add ALL existing opportunity allocations first
+      // This ensures we never lose any existing allocation, even if it's not in the group/user lists
+      if (existingOpportunityAllocations && Array.isArray(existingOpportunityAllocations)) {
+        console.log(`Processing ${existingOpportunityAllocations.length} existing opportunity allocations for user`);
+        
+        existingOpportunityAllocations.forEach(allocation => {
+          // Try to find matching opportunity from group/user data for enhanced opportunity info
+          let opportunityInfo = null;
+          
+          // Look for matching user opportunity
+          if (userGroupOpportunityData.user_managed_opportunities && Array.isArray(userGroupOpportunityData.user_managed_opportunities)) {
+            opportunityInfo = userGroupOpportunityData.user_managed_opportunities.find(opportunity => 
+              opportunity.opportunity_number === allocation.opportunity_number
+            );
+          }
+          
+          // If not found in user opportunities, look in group opportunities
+          if (!opportunityInfo && userGroupOpportunityData.group_opportunities && Array.isArray(userGroupOpportunityData.group_opportunities)) {
+            opportunityInfo = userGroupOpportunityData.group_opportunities.find(opportunity => 
+              opportunity.opportunity_number === allocation.opportunity_number
+            );
+          }
+          
+          opportunityRows.push({
+            id: allocation.ra_id || allocation.id || `${allocation.opportunity_number}_${userEmail}`,
+            opportunityNumber: allocation.opportunity_number,
+            opportunityName: opportunityInfo?.opportunity_name || allocation.opportunity_name || '',
+            proposalChampion: opportunityInfo?.proposal_champion || allocation.proposal_champion || '',
+            estimatedFee: opportunityInfo?.estimated_fee || allocation.estimated_fee || 0,
+            remarks: allocation.remarks || allocation.ra_remarks || '',
+            month: allocation.month_hours || 0,
+            month1: allocation.month_hours1 || 0,
+            month2: allocation.month_hours2 || 0,
+          });
+          
+          addedOpportunityNumbers.add(allocation.opportunity_number);
+        });
+      }
+      
+      console.log(`Added ${opportunityRows.length} existing opportunity allocation rows`);
+      
+      // STEP 2: Add user's managed opportunities that don't already have allocations
+      if (userGroupOpportunityData.user_managed_opportunities && Array.isArray(userGroupOpportunityData.user_managed_opportunities)) {
+        const newUserOpportunities = userGroupOpportunityData.user_managed_opportunities.filter(opportunity => 
+          !addedOpportunityNumbers.has(opportunity.opportunity_number)
+        );
+        
+        console.log(`Processing ${newUserOpportunities.length} new user managed opportunities (without existing allocations)`);
+        
+        newUserOpportunities.forEach(opportunity => {
+          opportunityRows.push({
+            id: `${opportunity.opportunity_number}_${userEmail}`,
+            opportunityNumber: opportunity.opportunity_number,
+            opportunityName: opportunity.opportunity_name || '',
+            proposalChampion: opportunity.proposal_champion || '',
+            estimatedFee: opportunity.estimated_fee || 0,
+            remarks: '',
+            month: 0, // No existing allocation
+            month1: 0,
+            month2: 0,
+          });
+          
+          addedOpportunityNumbers.add(opportunity.opportunity_number);
+        });
+      }
+      
+      // STEP 3: Add group opportunities that don't already have allocations (limited to prevent UI overload)
+      if (userGroupOpportunityData.group_opportunities && Array.isArray(userGroupOpportunityData.group_opportunities)) {
+        const newGroupOpportunities = userGroupOpportunityData.group_opportunities
+          .filter(opportunity => !addedOpportunityNumbers.has(opportunity.opportunity_number))
+          .slice(0, 20); // Limit to 20 to avoid overwhelming the UI
+          
+        console.log(`Processing ${newGroupOpportunities.length} new group opportunities (without existing allocations)`);
+        
+        newGroupOpportunities.forEach(opportunity => {
+          opportunityRows.push({
+            id: `${opportunity.opportunity_number}_${userEmail}`,
+            opportunityNumber: opportunity.opportunity_number,
+            opportunityName: opportunity.opportunity_name || '',
+            proposalChampion: opportunity.proposal_champion || '',
+            estimatedFee: opportunity.estimated_fee || 0,
+            remarks: '',
+            month: 0, // No existing allocation
+            month1: 0,
+            month2: 0,
+          });
+          
+          addedOpportunityNumbers.add(opportunity.opportunity_number);
+        });
+      }
+      
+      console.log(`Total opportunity rows created: ${opportunityRows.length} (existing allocations + user managed + group opportunities)`);
+      console.log('Sample opportunity row:', opportunityRows[0]);
+      
+      return {
+        opportunityRows,
+        userGroupOpportunityData,
+        existingOpportunityAllocations,
+        stats: {
+          totalExistingAllocations: existingOpportunityAllocations?.length || 0,
+          userOpportunities: userGroupOpportunityData.user_managed_opportunities?.length || 0,
+          groupOpportunities: userGroupOpportunityData.group_opportunities?.length || 0,
+          totalOpportunityRows: opportunityRows.length
+        }
+      };
+      
+    } catch (error) {
+      console.error("Error preloading active opportunities:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get existing project allocations for a user (helper method)
+   * This uses the existing ProjectDataService to get current project allocations
+   * @param {string} userEmail - User email
+   * @param {number} year - The year
+   * @param {string} quarter - The quarter
+   * @returns {Promise<Array>} Array of existing project allocations
+   */
+  static async getExistingProjectAllocations(userEmail, year, quarter) {
+    try {
+      // Import ProjectDataService dynamically to avoid circular dependency
+      const { ProjectDataService } = await import('./ProjectDataService');
+      
+      console.log(`Fetching existing project allocations for ${userEmail} in ${quarter} ${year}`);
+      const existingAllocations = await ProjectDataService.getAllocationsByQuarterWithDetails(userEmail, year, quarter);
+      
+      console.log(`Retrieved ${existingAllocations?.length || 0} existing project allocations`);
+      return Array.isArray(existingAllocations) ? existingAllocations : [];
+    } catch (error) {
+      console.error("Error fetching existing project allocations:", error);
+      return []; // Return empty array on error, don't fail the whole preload
+    }
+  }
+
+  /**
+   * Get existing opportunity allocations for a user (helper method)
+   * This uses the existing ProjectDataService to get current opportunity allocations
+   * @param {string} userEmail - User email
+   * @param {number} year - The year
+   * @param {string} quarter - The quarter
+   * @returns {Promise<Array>} Array of existing opportunity allocations
+   */
+  static async getExistingOpportunityAllocations(userEmail, year, quarter) {
+    try {
+      // Import ProjectDataService dynamically to avoid circular dependency
+      const { ProjectDataService } = await import('./ProjectDataService');
+      
+      console.log(`Fetching existing opportunity allocations for ${userEmail} in ${quarter} ${year}`);
+      const existingAllocations = await ProjectDataService.getOpportunitiesByQuarter(userEmail, year, quarter);
+      
+      console.log(`Retrieved ${existingAllocations?.length || 0} existing opportunity allocations`);
+      return Array.isArray(existingAllocations) ? existingAllocations : [];
+    } catch (error) {
+      console.error("Error fetching existing opportunity allocations:", error);
+      return []; // Return empty array on error, don't fail the whole preload
     }
   }
 }

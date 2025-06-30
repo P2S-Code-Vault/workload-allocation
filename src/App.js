@@ -607,6 +607,38 @@ const MainContent = React.forwardRef((props, ref) => {
           console.log("Preload data received:", preloadData);
           console.log("Project rows:", preloadData.projectRows);
           console.log("Stats:", preloadData.stats);
+          
+          // Log breakdown of allocation types
+          if (preloadData.projectRows && preloadData.projectRows.length > 0) {
+            const ptoRows = preloadData.projectRows.filter(row => 
+              row.projectNumber?.startsWith('0000-0000-0PTO') || 
+              row.projectNumber?.startsWith('0000-0000-0HOL') ||
+              row.projectNumber?.startsWith('0000-0000-0SIC') ||
+              row.projectNumber?.startsWith('0000-0000-JURY')
+            );
+            const adminRows = preloadData.projectRows.filter(row => 
+              row.projectNumber?.startsWith('0000-0000') && 
+              !row.projectNumber?.startsWith('0000-0000-0PTO') &&
+              !row.projectNumber?.startsWith('0000-0000-0HOL') &&
+              !row.projectNumber?.startsWith('0000-0000-0SIC') &&
+              !row.projectNumber?.startsWith('0000-0000-JURY') &&
+              !row.projectNumber?.startsWith('0000-0000-LWOP')
+            );
+            const lwopRows = preloadData.projectRows.filter(row => 
+              row.projectNumber?.startsWith('0000-0000-LWOP')
+            );
+            const regularRows = preloadData.projectRows.filter(row => 
+              !row.projectNumber?.startsWith('0000-0000')
+            );
+            
+            console.log("Allocation type breakdown:");
+            console.log(`- PTO/Holiday/Sick/Jury: ${ptoRows.length}`);
+            console.log(`- Administrative: ${adminRows.length}`);
+            console.log(`- LWOP: ${lwopRows.length}`);
+            console.log(`- Regular projects: ${regularRows.length}`);
+            console.log(`- Total: ${preloadData.projectRows.length}`);
+          }
+          
           console.log("=== END PRELOAD DEBUG ===");
 
           if (preloadData.projectRows && preloadData.projectRows.length > 0) {
@@ -777,50 +809,119 @@ const MainContent = React.forwardRef((props, ref) => {
     }
 
     // Fetch opportunity projections for the opportunities table
-    ProjectDataService.getOpportunitiesByQuarter(
-      currentUser,
-      selectedYear,
-      apiQuarter
-    )
-      .then((oppsData) => {
-        const dataArray = Array.isArray(oppsData) ? oppsData : [];
-          console.log("=== OPPORTUNITY FETCH DEBUG ===");
-          console.log("Raw opportunities data:", oppsData);
-          console.log("Data array length:", dataArray.length);
-          if (dataArray.length > 0) {
-            console.log("First opportunity item:", JSON.stringify(dataArray[0], null, 2));
-            console.log("Available fields:", Object.keys(dataArray[0]));
+    if (usePreloadService) {
+      // Use the new preload service for opportunities
+      console.log("Using WorkloadPreloadService to fetch opportunities");
+      WorkloadPreloadService.preloadActiveOpportunities(currentUser, selectedYear, apiQuarter)
+        .then((opportunityPreloadData) => {
+          console.log("=== OPPORTUNITY PRELOAD SERVICE DEBUG ===");
+          console.log("Opportunity preload data received:", opportunityPreloadData);
+          console.log("Opportunity rows:", opportunityPreloadData.opportunityRows);
+          console.log("Opportunity stats:", opportunityPreloadData.stats);
+          console.log("=== END OPPORTUNITY PRELOAD DEBUG ===");
+
+          if (opportunityPreloadData.opportunityRows && opportunityPreloadData.opportunityRows.length > 0) {
+            setOpportunityRows(opportunityPreloadData.opportunityRows);
+          } else {
+            // Create empty rows if no data
+            setOpportunityRows([
+              { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+              { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+              { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+            ]);
           }
-          console.log("=== END OPPORTUNITY DEBUG ===");
-        if (dataArray.length > 0) {
-          const newOppRows = dataArray.map((opp) => ({
-            id: opp.ra_id,
-            opportunityNumber: opp.opportunity_number || "",
-            opportunityName: opp.opportunity_name || "",
-            proposalChampion: opp.proposal_champion || "",
-            estimatedFee: opp.estimated_fee || "",
-            remarks: opp.remarks || "",
-            month: opp.month_hours || 0,
-            month1: opp.month_hours1 || 0,
-            month2: opp.month_hours2 || 0,
-          }));
-          setOpportunityRows(newOppRows);
-        } else {
+        })
+        .catch((err) => {
+          console.error("WorkloadPreloadService failed for opportunities, falling back:", err);
+          // Fallback to original opportunities service
+          ProjectDataService.getOpportunitiesByQuarter(
+            currentUser,
+            selectedYear,
+            apiQuarter
+          )
+            .then((oppsData) => {
+              const dataArray = Array.isArray(oppsData) ? oppsData : [];
+              console.log("=== FALLBACK OPPORTUNITY FETCH DEBUG ===");
+              console.log("Raw opportunities data:", oppsData);
+              console.log("Data array length:", dataArray.length);
+              console.log("=== END FALLBACK OPPORTUNITY DEBUG ===");
+              if (dataArray.length > 0) {
+                const newOppRows = dataArray.map((opp) => ({
+                  id: opp.ra_id,
+                  opportunityNumber: opp.opportunity_number || "",
+                  opportunityName: opp.opportunity_name || "",
+                  proposalChampion: opp.proposal_champion || "",
+                  estimatedFee: opp.estimated_fee || "",
+                  remarks: opp.remarks || "",
+                  month: opp.month_hours || 0,
+                  month1: opp.month_hours1 || 0,
+                  month2: opp.month_hours2 || 0,
+                }));
+                setOpportunityRows(newOppRows);
+              } else {
+                setOpportunityRows([
+                  { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+                  { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+                  { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+                ]);
+              }
+            })
+            .catch((fallbackErr) => {
+              console.error("Fallback opportunity service also failed:", fallbackErr);
+              setOpportunityRows([
+                { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+                { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+                { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+              ]);
+            });
+        });
+    } else {
+      // Original opportunities loading logic
+      ProjectDataService.getOpportunitiesByQuarter(
+        currentUser,
+        selectedYear,
+        apiQuarter
+      )
+        .then((oppsData) => {
+          const dataArray = Array.isArray(oppsData) ? oppsData : [];
+            console.log("=== OPPORTUNITY FETCH DEBUG ===");
+            console.log("Raw opportunities data:", oppsData);
+            console.log("Data array length:", dataArray.length);
+            if (dataArray.length > 0) {
+              console.log("First opportunity item:", JSON.stringify(dataArray[0], null, 2));
+              console.log("Available fields:", Object.keys(dataArray[0]));
+            }
+            console.log("=== END OPPORTUNITY DEBUG ===");
+          if (dataArray.length > 0) {
+            const newOppRows = dataArray.map((opp) => ({
+              id: opp.ra_id,
+              opportunityNumber: opp.opportunity_number || "",
+              opportunityName: opp.opportunity_name || "",
+              proposalChampion: opp.proposal_champion || "",
+              estimatedFee: opp.estimated_fee || "",
+              remarks: opp.remarks || "",
+              month: opp.month_hours || 0,
+              month1: opp.month_hours1 || 0,
+              month2: opp.month_hours2 || 0,
+            }));
+            setOpportunityRows(newOppRows);
+          } else {
+            setOpportunityRows([
+              { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+              { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+              { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
+            ]);
+          }
+        })
+        .catch((err) => {
+          console.error("Error loading opportunities:", err);
           setOpportunityRows([
             { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
             { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
             { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
           ]);
-        }
-      })
-      .catch((err) => {
-        console.error("Error loading opportunities:", err);
-        setOpportunityRows([
-          { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
-          { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
-          { opportunityNumber: "", opportunityName: "", proposalChampion: "", estimatedFee: "", remarks: "", month: "", month1: "", month2: "" },
-        ]);
-      });
+        });
+    }
 
     // Return cleanup function to prevent state updates after unmounting
     return () => {

@@ -43,6 +43,7 @@ const API_CONFIG = {
       
       // User group projects endpoints
       CONTACTS_GROUP_PROJECTS_EXTENDED: email => `/contacts/by-email/${encodeURIComponent(email)}/group-projects/extended`, // include_user_projects param
+      CONTACTS_GROUP_OPPORTUNITIES_EXTENDED: email => `/contacts/by-email/${encodeURIComponent(email)}/group-opportunities/extended`, // include_user_opportunities param
       
       //scheduled hours endpoints
       CONTACT_MONTHLY_SCHEDULED_HOURS: contactId => `/contacts/${contactId}/scheduled-hours/monthly`,
