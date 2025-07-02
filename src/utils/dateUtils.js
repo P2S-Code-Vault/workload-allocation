@@ -43,3 +43,25 @@ export const getQuarterMonthsZeroIndexed = (quarter) => {
   };
   return quarterMap[quarter] || [0, 1, 2];
 };
+
+// Helper function to get month names for a quarter
+export const getQuarterMonthNames = (quarter, year = null) => {
+  const monthNames = [
+    'January', 'February', 'March', 'April', 'May', 'June',
+    'July', 'August', 'September', 'October', 'November', 'December'
+  ];
+  
+  const quarterMonths = getQuarterMonths(quarter);
+  return quarterMonths.map(monthNum => monthNames[monthNum - 1]);
+};
+
+// Helper function to get short month names for a quarter
+export const getQuarterMonthNamesShort = (quarter, year = null) => {
+  const monthNames = [
+    'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+    'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+  ];
+  
+  const quarterMonths = getQuarterMonths(quarter);
+  return quarterMonths.map(monthNum => monthNames[monthNum - 1]);
+};

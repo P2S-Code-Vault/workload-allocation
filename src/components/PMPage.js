@@ -1,9 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import QuarterPicker from "./QuarterPicker";
-import { format } from "date-fns";
 import PMDashboardService from "../services/PMDashboardService";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
-import { getCurrentQuarterString, getCurrentYear } from "../utils/dateUtils";
+import { getCurrentQuarterString, getCurrentYear, getQuarterMonthNamesShort } from "../utils/dateUtils";
 
 // CollapsibleProject component for individual project display
 const CollapsibleProject = ({
@@ -11,8 +10,17 @@ const CollapsibleProject = ({
   formatNumber,
   formatCurrency,
   formatPercent,
+  selectedQuarter,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Get month names for the selected quarter
+  const getMonthNames = () => {
+    const quarterNum = parseInt(selectedQuarter.replace('Q', ''));
+    return getQuarterMonthNamesShort(quarterNum);
+  };
+
+  const monthNames = getMonthNames();
 
   return (
     <div className="pm-group">
@@ -42,7 +50,10 @@ const CollapsibleProject = ({
               <tr>
                 <th>Resource</th>
                 <th>Labor Grade</th>
-                <th>Planned Hours</th>
+                <th>{monthNames[0]}</th>
+                <th>{monthNames[1]}</th>
+                <th>{monthNames[2]}</th>
+                <th>Total Hours</th>
               </tr>
             </thead>
             <tbody>
@@ -52,7 +63,16 @@ const CollapsibleProject = ({
                     <td>{resource.name}</td>
                     <td>{resource.laborCategory}</td>
                     <td className="number-cell">
-                      {formatNumber(resource.hours)}
+                      {formatNumber(resource.month1Hours || 0)}
+                    </td>
+                    <td className="number-cell">
+                      {formatNumber(resource.month2Hours || 0)}
+                    </td>
+                    <td className="number-cell">
+                      {formatNumber(resource.month3Hours || 0)}
+                    </td>
+                    <td className="number-cell">
+                      {formatNumber(resource.totalHours || 0)}
                     </td>
                   </tr>
                 ))}
@@ -70,10 +90,18 @@ const PMSelector = ({
   projectManagers = [],
   showAllMilestones,
   onToggleAllMilestones,
+  activeView = "projects",
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
   const dropdownRef = useRef(null);
+
+  // Dynamic labels based on view
+  const managerLabel = activeView === "projects" ? "PM" : "Champion";
+  const allItemsLabel = activeView === "projects" ? "All Projects" : "All Opportunities";
+  const selectLabel = activeView === "projects" ? "Select Project Manager" : "Select Opportunity Champion";
+  const searchPlaceholder = activeView === "projects" ? "Search project manager..." : "Search opportunity champion...";
+  const showAllLabel = activeView === "projects" ? "Show All Projects" : "Show All Opportunities";
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -146,15 +174,15 @@ const PMSelector = ({
           }}
         >
           <div style={{ display: "flex", alignItems: "center" }}>
-            <span className="user-label">Filter by PM:</span>
+            <span className="user-label">Filter by {managerLabel}:</span>
             <strong className="user-name" style={{ marginRight: "10px" }}>
-              {selectedPM || "All Projects"}
+              {selectedPM || allItemsLabel}
             </strong>
             <button
               className="team-dropdown-btn"
               onClick={() => setShowDropdown(!showDropdown)}
             >
-              Select Project Manager
+              {selectLabel}
             </button>
           </div>
           <div
@@ -184,7 +212,7 @@ const PMSelector = ({
           <div className="user-dropdown pm-dashboard-dropdown">
             <input
               type="text"
-              placeholder="Search project manager..."
+              placeholder={searchPlaceholder}
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="user-search"
@@ -193,7 +221,7 @@ const PMSelector = ({
 
             <ul className="user-list">
               <li onClick={handleClearSelection} className="user-list-item">
-                <div className="user-name">Show All Projects</div>
+                <div className="user-name">{showAllLabel}</div>
               </li>
               {filteredPMs.map((pm, index) => (
                 <li
@@ -246,6 +274,7 @@ const CollapsiblePMGroup = ({
   formatNumber,
   formatCurrency,
   formatPercent,
+  selectedQuarter,
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -272,6 +301,7 @@ const CollapsiblePMGroup = ({
               formatNumber={formatNumber}
               formatCurrency={formatCurrency}
               formatPercent={formatPercent}
+              selectedQuarter={selectedQuarter}
             />
           ))}
         </div>
@@ -291,6 +321,7 @@ const PMPage = (props) => {
   const [projectManagers, setProjectManagers] = useState([]);
   const [retryCount, setRetryCount] = useState(0);
   const [showAllMilestones, setShowAllMilestones] = useState(false);
+  const [activeView, setActiveView] = useState("projects"); // "projects" or "opportunities"
 
   // Format functions
   const formatNumber = (value) => {
@@ -368,23 +399,31 @@ const PMPage = (props) => {
   //   }
   // };
 
-  // Load project managers on component mount
+  // Load project managers or opportunity champions based on active view
   useEffect(() => {
-    const loadProjectManagers = async () => {
+    const loadManagers = async () => {
       try {
-        const managers = await PMDashboardService.getAllProjectManagers();
-        console.log("Loaded project managers:", managers);
+        let managers;
+        if (activeView === "projects") {
+          managers = await PMDashboardService.getAllProjectManagers();
+          console.log("Loaded project managers:", managers);
+        } else {
+          managers = await PMDashboardService.getAllOpportunityChampions();
+          console.log("Loaded opportunity champions:", managers);
+        }
         setProjectManagers(managers);
       } catch (err) {
-        console.error("Error loading project managers:", err);
+        console.error(`Error loading ${activeView === "projects" ? "project managers" : "opportunity champions"}:`, err);
         setError(
-          "Failed to load project managers. Please try refreshing the page."
+          `Failed to load ${activeView === "projects" ? "project managers" : "opportunity champions"}. Please try refreshing the page.`
         );
       }
     };
 
-    loadProjectManagers();
-  }, []);
+    loadManagers();
+    // Reset selected manager when switching views
+    setSelectedPM("");
+  }, [activeView]);
 
   // Debug data state changes
   useEffect(() => {
@@ -409,24 +448,38 @@ const PMPage = (props) => {
       setIsLoading(true);
       setError(null);
 
-      console.log("Loading dashboard data:", {
+      const viewType = activeView === "projects" ? "Projects" : "Opportunities";
+      const managerType = activeView === "projects" ? selectedPM : selectedPM; // Could be PM or Champion
+
+      console.log(`Loading ${viewType.toLowerCase()} dashboard data:`, {
         selectedYear,
         selectedQuarter,
-        selectedPM: selectedPM || "All Projects",
+        selectedManager: managerType || `All ${viewType}`,
         showAllMilestones,
+        activeView,
       });
 
       try {
-        const data = await PMDashboardService.getPMDashboardDataByQuarter(
-          selectedYear,
-          selectedQuarter,
-          selectedPM || null,
-          showAllMilestones
-        );
+        let data;
+        if (activeView === "projects") {
+          data = await PMDashboardService.getPMDashboardDataByQuarter(
+            selectedYear,
+            selectedQuarter,
+            selectedPM || null,
+            showAllMilestones
+          );
+        } else {
+          data = await PMDashboardService.getOpportunitiesDashboardDataByQuarter(
+            selectedYear,
+            selectedQuarter,
+            selectedPM || null, // This will be the champion name
+            showAllMilestones
+          );
+        }
 
-        console.log("Dashboard data received in component:", data);
+        console.log(`${viewType} dashboard data received in component:`, data);
         console.log(
-          `Projects count: ${data.projects ? data.projects.length : 0}`
+          `${viewType} count: ${data.projects ? data.projects.length : 0}`
         );
 
         // Verify data structure before setting state
@@ -452,26 +505,7 @@ const PMPage = (props) => {
     };
 
     loadDashboardData();
-  }, [selectedQuarter, selectedYear, selectedPM, retryCount, showAllMilestones]);
-  // Month column headers
-  const getQuarterMonths = (quarterString) => {
-    // Extract number from "Q1", "Q2", etc.
-    const quarterNum = parseInt(quarterString.replace('Q', ''));
-    const defaultQuarterMonths = {
-      1: [0, 1, 2],
-      2: [3, 4, 5],
-      3: [6, 7, 8],
-      4: [9, 10, 11],
-    };
-    return defaultQuarterMonths[quarterNum] || [0, 1, 2];
-  };
-  const getMonthNames = () => {
-    if (!selectedQuarter || !selectedYear) return ["", "", ""];
-    const months = getQuarterMonths(selectedQuarter);
-    return months.map((m) =>
-      format(new Date(selectedYear, m, 1), "MMMM yyyy")
-    );
-  };
+  }, [selectedQuarter, selectedYear, selectedPM, retryCount, showAllMilestones, activeView]);
 
   return (
     <main className="main-content">
@@ -485,15 +519,60 @@ const PMPage = (props) => {
             initialYear={selectedYear}
             initialQuarter={selectedQuarter}
           />
+          
+          {/* View Toggle Buttons */}
+          <div className="view-toggle-container" style={{ 
+            display: 'flex', 
+            gap: '10px', 
+            margin: '10px 0',
+            justifyContent: 'center'
+          }}>
+            <button
+              className={`view-toggle-btn ${activeView === 'projects' ? 'active' : ''}`}
+              onClick={() => setActiveView('projects')}
+              style={{
+                padding: '8px 16px',
+                border: '2px solid var(--primary-color)',
+                borderRadius: '4px',
+                backgroundColor: activeView === 'projects' ? 'var(--primary-color)' : 'transparent',
+                color: activeView === 'projects' ? 'white' : 'var(--primary-color)',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              Projects
+            </button>
+            <button
+              className={`view-toggle-btn ${activeView === 'opportunities' ? 'active' : ''}`}
+              onClick={() => setActiveView('opportunities')}
+              style={{
+                padding: '8px 16px',
+                border: '2px solid var(--primary-color)',
+                borderRadius: '4px',
+                backgroundColor: activeView === 'opportunities' ? 'var(--primary-color)' : 'transparent',
+                color: activeView === 'opportunities' ? 'white' : 'var(--primary-color)',
+                cursor: 'pointer',
+                fontWeight: 'bold',
+                transition: 'all 0.3s ease'
+              }}
+            >
+              Opportunities
+            </button>
+          </div>
+          
           <PMSelector
             onPMChange={setSelectedPM}
             selectedPM={selectedPM}
-            projectManagers={projectManagers.map((pm) => pm.name || "")}
+            projectManagers={projectManagers}
             showAllMilestones={showAllMilestones}
             onToggleAllMilestones={setShowAllMilestones}
+            activeView={activeView}
           />
           <div className="pm-dashboard">
-            <div className="pm-dashboard-title">Project Planning Summary</div>
+            <div className="pm-dashboard-title">
+              {activeView === "projects" ? "Project Planning Summary" : "Opportunity Planning Summary"}
+            </div>
 
             {/* Debug information - remove in production */}
             <div
@@ -509,7 +588,8 @@ const PMPage = (props) => {
               <div>
                 <strong>Debug Info:</strong>
               </div>
-              <div>Selected PM: {selectedPM || "All Projects"}</div>
+              <div>Active View: {activeView}</div>
+              <div>Selected {activeView === "projects" ? "PM" : "Champion"}: {selectedPM || (activeView === "projects" ? "All Projects" : "All Opportunities")}</div>
               <div>Show All Milestones: {showAllMilestones ? "Yes" : "No"}</div>
               <div>
                 Data Status: {isLoading ? "Loading" : error ? "Error" : "Ready"}
@@ -543,6 +623,7 @@ const PMPage = (props) => {
                       formatNumber={formatNumber}
                       formatCurrency={formatCurrency}
                       formatPercent={formatPercent}
+                      selectedQuarter={selectedQuarter}
                     />
                   ))}
                 </div>
@@ -559,16 +640,17 @@ const PMPage = (props) => {
                         formatNumber={formatNumber}
                         formatCurrency={formatCurrency}
                         formatPercent={formatPercent}
+                        selectedQuarter={selectedQuarter}
                       />
                     ))}
                 </div>
               )
             ) : (
-              // Show "no projects found" message when data array is empty
+              // Show "no items found" message when data array is empty
               <div className="no-data">
                 {selectedPM
-                  ? `No projects found for ${selectedPM} in the selected date range.`
-                  : "No projects found for the selected date range."}
+                  ? `No ${activeView} found for ${selectedPM} in the selected date range.`
+                  : `No ${activeView} found for the selected date range.`}
               </div>
             )}
           </div>
