@@ -267,11 +267,10 @@ export class WorkloadPreloadService {
         });
       }
       
-      // STEP 3: Add group projects that don't already have allocations (limited to prevent UI overload)
+      // STEP 3: Add group projects that don't already have allocations
       if (userGroupData.group_projects && Array.isArray(userGroupData.group_projects)) {
         const newGroupProjects = userGroupData.group_projects
-          .filter(project => !addedProjectNumbers.has(project.project_number))
-          .slice(0, 20); // Limit to 20 to avoid overwhelming the UI
+          .filter(project => !addedProjectNumbers.has(project.project_number));
           
         console.log(`Processing ${newGroupProjects.length} new group projects (without existing allocations)`);
         
@@ -412,11 +411,10 @@ export class WorkloadPreloadService {
         });
       }
       
-      // STEP 3: Add group opportunities that don't already have allocations (limited to prevent UI overload)
+      // STEP 3: Add group opportunities that don't already have allocations
       if (userGroupOpportunityData.group_opportunities && Array.isArray(userGroupOpportunityData.group_opportunities)) {
         const newGroupOpportunities = userGroupOpportunityData.group_opportunities
-          .filter(opportunity => !addedOpportunityNumbers.has(opportunity.opportunity_number))
-          .slice(0, 20); // Limit to 20 to avoid overwhelming the UI
+          .filter(opportunity => !addedOpportunityNumbers.has(opportunity.opportunity_number));
           
         console.log(`Processing ${newGroupOpportunities.length} new group opportunities (without existing allocations)`);
         
