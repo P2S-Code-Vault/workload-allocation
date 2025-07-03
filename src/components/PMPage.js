@@ -4,13 +4,14 @@ import PMDashboardService from "../services/PMDashboardService";
 import { FaChevronDown, FaChevronRight } from "react-icons/fa";
 import { getCurrentQuarterString, getCurrentYear, getQuarterMonthNamesShort } from "../utils/dateUtils";
 
-// CollapsibleProject component for individual project display
+// CollapsibleProject component for individual project/opportunity display
 const CollapsibleProject = ({
   project,
   formatNumber,
   formatCurrency,
   formatPercent,
   selectedQuarter,
+  activeView = "projects",
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
 
@@ -22,6 +23,14 @@ const CollapsibleProject = ({
 
   const monthNames = getMonthNames();
 
+  // Get appropriate labels and values based on view type
+  const isOpportunity = activeView === "opportunities";
+  const itemNumber = isOpportunity ? project.opportunityNumber : project.projectNumber;
+  const contractLabel = isOpportunity ? "Estimated Fee" : "Contract Labor";
+  const contractValue = isOpportunity ? project.estimatedFee : project.labor;
+  const usageLabel = isOpportunity ? "Probability" : "% EAC Labor Used";
+  const usageValue = isOpportunity ? project.probability : project.laborUsed;
+
   return (
     <div className="pm-group">
       <div
@@ -30,16 +39,16 @@ const CollapsibleProject = ({
       >
         {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
         <h3>
-          {project.name} - MS{" "}
-          {project.projectNumber
-            ? project.projectNumber.split("-").pop() || project.projectNumber
+          {project.name} - {isOpportunity ? "OP" : "MS"}{" "}
+          {itemNumber
+            ? itemNumber.split("-").pop() || itemNumber
             : "N/A"}
         </h3>
         <div className="project-info">
-          <span>Contract Labor: {formatCurrency(project.labor)}</span>
+          <span>{contractLabel}: {formatCurrency(contractValue)}</span>
           <span>Total Hours: {formatNumber(project.totalHours)}</span>
           <span>Forecasted Cost: {formatCurrency(project.totalCost)}</span>
-          <span>% EAC Labor Used: {formatPercent(project.laborUsed)}</span>
+          <span>{usageLabel}: {isOpportunity ? `${usageValue}%` : formatPercent(usageValue)}</span>
         </div>
       </div>
 
@@ -113,22 +122,28 @@ const PMSelector = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Log available PMs for debugging
+  // Log available PMs/Champions for debugging
   useEffect(() => {
+    console.log(`=== PMSelector Debug (${activeView}) ===`);
+    console.log("projectManagers prop:", projectManagers);
+    console.log("projectManagers length:", projectManagers?.length || 0);
+    
     if (projectManagers && projectManagers.length > 0) {
-      console.log("Available Project Managers:", projectManagers);
+      console.log(`Available ${activeView === "projects" ? "Project Managers" : "Opportunity Champions"}:`, projectManagers);
 
-      // Check for any PMs with leading/trailing spaces
-      const pmsWithSpaces = projectManagers.filter((pm) => pm !== pm.trim());
-      if (pmsWithSpaces.length > 0) {
-        console.warn("PMs with leading/trailing spaces:", pmsWithSpaces);
+      // Check for any entries with leading/trailing spaces
+      const entriesWithSpaces = projectManagers.filter((entry) => entry !== entry.trim());
+      if (entriesWithSpaces.length > 0) {
+        console.warn(`${activeView === "projects" ? "PMs" : "Champions"} with leading/trailing spaces:`, entriesWithSpaces);
       }
+    } else {
+      console.warn(`No ${activeView === "projects" ? "project managers" : "opportunity champions"} available in dropdown`);
     }
 
     if (selectedPM) {
-      console.log("Currently selected PM:", selectedPM);
+      console.log(`Currently selected ${activeView === "projects" ? "PM" : "Champion"}:`, selectedPM);
     }
-  }, [projectManagers, selectedPM]);
+  }, [projectManagers, selectedPM, activeView]);
 
   const filteredPMs = searchTerm
     ? projectManagers.filter((pm) =>
@@ -185,6 +200,7 @@ const PMSelector = ({
               {selectLabel}
             </button>
           </div>
+          {/* Temporarily hidden All Milestones toggle
           <div
             className="toggle-container"
             style={{
@@ -206,6 +222,7 @@ const PMSelector = ({
               <span className="toggle-slider"></span>
             </label>
           </div>
+          */}
         </div>
 
         {showDropdown && (
@@ -242,15 +259,18 @@ const PMSelector = ({
   );
 };
 
-// New function to group projects by project manager
-const groupProjectsByPM = (projects) => {
+// New function to group projects by project manager or opportunities by champion
+const groupProjectsByPM = (projects, activeView = "projects") => {
   const grouped = {};
 
   projects.forEach((project) => {
-    const pm = project.pm || "Unassigned";
+    // Use pm for projects, proposalChampion for opportunities (with fallback to pm for transformed data)
+    const manager = activeView === "opportunities" 
+      ? (project.proposalChampion || project.pm || "Unassigned")
+      : (project.pm || "Unassigned");
 
-    if (!grouped[pm]) {
-      grouped[pm] = {
+    if (!grouped[manager]) {
+      grouped[manager] = {
         projects: [],
         totalLabor: 0,
         totalHours: 0,
@@ -258,16 +278,17 @@ const groupProjectsByPM = (projects) => {
       };
     }
 
-    grouped[pm].projects.push(project);
-    grouped[pm].totalLabor += project.labor || 0;
-    grouped[pm].totalHours += project.totalHours || 0;
-    grouped[pm].totalCost += project.totalCost || 0;
+    grouped[manager].projects.push(project);
+    // Use appropriate field based on view type
+    grouped[manager].totalLabor += (activeView === "opportunities" ? project.estimatedFee : project.labor) || 0;
+    grouped[manager].totalHours += project.totalHours || 0;
+    grouped[manager].totalCost += project.totalCost || 0;
   });
 
   return grouped;
 };
 
-// Collapsible PM Group component to display each PM and their projects
+// Collapsible PM Group component to display each PM/Champion and their projects/opportunities
 const CollapsiblePMGroup = ({
   pmName,
   pmData,
@@ -275,8 +296,12 @@ const CollapsiblePMGroup = ({
   formatCurrency,
   formatPercent,
   selectedQuarter,
+  activeView = "projects",
 }) => {
   const [isExpanded, setIsExpanded] = useState(false);
+
+  const itemsLabel = activeView === "opportunities" ? "Opportunities" : "Projects";
+  const contractLabel = activeView === "opportunities" ? "Total Estimated Fees" : "Total Contract Labor";
 
   return (
     <div className="pm-group">
@@ -287,8 +312,8 @@ const CollapsiblePMGroup = ({
         {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
         <h3>{pmName}</h3>
         <div className="project-info">
-          <span>Projects: {pmData.projects.length}</span>
-          <span>Total Contract Labor: {formatCurrency(pmData.totalLabor)}</span>
+          <span>{itemsLabel}: {pmData.projects.length}</span>
+          <span>{contractLabel}: {formatCurrency(pmData.totalLabor)}</span>
         </div>
       </div>
 
@@ -296,12 +321,13 @@ const CollapsiblePMGroup = ({
         <div className="collapsible-content">
           {pmData.projects.map((project) => (
             <CollapsibleProject
-              key={project.projectNumber}
+              key={project.projectNumber || project.opportunityNumber}
               project={project}
               formatNumber={formatNumber}
               formatCurrency={formatCurrency}
               formatPercent={formatPercent}
               selectedQuarter={selectedQuarter}
+              activeView={activeView}
             />
           ))}
         </div>
@@ -595,7 +621,7 @@ const PMPage = (props) => {
                 Data Status: {isLoading ? "Loading" : error ? "Error" : "Ready"}
               </div>
               <div>
-                Projects Count:{" "}
+                {activeView === "projects" ? "Projects" : "Opportunities"} Count:{" "}
                 {dashboardData.projects ? dashboardData.projects.length : 0}
               </div>
             </div>
@@ -613,24 +639,25 @@ const PMPage = (props) => {
             {isLoading ? (
               <div className="loading">Loading summary data...</div>
             ) : dashboardData.projects && dashboardData.projects.length > 0 ? (
-              // When filtering by a specific PM, just show their projects
+              // When filtering by a specific PM/Champion, just show their projects/opportunities
               selectedPM ? (
                 <div className="pm-groups">
                   {dashboardData.projects.map((project) => (
                     <CollapsibleProject
-                      key={project.projectNumber}
+                      key={project.projectNumber || project.opportunityNumber}
                       project={project}
                       formatNumber={formatNumber}
                       formatCurrency={formatCurrency}
                       formatPercent={formatPercent}
                       selectedQuarter={selectedQuarter}
+                      activeView={activeView}
                     />
                   ))}
                 </div>
               ) : (
-                // When showing all projects, group by PM
+                // When showing all projects/opportunities, group by PM/Champion
                 <div className="pm-groups">
-                  {Object.entries(groupProjectsByPM(dashboardData.projects))
+                  {Object.entries(groupProjectsByPM(dashboardData.projects, activeView))
                     .sort(([pmA], [pmB]) => pmA.localeCompare(pmB))
                     .map(([pmName, pmData]) => (
                       <CollapsiblePMGroup
@@ -641,6 +668,7 @@ const PMPage = (props) => {
                         formatCurrency={formatCurrency}
                         formatPercent={formatPercent}
                         selectedQuarter={selectedQuarter}
+                        activeView={activeView}
                       />
                     ))}
                 </div>

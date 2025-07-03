@@ -231,17 +231,59 @@ export class PMDashboardService {
       const data = await response.json();
       console.log("Received opportunities dashboard data:", data);
       
-      // Check if data has expected structure
-      if (!data.projects) {
-        console.error("Opportunities API response missing 'projects' array:", data);
+      // Transform opportunities data to match expected structure
+      if (data.opportunities) {
+        // Transform opportunities array to projects array with consistent structure
+        const transformedOpportunities = data.opportunities.map(opportunity => ({
+          ...opportunity,
+          projectNumber: opportunity.opportunityNumber,
+          pm: opportunity.proposalChampion, // Map proposalChampion to pm for consistency
+          labor: opportunity.estimatedFee || 0, // Map estimatedFee to labor
+          laborUsed: opportunity.probability || 0 // Map probability to laborUsed for display
+        }));
+        
+        // Create transformed data structure
+        const transformedData = {
+          projects: transformedOpportunities, // Use projects array for consistency with UI
+          summary: {
+            totalProjects: data.summary?.totalOpportunities || 0,
+            totalResources: data.summary?.totalResources || 0,
+            totalHours: data.summary?.totalHours || 0,
+            totalCost: data.summary?.totalCost || 0,
+            projectManagers: data.summary?.proposalChampions || 0,
+            quarter: data.summary?.quarter || null,
+            year: data.summary?.year || null,
+            month: data.summary?.month || null
+          }
+        };
+        
+        console.log(`Received ${transformedOpportunities.length} opportunities for ${championName || 'all Champions'}`);
+        console.log("Transformed opportunities data:", transformedData);
+        
+        // Cache successful results
+        try {
+          localStorage.setItem(cacheKey, JSON.stringify({
+            data: transformedData,
+            timestamp: Date.now(),
+            expiry: Date.now() + (30 * 60 * 1000) // 30 minute expiry
+          }));
+          console.log(`Cached opportunities dashboard data with key: ${cacheKey}`);
+        } catch (cacheError) {
+          console.warn("Failed to cache opportunities dashboard data:", cacheError);
+        }
+        
+        return transformedData;
+      }
+      
+      // Check if data has expected structure (fallback for old format)
+      if (!data.projects && !data.opportunities) {
+        console.error("Opportunities API response missing 'opportunities' or 'projects' array:", data);
         return this._getFallbackData();
       }
       
-      console.log(`Received ${data.projects.length} opportunities for ${championName || 'all Champions'}`);
-      
-      // Log summary information
-      if (data.summary) {
-        console.log("Opportunities Summary data:", {
+      // Log summary information for legacy format
+      if (data.summary && data.projects) {
+        console.log("Opportunities Summary data (legacy format):", {
           totalProjects: data.summary.totalProjects || 0,
           totalResources: data.summary.totalResources || 0,
           totalHours: data.summary.totalHours || 0,
@@ -251,10 +293,8 @@ export class PMDashboardService {
           year: data.summary.year || null,
           month: data.summary.month || null
         });
-      }
-      
-      // Cache successful results
-      if (data.projects) {
+        
+        // Cache successful results
         try {
           localStorage.setItem(cacheKey, JSON.stringify({
             data: data,
@@ -282,7 +322,7 @@ export class PMDashboardService {
   
   static async getAllOpportunityChampions() {
     try {
-      const url = `${this.apiBaseUrl}/workload/pm/opportunities/champions`;
+      const url = `${this.apiBaseUrl}/workload/pm/opportunities/proposal-champions`;
       console.log("Fetching opportunity champions from URL:", url);
       
       const response = await fetch(url);
@@ -295,8 +335,8 @@ export class PMDashboardService {
       const data = await response.json();
       console.log("Received opportunity champions:", data);
       
-      // Clean and filter the champions array (assuming similar structure to project managers)
-      const champions = data.champions || data.opportunity_champions || [];
+      // Extract champions from the proposal_champions array
+      const champions = data.proposal_champions || [];
       const cleanedChampions = champions
         .filter(champion => champion && typeof champion === 'string' && champion.trim().length > 0)
         .filter(champion => champion.trim() !== ',')
