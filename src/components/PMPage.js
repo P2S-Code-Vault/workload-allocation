@@ -97,8 +97,8 @@ const PMSelector = ({
   onPMChange,
   selectedPM,
   projectManagers = [],
-  showAllMilestones,
-  onToggleAllMilestones,
+  showAllItems,
+  onToggleAllItems,
   activeView = "projects",
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
@@ -200,7 +200,6 @@ const PMSelector = ({
               {selectLabel}
             </button>
           </div>
-          {/* Temporarily hidden All Milestones toggle
           <div
             className="toggle-container"
             style={{
@@ -211,18 +210,17 @@ const PMSelector = ({
             }}
           >
             <span style={{ marginRight: "8px", fontSize: "14px" }}>
-              All Milestones
+              {allItemsLabel}
             </span>
             <label className="toggle-switch">
               <input
                 type="checkbox"
-                checked={showAllMilestones}
-                onChange={() => onToggleAllMilestones(!showAllMilestones)}
+                checked={showAllItems}
+                onChange={() => onToggleAllItems(!showAllItems)}
               />
               <span className="toggle-slider"></span>
             </label>
           </div>
-          */}
         </div>
 
         {showDropdown && (
@@ -302,6 +300,9 @@ const CollapsiblePMGroup = ({
 
   const itemsLabel = activeView === "opportunities" ? "Opportunities" : "Projects";
   const contractLabel = activeView === "opportunities" ? "Total Estimated Fees" : "Total Contract Labor";
+  
+  // Display name for PM/Champion - show "Unassigned" if no allocations
+  const displayName = pmName === "Unassigned" || !pmName || pmName.trim() === "" ? "Unassigned" : pmName;
 
   return (
     <div className="pm-group">
@@ -310,7 +311,7 @@ const CollapsiblePMGroup = ({
         onClick={() => setIsExpanded(!isExpanded)}
       >
         {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
-        <h3>{pmName}</h3>
+        <h3>{displayName}</h3>
         <div className="project-info">
           <span>{itemsLabel}: {pmData.projects.length}</span>
           <span>{contractLabel}: {formatCurrency(pmData.totalLabor)}</span>
@@ -346,7 +347,7 @@ const PMPage = (props) => {
   const [selectedPM, setSelectedPM] = useState("");
   const [projectManagers, setProjectManagers] = useState([]);
   const [retryCount, setRetryCount] = useState(0);
-  const [showAllMilestones, setShowAllMilestones] = useState(false);
+  const [showAllItems, setShowAllItems] = useState(false);
   const [activeView, setActiveView] = useState("projects"); // "projects" or "opportunities"
 
   // Format functions
@@ -481,26 +482,37 @@ const PMPage = (props) => {
         selectedYear,
         selectedQuarter,
         selectedManager: managerType || `All ${viewType}`,
-        showAllMilestones,
+        showAllItems,
         activeView,
       });
 
       try {
         let data;
-        if (activeView === "projects") {
-          data = await PMDashboardService.getPMDashboardDataByQuarter(
-            selectedYear,
-            selectedQuarter,
-            selectedPM || null,
-            showAllMilestones
-          );
+        
+        // Check if "All Items" toggle is enabled
+        if (showAllItems) {
+          if (activeView === "projects") {
+            data = await PMDashboardService.getAllProjectsWithMilestones();
+          } else {
+            data = await PMDashboardService.getAllOpportunities();
+          }
         } else {
-          data = await PMDashboardService.getOpportunitiesDashboardDataByQuarter(
-            selectedYear,
-            selectedQuarter,
-            selectedPM || null, // This will be the champion name
-            showAllMilestones
-          );
+          // Use regular quarterly data
+          if (activeView === "projects") {
+            data = await PMDashboardService.getPMDashboardDataByQuarter(
+              selectedYear,
+              selectedQuarter,
+              selectedPM || null,
+              false // No longer using showAllMilestones
+            );
+          } else {
+            data = await PMDashboardService.getOpportunitiesDashboardDataByQuarter(
+              selectedYear,
+              selectedQuarter,
+              selectedPM || null, // This will be the champion name
+              false // No longer using showAllMilestones
+            );
+          }
         }
 
         console.log(`${viewType} dashboard data received in component:`, data);
@@ -531,7 +543,7 @@ const PMPage = (props) => {
     };
 
     loadDashboardData();
-  }, [selectedQuarter, selectedYear, selectedPM, retryCount, showAllMilestones, activeView]);
+  }, [selectedQuarter, selectedYear, selectedPM, retryCount, showAllItems, activeView]);
 
   return (
     <main className="main-content">
@@ -591,8 +603,8 @@ const PMPage = (props) => {
             onPMChange={setSelectedPM}
             selectedPM={selectedPM}
             projectManagers={projectManagers}
-            showAllMilestones={showAllMilestones}
-            onToggleAllMilestones={setShowAllMilestones}
+            showAllItems={showAllItems}
+            onToggleAllItems={setShowAllItems}
             activeView={activeView}
           />
           <div className="pm-dashboard">
@@ -616,7 +628,7 @@ const PMPage = (props) => {
               </div>
               <div>Active View: {activeView}</div>
               <div>Selected {activeView === "projects" ? "PM" : "Champion"}: {selectedPM || (activeView === "projects" ? "All Projects" : "All Opportunities")}</div>
-              <div>Show All Milestones: {showAllMilestones ? "Yes" : "No"}</div>
+              <div>Show All {activeView === "projects" ? "Projects" : "Opportunities"}: {showAllItems ? "Yes" : "No"}</div>
               <div>
                 Data Status: {isLoading ? "Loading" : error ? "Error" : "Ready"}
               </div>

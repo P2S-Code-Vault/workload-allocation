@@ -371,6 +371,140 @@ export class PMDashboardService {
       }
     };
   }
+
+  // New method to fetch all projects with milestones
+  static async getAllProjectsWithMilestones() {
+    try {
+      const url = `${this.apiBaseUrl}/projects/with-milestones?status=Active&include_empty=true`;
+      console.log("Fetching all projects with milestones from URL:", url);
+      
+      console.time('All Projects API Request');
+      const response = await fetch(url);
+      console.timeEnd('All Projects API Request');
+
+      console.log('All Projects API Response Status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`HTTP Error ${response.status}: ${errorText}`);
+        throw new Error(`Failed to fetch all projects with milestones: ${response.status} ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log("Received all projects with milestones data:", data);
+      
+      // Transform data to match expected structure
+      if (data.projects) {
+        const transformedProjects = data.projects.map(item => {
+          const project = item.project || {};
+          const milestones = item.milestones || [];
+          
+          return {
+            // Map project fields to expected structure
+            projectNumber: project.projectNumber,
+            name: project.projectName,
+            pm: project.projectManager || "Unassigned",
+            labor: project.projectContractLabor || 0,
+            laborUsed: 0, // Projects don't have labor used percentage in this endpoint
+            totalHours: milestones.reduce((sum, milestone) => sum + (milestone.hours || 0), 0),
+            totalCost: milestones.reduce((sum, milestone) => sum + (milestone.cost || 0), 0),
+            status: project.status,
+            // Ensure milestones array exists
+            milestones: milestones,
+            // Map milestones to resources for display consistency
+            resources: milestones.map(milestone => ({
+              name: milestone.milestone_name || "Unknown Milestone",
+              laborCategory: milestone.labor_category || "N/A",
+              month1Hours: 0, // Milestones don't have monthly breakdowns in this endpoint
+              month2Hours: 0,
+              month3Hours: 0,
+              totalHours: milestone.hours || 0,
+              totalCost: milestone.cost || 0
+            }))
+          };
+        });
+
+        return {
+          projects: transformedProjects,
+          summary: data.summary || {
+            totalProjects: transformedProjects.length,
+            totalResources: transformedProjects.reduce((sum, project) => sum + project.resources.length, 0),
+            totalHours: transformedProjects.reduce((sum, project) => sum + project.totalHours, 0),
+            totalCost: transformedProjects.reduce((sum, project) => sum + project.totalCost, 0),
+            projectManagers: [...new Set(transformedProjects.map(p => p.pm).filter(pm => pm && pm !== "Unassigned"))].length,
+            quarter: null,
+            year: null,
+            month: null
+          }
+        };
+      }
+      
+      return this._getFallbackData();
+    } catch (error) {
+      console.error("Error fetching all projects with milestones:", error);
+      return this._getFallbackData();
+    }
+  }
+
+  // New method to fetch all opportunities
+  static async getAllOpportunities() {
+    try {
+      const url = `${this.apiBaseUrl}/opportunities/all-opportunities`;
+      console.log("Fetching all opportunities from URL:", url);
+      
+      console.time('All Opportunities API Request');
+      const response = await fetch(url);
+      console.timeEnd('All Opportunities API Request');
+
+      console.log('All Opportunities API Response Status:', response.status);
+      
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error(`HTTP Error ${response.status}: ${errorText}`);
+        throw new Error(`Failed to fetch all opportunities: ${response.status} ${errorText}`);
+      }
+
+      const data = await response.json();
+      console.log("Received all opportunities data:", data);
+      
+      // Transform opportunities data to match expected structure
+      if (data.opportunities) {
+        const transformedOpportunities = data.opportunities.map(opportunity => ({
+          ...opportunity,
+          projectNumber: opportunity.opportunity_number,
+          name: opportunity.opportunity_name,
+          pm: opportunity.proposal_champion || "Unassigned",
+          proposalChampion: opportunity.proposal_champion || "Unassigned",
+          labor: opportunity.estimated_fee_proposed || 0,
+          estimatedFee: opportunity.estimated_fee_proposed || 0,
+          laborUsed: opportunity.probability || 0,
+          probability: opportunity.probability || 0,
+          totalHours: 0, // Opportunities don't have hour allocations
+          totalCost: opportunity.estimated_fee_proposed || 0,
+          resources: [] // No resource breakdown for opportunities
+        }));
+
+        return {
+          projects: transformedOpportunities, // Use projects array for consistency with UI
+          summary: data.summary || {
+            totalProjects: transformedOpportunities.length,
+            totalResources: 0, // Opportunities don't have resource allocations
+            totalHours: 0, // Opportunities don't have hour allocations
+            totalCost: transformedOpportunities.reduce((sum, opp) => sum + (opp.estimatedFee || 0), 0),
+            projectManagers: [...new Set(transformedOpportunities.map(opp => opp.proposalChampion).filter(champion => champion && champion !== "Unassigned"))].length,
+            quarter: null,
+            year: null,
+            month: null
+          }
+        };
+      }
+      
+      return this._getFallbackData();
+    } catch (error) {
+      console.error("Error fetching all opportunities:", error);
+      return this._getFallbackData();
+    }
+  }
 }
 
 export default PMDashboardService;
