@@ -7,7 +7,7 @@ import "./LeadershipPage.css";
 import API_CONFIG from "../services/apiConfig";
 import { getCurrentQuarterString, getCurrentYear } from "../utils/dateUtils";
 import { 
-  normalizeQuarterlyWorkloadData,
+  normalizeMonthlyWorkloadData,
   groupStaffByManager, 
   calculateGroupSummary, 
   validateMonthlyData 
@@ -24,6 +24,12 @@ const LeadershipPage = ({ navigate }) => {
   const [currentUser, setCurrentUser] = useState(null);
   const [groupList, setGroupList] = useState([]);
   const [showAllGroups, setShowAllGroups] = useState(false);
+
+  // Add month selection state for quarterly data
+  const [selectedMonth, setSelectedMonth] = useState(0); // 0 = month1, 1 = month2, 2 = month3
+
+  // Add separate loading state for all groups to show faster feedback
+  const [allGroupsLoading, setAllGroupsLoading] = useState(false);
 
   const [allStaffMonthlyData, setAllStaffMonthlyData] = useState(null);
 
@@ -79,10 +85,10 @@ const LeadershipPage = ({ navigate }) => {
       return ScheduledHoursService.getScheduledHoursForMemberOptimized(
         member, 
         quarterlyScheduledHoursData, 
-        0, // Default to first month for quarterly data
+        selectedMonth, // Use selected month instead of hardcoded 0
         40.0
       );
-    }, [quarterlyScheduledHoursData]);
+    }, [quarterlyScheduledHoursData, selectedMonth]);
 
   
   /**
@@ -114,7 +120,7 @@ const calculateStudioScheduledHours = useCallback((studioData) => {
       apiDataCount++;
       const monthlyHours = ScheduledHoursService.extractMonthlyFromQuarterly(
         quarterlyScheduledHoursInfo.quarterlyScheduledHoursData, 
-        0, // Default to first month for quarterly data
+        selectedMonth, // Use selected month instead of hardcoded 0
         40.0
       );
       totalScheduledHours += monthlyHours;
@@ -134,7 +140,7 @@ const calculateStudioScheduledHours = useCallback((studioData) => {
     errorCount,
     totalMembers: members.length
   };
-}, [quarterlyScheduledHoursData, getScheduledHoursForMember]);
+}, [quarterlyScheduledHoursData, getScheduledHoursForMember, selectedMonth]);
 
  
   const fetchQuarterlyScheduledHoursForMembers = useCallback(async (members, year, quarter) => {
@@ -223,13 +229,16 @@ const calculateStudioScheduledHours = useCallback((studioData) => {
       }
       
       if (showAllGroups) {
-        // Fetch all staff quarterly workload for all groups
+        // Set separate loading state for all groups
+        setAllGroupsLoading(true);
         console.log('Fetching all staff quarterly workload for all groups...');
-        const allStaffData = await GLTeamService.getAllStaffQuarterlyWorkload(
-          selectedYear,
-          quarterString
-        );
-        console.log('All staff quarterly workload data received:', allStaffData);
+        
+        try {
+          const allStaffData = await GLTeamService.getAllStaffQuarterlyWorkload(
+            selectedYear,
+            quarterString
+          );
+          console.log('All staff quarterly workload data received:', allStaffData);
         
         // Add detailed structure inspection
         if (allStaffData && allStaffData.managers) {
@@ -306,6 +315,14 @@ const calculateStudioScheduledHours = useCallback((studioData) => {
         setTeamData({}); // Clear teamData for all groups view
         setIsLoading(false);
         return;
+        
+        } catch (err) {
+          console.error("Error loading all groups data:", err);
+          setError(`Failed to load all groups data: ${err.message}`);
+          setAllStaffMonthlyData(null);
+        } finally {
+          setAllGroupsLoading(false);
+        }
       }
 
       console.log(`User belongs to group managed by: ${userGroupManager}`);      // Always refresh and get the group manager's email, don't use localStorage
@@ -410,8 +427,8 @@ const calculateStudioScheduledHours = useCallback((studioData) => {
       console.log('[LeadershipPage] Project sample:', projectData?.monthly_data ? Object.values(projectData.monthly_data)[0]?.slice(0, 2) : 'No project data');
       console.log('[LeadershipPage] Opportunities sample:', opportunitiesData?.monthly_opportunities?.monthly_data ? Object.values(opportunitiesData.monthly_opportunities.monthly_data)[0]?.slice(0, 2) : 'No opportunities data');
 
-      // Use quarterly data directly without month selection
-      const monthKey = `month1`; // Default to first month for quarterly aggregation
+      // Use selected month for quarterly data
+      const monthKey = monthKeys[selectedMonth]; // Use selected month
       const monthAllocations = combinedData.monthly_data[monthKey] || [];
       const monthOpportunities = (opportunitiesData.monthly_opportunities && opportunitiesData.monthly_opportunities.monthly_data && opportunitiesData.monthly_opportunities.monthly_data[monthKey]) || [];
 
@@ -687,13 +704,13 @@ const calculateStudioScheduledHours = useCallback((studioData) => {
     } finally {
       setIsLoading(false);
     }
-  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear, fetchQuarterlyScheduledHoursForMembers, getScheduledHoursForMember, getScheduledHoursSummary, quarterlyScheduledHoursData]);  useEffect(() => {
+  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear, selectedMonth, fetchQuarterlyScheduledHoursForMembers, getScheduledHoursForMember, getScheduledHoursSummary, quarterlyScheduledHoursData]);  useEffect(() => {
     if (!currentUser) {
       return;
     }
     loadTeamData();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear]);
+  }, [currentUser, selectedGroup, showAllGroups, selectedQuarter, selectedYear, selectedMonth]);
 
 
   const handleQuarterChange = useCallback((quarter, year) => {
@@ -739,6 +756,41 @@ const calculateStudioScheduledHours = useCallback((studioData) => {
     }).format(value);
   };
 
+  // Helper function to get month names for the selected quarter
+  const getQuarterMonthNames = () => {
+    const quarterNum = parseInt(selectedQuarter.replace('Q', ''));
+    const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const startMonth = (quarterNum - 1) * 3;
+    return [
+      monthNames[startMonth],
+      monthNames[startMonth + 1], 
+      monthNames[startMonth + 2]
+    ];
+  };
+
+  const monthNames = getQuarterMonthNames();
+
+  // Helper function to render month selector
+  const renderMonthSelector = () => {
+    if (!monthNames || monthNames.length === 0) {
+      return null;
+    }
+    
+    return (
+      <div className="month-selector">
+        {monthNames.map((monthName, index) => (
+          <button
+            key={index}
+            className={`view-control-btn ${selectedMonth === index ? 'active' : ''}`}
+            onClick={() => setSelectedMonth(index)}
+          >
+            {monthName}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
   return (
     <div className="page-layout">
       <main className="gl-dashboard">
@@ -779,11 +831,15 @@ const calculateStudioScheduledHours = useCallback((studioData) => {
             {error && <div className="error-message">{error}</div>}
 
             {isLoading ? (
-              <div className="loading-indicator">Loading team data...</div>            ) : showAllGroups ? (
-              allStaffMonthlyData ? (                  <div className="group-summary">
+              <div className="loading-indicator">Loading team data...</div>
+            ) : showAllGroups ? (
+              allGroupsLoading ? (
+                <div className="loading-indicator">Loading all groups data... This may take a moment.</div>
+              ) : allStaffMonthlyData ? (                  <div className="group-summary">
                     <div className="project-summary">
                       <div className="pm-dashboard-title">
                         All Groups Summary ({selectedQuarter} {selectedYear})
+                        {renderMonthSelector()}
                       </div>
                     
                     {/* Group-by-group summary table for All Groups view */}
@@ -791,8 +847,8 @@ const calculateStudioScheduledHours = useCallback((studioData) => {
                       console.log('Processing all staff data for summary table...');
                       console.log('AllStaffMonthlyData structure:', allStaffMonthlyData);
                       
-                      // Use utility functions to normalize quarterly data (no month selection needed)
-                      const normalizedStaffMembers = normalizeQuarterlyWorkloadData(allStaffMonthlyData);
+                      // Use utility functions to normalize monthly data with selected month
+                      const normalizedStaffMembers = normalizeMonthlyWorkloadData(allStaffMonthlyData, selectedMonth);
                       console.log('Normalized staff members:', normalizedStaffMembers);
                       
                       if (normalizedStaffMembers.length === 0) {
@@ -937,8 +993,8 @@ const calculateStudioScheduledHours = useCallback((studioData) => {
                       {(() => {
                         console.log('Rendering collapsible groups for quarterly data');
                         
-                        // Use utility function to normalize quarterly data
-                        const allStaffMembers = normalizeQuarterlyWorkloadData(allStaffMonthlyData);
+                        // Use utility function to normalize monthly data with selected month
+                        const allStaffMembers = normalizeMonthlyWorkloadData(allStaffMonthlyData, selectedMonth);
                         console.log('Staff members for collapsible view:', allStaffMembers);
                         
                         if (allStaffMembers.length === 0) {
@@ -1066,6 +1122,7 @@ const calculateStudioScheduledHours = useCallback((studioData) => {
                 <div className="project-summary">
                   <div className="pm-dashboard-title">
                     Group Summary ({selectedQuarter} {selectedYear})
+                    {renderMonthSelector()}
                   </div>
                   <table className="summary-table">
                     <thead>
