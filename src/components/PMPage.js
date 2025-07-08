@@ -613,6 +613,7 @@ const PMPage = (props) => {
             </div>
 
             {/* Debug information - remove in production */}
+            {/*
             <div
               style={{
                 padding: "5px 10px",
@@ -637,6 +638,7 @@ const PMPage = (props) => {
                 {dashboardData.projects ? dashboardData.projects.length : 0}
               </div>
             </div>
+            */}
 
             {/* Error display with retry button */}
             {error && (
