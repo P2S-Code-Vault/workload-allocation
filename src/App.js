@@ -398,14 +398,18 @@ const MainContent = React.forwardRef((props, ref) => {
               continue;
             }
 
-            // Explicitly check and log row ID to debug
-            if (row.id) {
+            // Check if row has a valid integer ra_id (real database ID) vs composite string ID (new row)
+            const hasValidRaId = row.id && 
+              (typeof row.id === 'number' || 
+              (typeof row.id === 'string' && /^\d+$/.test(row.id)));
+            
+            if (hasValidRaId) {
               console.log(
-                `Found existing row with ID: ${row.id}, Type: ${typeof row.id}`
+                `Found existing row with valid ra_id: ${row.id}, Type: ${typeof row.id}`
               );
               updatedRows.push(row);
             } else {
-              console.log("New row without ID:", row);
+              console.log(`New row without valid ra_id (ID: ${row.id}):`, row);
               newRows.push(row);
             }
           }
@@ -471,11 +475,16 @@ const MainContent = React.forwardRef((props, ref) => {
               continue;
             }
 
-            if (row.id) {
-              console.log(`Found existing opportunity row with ID: ${row.id}`);
+            // Check if row has a valid integer ra_id (real database ID) vs composite string ID (new row)
+            const hasValidRaId = row.id && 
+              (typeof row.id === 'number' || 
+              (typeof row.id === 'string' && /^\d+$/.test(row.id)));
+            
+            if (hasValidRaId) {
+              console.log(`Found existing opportunity row with valid ra_id: ${row.id}`);
               updatedOpportunityRows.push(row);
             } else {
-              console.log("New opportunity row without ID:", row);
+              console.log(`New opportunity row without valid ra_id (ID: ${row.id}):`, row);
               newOpportunityRows.push(row);
             }
           }
@@ -1406,7 +1415,7 @@ const deleteOpportunityRow = useCallback(async (index) => {
                     <th>Opportunity No.</th>
                     <th>Opportunity Name</th>
                     <th>Proposal Champion</th>
-                    <th>Projected Fee</th>
+                    <th>Estimated Fee</th>
                     <th style={{ width: "110px" }}>{monthCol}</th>
                     <th style={{ width: "110px" }}>{month1Col}</th>
                     <th style={{ width: "110px" }}>{month2Col}</th>
