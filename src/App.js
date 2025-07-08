@@ -47,7 +47,7 @@ const Header = ({ currentView, onNavigate, onLogout }) => {
           onClick={() => currentView !== "pm" && onNavigate("pm")}
           disabled={currentView === "pm"}
         >
-          PM View (WIP)
+          PM View
         </button>
 
         {/* GL View Button - disabled when on leadership view */}
