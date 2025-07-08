@@ -1368,6 +1368,14 @@ const CollapsibleMember = ({ member, formatter, formatPercent, navigate, isEdita
   const sortedOpportunityRows = [...(member.opportunityRows || [])].sort((a, b) => a.projectNumber.localeCompare(b.projectNumber));
   // ===== UPDATED: Get scheduled hours from API data =====
   const displayScheduledHours = getScheduledHoursForMember(member);
+  
+  // ===== FIX: Recalculate ratio using the same scheduled hours being displayed =====
+  const calculateRatioB = (directHours, scheduledHours, ptoHours) => {
+    const denominator = scheduledHours - ptoHours;
+    if (denominator <= 0) return 0;
+    return directHours / denominator;
+  };
+  const displayRatioB = calculateRatioB(member.directHours, displayScheduledHours, member.ptoHours);
   return (
     <>
       <tr>
@@ -1387,7 +1395,7 @@ const CollapsibleMember = ({ member, formatter, formatPercent, navigate, isEdita
         <td className="number-cell">{formatter.format(member.overheadHours)}</td>
         <td className={`number-cell available-hours-cell ${member.availableHours === 0 ? 'zero-hours' : ''}`}>{formatter.format(member.availableHours)}</td>
         <td className={`number-cell ${member.totalHours < member.scheduledHours ? 'hours-warning' : ''}`}>{formatter.format(member.totalHours)}</td>
-        <td className="number-cell"><strong>{formatPercent(member.ratioB)}</strong></td>
+        <td className="number-cell"><strong>{formatPercent(displayRatioB)}</strong></td>
         <td>
           <button
             className="expand-details-btn"
