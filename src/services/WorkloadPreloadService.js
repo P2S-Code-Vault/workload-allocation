@@ -79,6 +79,25 @@ export class WorkloadPreloadService {
       const data = await response.json();
       console.log(`Received group projects data:`, data);
       
+      // Debug EAC data
+      if (data.group_projects && Array.isArray(data.group_projects)) {
+        console.log(`Found ${data.group_projects.length} group projects`);
+        data.group_projects.forEach(project => {
+          if (project.eac) {
+            console.log(`Project ${project.project_number} has EAC: ${project.eac}, Contract Labor: ${project.project_contract_labor}`);
+          }
+        });
+      }
+      
+      if (data.user_managed_projects && Array.isArray(data.user_managed_projects)) {
+        console.log(`Found ${data.user_managed_projects.length} user managed projects`);
+        data.user_managed_projects.forEach(project => {
+          if (project.eac) {
+            console.log(`User project ${project.project_number} has EAC: ${project.eac}, Contract Labor: ${project.project_contract_labor}`);
+          }
+        });
+      }
+      
       return data;
     } catch (error) {
       console.error("Error fetching user group projects:", error);
@@ -172,6 +191,13 @@ export class WorkloadPreloadService {
           
           const projectNumber = allocation.proj_id || allocation.project_number;
           
+          // Use EAC directly as percentage, or 0 if null
+          let pctLaborUsed = 0;
+          if (projectInfo) {
+            pctLaborUsed = projectInfo.eac || 0;
+            console.log(`Project ${projectNumber} - EAC Percentage: ${pctLaborUsed}%`);
+          }
+          
           projectRows.push({
             id: allocation.ra_id || allocation.id || `${projectNumber}_${userEmail}`,
             resource: userEmail,
@@ -179,7 +205,7 @@ export class WorkloadPreloadService {
             projectName: projectInfo?.project_name || allocation.project_name || '',
             pm: projectInfo?.project_manager || allocation.project_manager || '',
             labor: projectInfo?.project_contract_labor || allocation.project_contract_labor || allocation.contract_labor || 0,
-            pctLaborUsed: 0,
+            pctLaborUsed: pctLaborUsed,
             hours: allocation.ra_hours || allocation.hours || 0,
             remarks: allocation.ra_remarks || allocation.remarks || '',
             month: allocation.month_hours || 0,
@@ -220,6 +246,14 @@ export class WorkloadPreloadService {
             );
           }
           
+          // Calculate % EAC Labor Used
+          // Use EAC directly as percentage, or 0 if null
+          let pctLaborUsed = 0;
+          if (projectInfo) {
+            pctLaborUsed = projectInfo.eac || 0;
+            console.log(`Quarterly workload project ${allocation.project_number} - EAC Percentage: ${pctLaborUsed}%`);
+          }
+          
           projectRows.push({
             id: allocation.ra_id || allocation.id || `${allocation.project_number}_${userEmail}`,
             resource: userEmail,
@@ -227,7 +261,7 @@ export class WorkloadPreloadService {
             projectName: projectInfo?.project_name || allocation.project_name || '',
             pm: projectInfo?.project_manager || allocation.project_manager || '',
             labor: projectInfo?.project_contract_labor || allocation.project_contract_labor || allocation.contract_labor || 0,
-            pctLaborUsed: 0,
+            pctLaborUsed: pctLaborUsed,
             hours: allocation.total_hours || allocation.ra_hours || 0,
             remarks: allocation.remarks || allocation.ra_remarks || '',
             month: allocation.month_1_hours || allocation.month_hours || 0,
@@ -248,6 +282,10 @@ export class WorkloadPreloadService {
         console.log(`Processing ${newUserProjects.length} new user managed projects (without existing allocations)`);
         
         newUserProjects.forEach(project => {
+          // Use EAC directly as percentage, or 0 if null
+          const pctLaborUsed = project.eac || 0;
+          console.log(`New user project ${project.project_number} - EAC Percentage: ${pctLaborUsed}%`);
+          
           projectRows.push({
             id: `${project.project_number}_${userEmail}`,
             resource: userEmail,
@@ -255,7 +293,7 @@ export class WorkloadPreloadService {
             projectName: project.project_name || '',
             pm: project.project_manager || '',
             labor: project.project_contract_labor || 0,
-            pctLaborUsed: 0,
+            pctLaborUsed: pctLaborUsed,
             hours: 0, // No existing allocation
             remarks: '',
             month: 0,
@@ -275,6 +313,10 @@ export class WorkloadPreloadService {
         console.log(`Processing ${newGroupProjects.length} new group projects (without existing allocations)`);
         
         newGroupProjects.forEach(project => {
+          // Use EAC directly as percentage, or 0 if null
+          const pctLaborUsed = project.eac || 0;
+          console.log(`New group project ${project.project_number} - EAC Percentage: ${pctLaborUsed}%`);
+          
           projectRows.push({
             id: `${project.project_number}_${userEmail}`,
             resource: userEmail,
@@ -282,7 +324,7 @@ export class WorkloadPreloadService {
             projectName: project.project_name || '',
             pm: project.project_manager || '',
             labor: project.project_contract_labor || 0,
-            pctLaborUsed: 0,
+            pctLaborUsed: pctLaborUsed,
             hours: 0, // No existing allocation
             remarks: '',
             month: 0,
