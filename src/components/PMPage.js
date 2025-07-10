@@ -26,7 +26,7 @@ const CollapsibleProject = ({
   // Get appropriate labels and values based on view type
   const isOpportunity = activeView === "opportunities";
   const itemNumber = isOpportunity ? project.opportunityNumber : project.projectNumber;
-  const contractLabel = isOpportunity ? "Estimated Fee" : "Contract Labor";
+  const contractLabel = isOpportunity ? "Proposed Fee" : "Contract Labor";
   const contractValue = isOpportunity ? project.estimatedFee : project.labor;
   const usageLabel = isOpportunity ? "Probability" : "% EAC Labor Used";
   const usageValue = isOpportunity ? project.probability : project.laborUsed;
@@ -299,7 +299,7 @@ const CollapsiblePMGroup = ({
   const [isExpanded, setIsExpanded] = useState(false);
 
   const itemsLabel = activeView === "opportunities" ? "Opportunities" : "Projects";
-  const contractLabel = activeView === "opportunities" ? "Total Estimated Fees" : "Total Contract Labor";
+  const contractLabel = activeView === "opportunities" ? "Total Proposed Fees" : "Total Contract Labor";
   
   // Display name for PM/Champion - show "Unassigned" if no allocations
   const displayName = pmName === "Unassigned" || !pmName || pmName.trim() === "" ? "Unassigned" : pmName;

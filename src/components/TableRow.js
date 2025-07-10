@@ -396,7 +396,7 @@ const TableRow = ({
               ? (row.labor ? formatter.format(row.labor) : "-")
               : row.labor
               ? formatter.format(row.labor)
-              : ""
+              : "0"
           }
           readOnly
           className="centered-input"
@@ -410,7 +410,7 @@ const TableRow = ({
               ? (row.pctLaborUsed ? percentFormatter(row.pctLaborUsed) : "-")
               : row.pctLaborUsed
               ? percentFormatter(row.pctLaborUsed)
-              : ""
+              : "0%"
           }
           readOnly
           className="centered-input"

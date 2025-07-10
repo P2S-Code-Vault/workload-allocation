@@ -660,8 +660,8 @@ const MainContent = React.forwardRef((props, ref) => {
                 projectNumber: "",
                 projectName: "",
                 pm: "",
-                labor: "",
-                pctLaborUsed: "",
+                labor: 0,
+                pctLaborUsed: 0,
                 month: "",
                 month1: "",
                 month2: "",
@@ -712,8 +712,8 @@ const MainContent = React.forwardRef((props, ref) => {
                     projectNumber: "",
                     projectName: "",
                     pm: "",
-                    labor: "",
-                    pctLaborUsed: "",
+                    labor: 0,
+                    pctLaborUsed: 0,
                     month: "",
                     month1: "",
                     month2: "",
@@ -733,8 +733,8 @@ const MainContent = React.forwardRef((props, ref) => {
                   projectNumber: "",
                   projectName: "",
                   pm: "",
-                  labor: "",
-                  pctLaborUsed: "",
+                  labor: 0,
+                  pctLaborUsed: 0,
                   month: "",
                   month1: "",
                   month2: "",
@@ -784,8 +784,8 @@ const MainContent = React.forwardRef((props, ref) => {
                 projectNumber: "",
                 projectName: "",
                 pm: "",
-                labor: "",
-                pctLaborUsed: "",
+                labor: 0,
+                pctLaborUsed: 0,
                 month: "",
                 month1: "",
                 month2: "",
@@ -805,8 +805,8 @@ const MainContent = React.forwardRef((props, ref) => {
             projectNumber: "",
             projectName: "",
             pm: "",
-            labor: "",
-            pctLaborUsed: "",
+            labor: 0,
+            pctLaborUsed: 0,
             month: "",
             month1: "",
             month2: "",
@@ -946,8 +946,8 @@ const MainContent = React.forwardRef((props, ref) => {
         projectNumber: "",
         projectName: "",
         pm: "",
-        labor: "",
-        pctLaborUsed: "",
+        labor: 0,
+        pctLaborUsed: 0,
         month: "",
         month1: "",
         month2: "",
@@ -1415,7 +1415,7 @@ const deleteOpportunityRow = useCallback(async (index) => {
                     <th>Opportunity No.</th>
                     <th>Opportunity Name</th>
                     <th>Proposal Champion</th>
-                    <th>Estimated Fee</th>
+                    <th>Proposed Fee</th>
                     <th style={{ width: "110px" }}>{monthCol}</th>
                     <th style={{ width: "110px" }}>{month1Col}</th>
                     <th style={{ width: "110px" }}>{month2Col}</th>
