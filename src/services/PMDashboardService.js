@@ -81,6 +81,21 @@ export class PMDashboardService {
         return this._getFallbackData();
       }
       
+      // Clean up project names and filter out projects with only MS numbers
+      if (data.projects) {
+        data.projects = data.projects.map(project => {
+          // Clean project name by removing - MS #### suffix
+          if (project.name) {
+            const cleanedName = project.name.replace(/\s*-\s*MS\s+\w{4}\s*$/i, '').trim();
+            project.name = cleanedName;
+          }
+          return project;
+        }).filter(project => {
+          // Filter out projects that have empty names or only whitespace after cleaning
+          return project.name && project.name.trim().length > 0;
+        });
+      }
+      
       console.log(`Received ${data.projects.length} projects for ${pmName || 'all PMs'}`);
       
       // Log summary information
@@ -103,6 +118,10 @@ export class PMDashboardService {
           projectNumber: data.projects[0].projectNumber,
           name: data.projects[0].name,
           pm: data.projects[0].pm,
+          labor: data.projects[0].labor,
+          laborUsed: data.projects[0].laborUsed,
+          eac: data.projects[0].eac,
+          pctLaborUsed: data.projects[0].pctLaborUsed,
           resourceCount: data.projects[0].resources ? data.projects[0].resources.length : 0,
           sampleResource: data.projects[0].resources && data.projects[0].resources.length > 0 ? {
             name: data.projects[0].resources[0].name,
@@ -399,13 +418,19 @@ export class PMDashboardService {
           const project = item.project || {};
           const milestones = item.milestones || [];
           
+          // Clean project name by removing - MS #### suffix
+          let projectName = project.projectName || '';
+          if (projectName) {
+            projectName = projectName.replace(/\s*-\s*MS\s+\w{4}\s*$/i, '').trim();
+          }
+          
           return {
             // Map project fields to expected structure
             projectNumber: project.projectNumber,
-            name: project.projectName,
+            name: projectName,
             pm: project.projectManager || "Unassigned",
             labor: project.projectContractLabor || 0,
-            laborUsed: 0, // Projects don't have labor used percentage in this endpoint
+            laborUsed: project.eac || 0, // Use EAC for labor used percentage
             totalHours: milestones.reduce((sum, milestone) => sum + (milestone.hours || 0), 0),
             totalCost: milestones.reduce((sum, milestone) => sum + (milestone.cost || 0), 0),
             status: project.status,
@@ -422,6 +447,9 @@ export class PMDashboardService {
               totalCost: milestone.cost || 0
             }))
           };
+        }).filter(project => {
+          // Filter out projects that have empty names or only whitespace after cleaning
+          return project.name && project.name.trim().length > 0;
         });
 
         return {

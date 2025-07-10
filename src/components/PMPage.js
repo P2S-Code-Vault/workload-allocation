@@ -25,7 +25,6 @@ const CollapsibleProject = ({
 
   // Get appropriate labels and values based on view type
   const isOpportunity = activeView === "opportunities";
-  const itemNumber = isOpportunity ? project.opportunityNumber : project.projectNumber;
   const contractLabel = isOpportunity ? "Proposed Fee" : "Contract Labor";
   const contractValue = isOpportunity ? project.estimatedFee : project.labor;
   const usageLabel = isOpportunity ? "Probability" : "% EAC Labor Used";
@@ -39,10 +38,14 @@ const CollapsibleProject = ({
       >
         {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
         <h3>
-          {project.name} - {isOpportunity ? "OP" : "MS"}{" "}
-          {itemNumber
-            ? itemNumber.split("-").pop() || itemNumber
-            : "N/A"}
+          {/* Clean project name and only display if it has content after cleaning */}
+          {(() => {
+            // Clean the project name by removing any existing - MS #### suffix
+            const cleanedName = project.name ? project.name.replace(/\s*-\s*MS\s+\w{4}\s*$/i, '').trim() : '';
+            
+            // Only display the project if it has a name after cleaning
+            return cleanedName || 'Unnamed Project';
+          })()}
         </h3>
         <div className="project-info">
           <span>{contractLabel}: {formatCurrency(contractValue)}</span>
