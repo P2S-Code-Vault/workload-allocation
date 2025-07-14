@@ -26,9 +26,9 @@ const CollapsibleProject = ({
   // Get appropriate labels and values based on view type
   const isOpportunity = activeView === "opportunities";
   const contractLabel = isOpportunity ? "Proposed Fee" : "Contract Labor";
-  const contractValue = isOpportunity ? project.estimatedFee : project.labor;
+  const contractValue = isOpportunity ? project.estimatedFee : project.contractLabor;
   const usageLabel = isOpportunity ? "Probability" : "% EAC Labor Used";
-  const usageValue = isOpportunity ? project.probability : project.laborUsed;
+  const usageValue = isOpportunity ? project.probability : project.eacPct;
 
   return (
     <div className="pm-group">
@@ -281,7 +281,7 @@ const groupProjectsByPM = (projects, activeView = "projects") => {
 
     grouped[manager].projects.push(project);
     // Use appropriate field based on view type
-    grouped[manager].totalLabor += (activeView === "opportunities" ? project.estimatedFee : project.labor) || 0;
+    grouped[manager].totalLabor += (activeView === "opportunities" ? project.estimatedFee : project.contractLabor) || 0;
     grouped[manager].totalHours += project.totalHours || 0;
     grouped[manager].totalCost += project.totalCost || 0;
   });

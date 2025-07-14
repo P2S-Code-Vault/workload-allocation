@@ -118,10 +118,9 @@ export class PMDashboardService {
           projectNumber: data.projects[0].projectNumber,
           name: data.projects[0].name,
           pm: data.projects[0].pm,
-          labor: data.projects[0].labor,
-          laborUsed: data.projects[0].laborUsed,
+          contractLabor: data.projects[0].contractLabor,
           eac: data.projects[0].eac,
-          pctLaborUsed: data.projects[0].pctLaborUsed,
+          eacPct: data.projects[0].eacPct,
           resourceCount: data.projects[0].resources ? data.projects[0].resources.length : 0,
           sampleResource: data.projects[0].resources && data.projects[0].resources.length > 0 ? {
             name: data.projects[0].resources[0].name,
@@ -257,8 +256,7 @@ export class PMDashboardService {
           ...opportunity,
           projectNumber: opportunity.opportunityNumber,
           pm: opportunity.proposalChampion, // Map proposalChampion to pm for consistency
-          labor: opportunity.estimatedFee || 0, // Map estimatedFee to labor
-          laborUsed: opportunity.probability || 0 // Map probability to laborUsed for display
+          // Keep original field names for opportunities: estimatedFee, probability
         }));
         
         // Create transformed data structure
@@ -429,8 +427,8 @@ export class PMDashboardService {
             projectNumber: project.projectNumber,
             name: projectName,
             pm: project.projectManager || "Unassigned",
-            labor: project.projectContractLabor || 0,
-            laborUsed: project.eac || 0, // Use EAC for labor used percentage
+            contractLabor: project.projectContractLabor || 0,
+            eacPct: project.eac || 0, // Use EAC for labor used percentage
             totalHours: milestones.reduce((sum, milestone) => sum + (milestone.hours || 0), 0),
             totalCost: milestones.reduce((sum, milestone) => sum + (milestone.cost || 0), 0),
             status: project.status,
@@ -503,9 +501,7 @@ export class PMDashboardService {
           name: opportunity.opportunity_name,
           pm: opportunity.proposal_champion || "Unassigned",
           proposalChampion: opportunity.proposal_champion || "Unassigned",
-          labor: opportunity.estimated_fee_proposed || 0,
           estimatedFee: opportunity.estimated_fee_proposed || 0,
-          laborUsed: opportunity.probability || 0,
           probability: opportunity.probability || 0,
           totalHours: 0, // Opportunities don't have hour allocations
           totalCost: opportunity.estimated_fee_proposed || 0,
