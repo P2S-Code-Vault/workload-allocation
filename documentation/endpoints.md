@@ -129,6 +129,12 @@ Search opportunities with filtering.
 - `champion_email` (optional): Filter by champion email
 - `limit` (integer, default: 10): Maximum results
 
+### GET `/opportunities/{opportunity_id}`
+Get a specific opportunity by ID.
+
+**Path Parameters:**
+- `opportunity_id`: Integer opportunity identifier
+
 ## Project Management
 
 ### GET `/projects/active-all`
@@ -189,6 +195,21 @@ Get projects with their associated milestones using optional filters.
   }
 }
 ```
+
+### GET `/projects/{project_id}`
+Get a specific project by ID.
+
+**Path Parameters:**
+- `project_id`: Project identifier
+
+### GET `/projects`
+Search for projects by project number, project name, or project manager.
+
+**Query Parameters:**
+- `search` (optional): Search term for project number, name, or manager
+- `project_manager` (optional): Filter by project manager
+- `active_only` (boolean, default: true): Include only active projects
+- `limit` (integer, default: 10): Maximum results to return
 
 ## Workload Projections
 
@@ -265,6 +286,38 @@ Update an existing project projection.
 
 #### POST `/project-projections/batch`
 Batch update multiple project projections.
+
+### Contact Projections
+
+### GET `/contacts/{contact_id}/milestone-projections`
+Get all milestone projections for a contact.
+
+**Path Parameters:**
+- `contact_id`: Contact ID
+
+**Query Parameters:**
+- `year` (optional): Year filter
+- `quarter` (optional): Quarter filter
+
+### GET `/contacts/{contact_id}/opportunity-projections`
+Get all opportunity projections for a contact.
+
+**Path Parameters:**
+- `contact_id`: Contact ID
+
+**Query Parameters:**
+- `year` (optional): Year filter
+- `quarter` (optional): Quarter filter
+
+### GET `/contacts/{contact_id}/project-projections`
+Get all project projections for a contact.
+
+**Path Parameters:**
+- `contact_id`: Contact ID
+
+**Query Parameters:**
+- `year` (optional): Year filter
+- `quarter` (optional): Quarter filter
 
 ## Group Leader (GL) Endpoints
 
@@ -469,6 +522,73 @@ Get quarterly scheduled hours for a contact.
 ### GET `/contacts/by-email/{email}/scheduled-hours/quarterly`
 Get quarterly scheduled hours by email address.
 
+### GET `/contacts/{contact_id}/scheduled-hours/summary`
+Get a summary of scheduled hours for all quarters in a year.
+
+**Path Parameters:**
+- `contact_id`: Contact ID
+
+**Query Parameters:**
+- `year` (required): Year
+
+## Project Management Endpoints
+
+### GET `/projects/all-with-milestones`
+Get all projects with their associated milestones in a single efficient query.
+
+**Response:**
+```json
+{
+  "projects": [
+    {
+      "project": {
+        "projectId": "PRJ-001",
+        "projectName": "Website Redesign",
+        "projectNumber": "2025-001"
+      },
+      "milestones": [
+        {
+          "milestoneId": 123,
+          "milestoneName": "Design Phase"
+        }
+      ]
+    }
+  ],
+  "summary": {
+    "total_projects": 15,
+    "total_milestones": 45
+  }
+}
+```
+
+### GET `/projects/by-status/{status}/with-milestones`
+Get projects with milestones filtered by specific status.
+
+**Path Parameters:**
+- `status`: Project status (e.g., "Active", "Completed", "On Hold")
+
+### GET `/projects/by-manager/{project_manager}/with-milestones`
+Get projects with milestones for a specific project manager.
+
+**Path Parameters:**
+- `project_manager`: Project manager name
+
+### GET `/projects/with-milestones/summary`
+Get a quick summary of projects and milestones without full data.
+
+### GET `/projects/with-milestones/counts`
+Get quick counts of projects and milestones for dashboard widgets.
+
+### GET `/projects/{project_id}/projections`
+Get all projections for a specific project.
+
+**Path Parameters:**
+- `project_id`: Project ID
+
+**Query Parameters:**
+- `year` (optional): Year filter
+- `quarter` (optional): Quarter filter
+
 ## PM Dashboard Endpoints
 
 ### GET `/workload/pm/dashboard`
@@ -479,43 +599,6 @@ Get PM dashboard data filtered by quarter/year/PM.
 - `year` (optional): Year (2020-2030)
 - `month` (optional): Month (1-12) for monthly view
 - `pm_name` (optional): Project Manager name filter
-
-**Response:**
-```json
-{
-  "projects": [
-    {
-      "projectNumber": "2025-001",
-      "name": "Website Redesign",
-      "pm": "Alice Johnson",
-      "labor": 50000.0,
-      "laborUsed": 0.25,
-      "totalHours": 120.0,
-      "totalCost": 15000.0,
-      "resources": [
-        {
-          "name": "John Doe",
-          "laborCategory": "Senior Engineer",
-          "month1Hours": 40.0,
-          "month2Hours": 35.0,
-          "month3Hours": 30.0,
-          "totalHours": 105.0,
-          "totalCost": 13125.0
-        }
-      ]
-    }
-  ],
-  "summary": {
-    "totalProjects": 15,
-    "totalResources": 45,
-    "totalHours": 1800.0,
-    "totalCost": 225000.0,
-    "projectManagers": 8,
-    "quarter": "Q1",
-    "year": 2025
-  }
-}
-```
 
 ### GET `/workload/pm/project-managers`
 Get list of project managers for filtering.
@@ -558,6 +641,252 @@ Get combined group resources (projects and opportunities).
 - `include_projects` (boolean, default: true): Include projects
 - `include_opportunities` (boolean, default: true): Include opportunities
 - `limit_per_type` (1-50, default: 10): Max items per type
+
+### GET `/contacts/by-email/{email}/scheduled-hours/monthly`
+Get monthly scheduled hours by email address.
+
+**Path Parameters:**
+- `email`: Contact email address
+
+**Query Parameters:**
+- `year` (required): Year
+- `month` (required): Month (1-12)
+
+## Enhanced PM Dashboard Endpoints
+
+### GET `/workload/pm/projects/managers`
+Get list of project managers from Projects table for filtering.
+
+### GET `/workload/pm/projects/by-manager/{pm_name}`
+Get all projects managed by a specific project manager.
+
+**Path Parameters:**
+- `pm_name`: Project manager name
+
+### GET `/workload/pm/projects/{project_id}/summary`
+Get detailed workload summary for a specific project.
+
+**Path Parameters:**
+- `project_id`: Project ID
+
+**Query Parameters:**
+- `quarter` (optional): Quarter filter
+- `year` (optional): Year filter
+
+### GET `/workload/pm/projects/dashboard/export`
+Export PM Projects dashboard data in JSON or CSV format.
+
+**Query Parameters:**
+- `quarter` (optional): Quarter
+- `year` (optional): Year
+- `month` (optional): Month filter
+- `pm_name` (optional): PM name filter
+- `format` (optional): Export format (json or csv, default: json)
+
+### GET `/workload/pm/projects/dashboard/comparison`
+Compare PM Projects dashboard data between two quarters.
+
+**Query Parameters:**
+- `base_quarter` (required): Base quarter for comparison
+- `base_year` (required): Base year for comparison
+- `compare_quarter` (required): Comparison quarter
+- `compare_year` (required): Comparison year
+- `pm_name` (optional): PM name filter
+
+### GET `/workload/pm/projects/stats`
+Get statistical overview of PM Projects workload data.
+
+**Query Parameters:**
+- `year` (optional): Year filter
+- `pm_name` (optional): PM name filter
+
+## Opportunities Dashboard Endpoints
+
+### GET `/workload/opportunities/dashboard`
+Get opportunities-based dashboard data.
+
+**Query Parameters:**
+- `quarter` (optional): Quarter (Q1, Q2, Q3, Q4)
+- `year` (optional): Year
+- `month` (optional): Month (1-12) for monthly view
+- `champion_name` (optional): Proposal Champion name filter
+
+### GET `/workload/opportunities/champions`
+Get list of proposal champions for filtering.
+
+## Enhanced Opportunities Dashboard Endpoints
+
+### GET `/workload/pm/opportunities/by-champion/{champion_name}`
+Get all opportunities managed by a specific proposal champion.
+
+**Path Parameters:**
+- `champion_name`: Proposal champion name
+
+### GET `/workload/pm/opportunities/{opportunity_id}/summary`
+Get detailed workload summary for a specific opportunity.
+
+**Path Parameters:**
+- `opportunity_id`: Opportunity ID
+
+**Query Parameters:**
+- `quarter` (optional): Quarter filter
+- `year` (optional): Year filter
+
+### GET `/workload/pm/opportunities/dashboard/export`
+Export PM Opportunities dashboard data in JSON or CSV format.
+
+**Query Parameters:**
+- `quarter` (optional): Quarter
+- `year` (optional): Year
+- `month` (optional): Month filter
+- `champion_name` (optional): Champion name filter
+- `format` (optional): Export format (json or csv, default: json)
+
+### GET `/workload/pm/opportunities/stats`
+Get statistical overview of PM Opportunities workload data.
+
+**Query Parameters:**
+- `year` (optional): Year filter
+- `champion_name` (optional): Champion name filter
+
+## Enhanced Group Leader Endpoints
+
+### GET `/gl/projects/quarterly`
+Get quarterly project allocation for all team members under a group manager.
+
+**Query Parameters:**
+- `group_manager_email` (required): Group manager's email
+- `year` (required): Year
+- `quarter` (required): Quarter
+
+### GET `/gl/projects/monthly`
+Get monthly project allocation breakdown for a quarter for all team members.
+
+**Query Parameters:**
+- `group_manager_email` (required): Group manager's email
+- `year` (required): Year
+- `quarter` (required): Quarter
+
+### GET `/gl/workload/combined-with-projects`
+Get combined workload data (milestones + opportunities + projects) for all team members.
+
+**Query Parameters:**
+- `group_manager_email` (required): Group manager's email
+- `year` (required): Year
+- `quarter` (required): Quarter
+
+### POST `/gl/workload/batch-update-with-projects`
+Batch update workload projections (milestones, opportunities, and projects) for team members.
+
+**Query Parameters:**
+- `group_manager_email` (required): For authorization
+
+**Request Body:**
+```json
+{
+  "milestone_updates": [
+    {
+      "ra_id": 1,
+      "month_hours": 25.0,
+      "month_hours1": 20.0,
+      "month_hours2": 18.0
+    }
+  ],
+  "opportunity_updates": [
+    {
+      "ra_id": 2,
+      "month_hours": 15.0,
+      "month_hours1": 12.0,
+      "month_hours2": 10.0
+    }
+  ],
+  "project_updates": [
+    {
+      "ra_id": 3,
+      "month_hours": 20.0,
+      "month_hours1": 18.0,
+      "month_hours2": 16.0
+    }
+  ]
+}
+```
+
+## Enhanced All Staff Reporting
+
+### GET `/all-staff/projects/workload/quarterly`
+Get quarterly project workload data for all staff members from ContactProjects table.
+
+**Query Parameters:**
+- `year` (required): Year
+- `quarter` (required): Quarter
+
+### GET `/all-staff/projects/workload/monthly`
+Get monthly project workload breakdown for all staff members from ContactProjects table.
+
+**Query Parameters:**
+- `year` (required): Year
+- `quarter` (required): Quarter
+
+## Extended Group and Recommendation Endpoints
+
+### GET `/contacts/by-email/{email}/group-info`
+Get group information for a user including group members and their roles.
+
+**Path Parameters:**
+- `email`: User's email address
+
+### GET `/contacts/by-email/{email}/group-projects/extended`
+Get extended group project information including group members and project details.
+
+**Path Parameters:**
+- `email`: User's email address
+
+**Query Parameters:**
+- `include_user_projects` (boolean, default: true): Include projects managed by the user
+
+### GET `/contacts/by-email/{email}/group-opportunities/extended`
+Get extended group opportunity information including group members and opportunity details.
+
+**Path Parameters:**
+- `email`: User's email address
+
+**Query Parameters:**
+- `include_user_opportunities` (boolean, default: true): Include opportunities managed by the user
+
+### GET `/contacts/by-email/{email}/recommended-resources`
+Get recommended resources (projects and opportunities) for a user with priority scoring.
+
+**Path Parameters:**
+- `email`: User's email address
+
+**Query Parameters:**
+- `include_projects` (boolean, default: true): Include projects
+- `include_opportunities` (boolean, default: true): Include opportunities
+- `limit` (1-100, default: 20): Maximum total resources to return
+
+### GET `/contacts/{contact_id}/group-projects`
+Get projects managed by project managers in the same group as the contact.
+
+**Path Parameters:**
+- `contact_id`: Contact ID
+
+### GET `/contacts/{contact_id}/group-opportunities`
+Get opportunities managed by proposal champions in the same group as the contact.
+
+**Path Parameters:**
+- `contact_id`: Contact ID
+
+### GET `/groups/{group_name}/projects`
+Get all projects managed by members of a specific group.
+
+**Path Parameters:**
+- `group_name`: Name of the group
+
+### GET `/groups/{group_name}/opportunities`
+Get all opportunities managed by members of a specific group.
+
+**Path Parameters:**
+- `group_name`: Name of the group
 
 ## Error Handling
 

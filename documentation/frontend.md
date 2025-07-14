@@ -29,9 +29,9 @@ const [currentView, setCurrentView] = useState(() => {
 
 ## User Roles and Views
 
-### 1. Resource Allocation View (`currentView === "resource"`)
+### 1. Main View (`currentView === "resource"`)
 **Primary Users**: Individual contributors, team members
-**Purpose**: Personal workload management and project allocation
+**Purpose**: Personal workload management and project allocation, landing page for Workload projection.
 
 #### Features:
 - **Personal Workload Grid**: Individual's project assignments and hours
@@ -81,7 +81,7 @@ PMDashboardService.getPMDashboardData(quarter, year, pmName, showAllMilestones)
 // Returns project summaries with resource allocations
 ```
 
-### 3. Leadership View (`currentView === "leadership"`)
+### 3. Group Leader View (`currentView === "leadership"`)
 **Primary Users**: Group Leaders, Studio Leaders, Department Managers
 **Purpose**: Team and group-level resource management and strategic planning
 
@@ -109,7 +109,7 @@ PMDashboardService.getPMDashboardData(quarter, year, pmName, showAllMilestones)
 - Scheduled hours and capacity calculations
 - Group-level project assignments
 
-### 4. Team Edit View (`currentView === "teamedit"`)
+<!-- ### 4. Team Edit View (`currentView === "teamedit"`)
 **Primary Users**: Group Leaders, HR Administrators
 **Purpose**: Team structure management and member assignment
 
@@ -123,7 +123,7 @@ PMDashboardService.getPMDashboardData(quarter, year, pmName, showAllMilestones)
 - `TeamEdit` - Main team editing interface
 - **Member Cards**: Individual team member editing interfaces
 - **Studio Assignment**: Drag-and-drop or selection-based assignment
-- **Role Management**: Permission and role assignment controls
+- **Role Management**: Permission and role assignment controls -->
 
 ## Navigation and State Management
 
