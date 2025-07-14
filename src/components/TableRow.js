@@ -144,11 +144,29 @@ const TableRow = ({
           try {
             const project = await ProjectDataService.getProjectDetails(
               searchTerm
-            );            updateRow(index, "projectNumber", project.project_number);
+            );
+
+            let pctLaborUsed = 0; // Default value
+
+            // Try to get the latest EAC data from WorkloadPreloadService
+            try {
+              const { WorkloadPreloadService } = await import('../services/WorkloadPreloadService');
+              const latestEAC = await WorkloadPreloadService.getProjectEAC(currentUser, project.project_number);
+              
+              // Use EAC from API if available
+              if (latestEAC > 0) {
+                pctLaborUsed = latestEAC;
+                console.log(`Retrieved EAC from API for project ${project.project_number}: ${pctLaborUsed}%`);
+              }
+            } catch (eacError) {
+              console.warn("Failed to retrieve latest EAC data for API project:", eacError);
+            }
+
+            updateRow(index, "projectNumber", project.project_number);
             updateRow(index, "projectName", project.project_name);
             updateRow(index, "pm", project.project_manager);
             updateRow(index, "labor", project.project_contract_labor);
-            updateRow(index, "pctLaborUsed", 0); // Calculate this based on project data
+            updateRow(index, "pctLaborUsed", pctLaborUsed); // Use the retrieved EAC or 0 if not found
           } catch (apiError) {
             console.error("Failed to find project in CSV or API:", apiError);
             setHasError(true);
@@ -173,13 +191,29 @@ const TableRow = ({
       console.log("CSV project data:", project);
       console.log("Raw Pct Labor Used:", project["Pct Labor Used"]);
 
-      const pctLaborUsed = parseFloat(project["Pct Labor Used"]) || 0;
-      console.log("Parsed pctLaborUsed:", pctLaborUsed);      // Update with the selected project data
+      let pctLaborUsed = parseFloat(project["Pct Labor Used"]) || 0;
+      console.log("Parsed pctLaborUsed from CSV:", pctLaborUsed);
+
+      // Try to get the latest EAC data from WorkloadPreloadService
+      try {
+        const { WorkloadPreloadService } = await import('../services/WorkloadPreloadService');
+        const latestEAC = await WorkloadPreloadService.getProjectEAC(currentUser, project["Project Number"]);
+        
+        // Use EAC from API if available, otherwise fall back to CSV data
+        if (latestEAC > 0) {
+          pctLaborUsed = latestEAC;
+          console.log(`Updated EAC from API for project ${project["Project Number"]}: ${pctLaborUsed}%`);
+        }
+      } catch (eacError) {
+        console.warn("Failed to retrieve latest EAC data, using CSV value:", eacError);
+      }
+
+      // Update with the selected project data
       updateRow(index, "projectNumber", project["Project Number"]);
       updateRow(index, "projectName", project["Project Name"]);
       updateRow(index, "pm", project["PM"]);
       updateRow(index, "labor", project["Labor"]);
-      updateRow(index, "pctLaborUsed", pctLaborUsed); // Use the parsed value
+      updateRow(index, "pctLaborUsed", pctLaborUsed); // Use the updated value
 
       // Store the complete project data in the row for use during save
       updateRow(index, "_projectData", project);
@@ -393,10 +427,10 @@ const TableRow = ({
           type="text"
           value={
             row.projectNumber?.startsWith("0000-0000")
-              ? (row.labor ? formatter.format(row.labor) : "-")
-              : row.labor
+              ? (row.labor && row.labor > 0 ? formatter.format(row.labor) : "-")
+              : row.labor && row.labor > 0
               ? formatter.format(row.labor)
-              : "0"
+              : "$0"
           }
           readOnly
           className="centered-input"

@@ -60,10 +60,15 @@ export function calculateProjectedFee(totalHours, rate) {
  * @returns {string} - Formatted currency string
  */
 export function formatCurrency(amount) {
+  const numAmount = parseFloat(amount) || 0;
+  // If the amount is less than 0.50, display as $0 to avoid rounding to $1
+  if (numAmount < 0.50) {
+    return '$0';
+  }
   return new Intl.NumberFormat('en-US', {
     style: 'currency',
     currency: 'USD',
     minimumFractionDigits: 0,
     maximumFractionDigits: 0,
-  }).format(amount || 0);
+  }).format(numAmount);
 }

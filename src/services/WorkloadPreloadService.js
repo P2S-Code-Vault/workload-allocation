@@ -373,15 +373,31 @@ export class WorkloadPreloadService {
     try {
       console.log(`Preloading active opportunities for ${userEmail} in ${quarter} ${year}`);
       
-      // Fetch both opportunities data sources in parallel
-      const [existingOpportunityAllocations, userGroupOpportunityData] = await Promise.all([
+      // Fetch all data sources in parallel
+      const [existingOpportunityAllocations, userGroupOpportunityData, allOpportunities] = await Promise.all([
         // Get existing opportunity allocations using the original endpoint
         this.getExistingOpportunityAllocations(userEmail, year, quarter),
-        this.getUserGroupOpportunitiesExtended(userEmail, true)
+        this.getUserGroupOpportunitiesExtended(userEmail, true),
+        // Get all opportunities for accurate estimated fee data
+        this.getAllOpportunities().catch(error => {
+          console.warn("Failed to fetch all opportunities, continuing without:", error);
+          return [];
+        })
       ]);
       
       console.log('Existing opportunity allocations received:', existingOpportunityAllocations?.length || 0, 'items');
       console.log('User group opportunity data received:', userGroupOpportunityData);
+      console.log('All opportunities received:', allOpportunities?.length || 0, 'items');
+      
+      // Create a lookup map for all opportunities by opportunity number for quick access
+      const allOpportunitiesMap = new Map();
+      if (allOpportunities && Array.isArray(allOpportunities)) {
+        allOpportunities.forEach(opp => {
+          if (opp.opportunity_number) {
+            allOpportunitiesMap.set(opp.opportunity_number, opp);
+          }
+        });
+      }
       
       // Create opportunity rows by merging existing allocations and group/user-managed opportunities
       const opportunityRows = [];
@@ -410,12 +426,23 @@ export class WorkloadPreloadService {
             );
           }
           
+          // Get the most accurate estimated fee from all-opportunities data, fallback to other sources
+          let estimatedFee = 0;
+          const allOpportunityData = allOpportunitiesMap.get(allocation.opportunity_number);
+          if (allOpportunityData) {
+            estimatedFee = allOpportunityData.estimated_fee_proposed || 0;
+            console.log(`Using estimated fee from all-opportunities for ${allocation.opportunity_number}: ${estimatedFee}`);
+          } else {
+            estimatedFee = opportunityInfo?.estimated_fee || allocation.estimated_fee || 0;
+            console.log(`Using fallback estimated fee for ${allocation.opportunity_number}: ${estimatedFee}`);
+          }
+          
           opportunityRows.push({
             id: allocation.ra_id || allocation.id || `${allocation.opportunity_number}_${userEmail}`,
             opportunityNumber: allocation.opportunity_number,
             opportunityName: opportunityInfo?.opportunity_name || allocation.opportunity_name || '',
             proposalChampion: opportunityInfo?.proposal_champion || allocation.proposal_champion || '',
-            estimatedFee: opportunityInfo?.estimated_fee || allocation.estimated_fee || 0,
+            estimatedFee: estimatedFee,
             remarks: allocation.remarks || allocation.ra_remarks || '',
             month: allocation.month_hours || 0,
             month1: allocation.month_hours1 || 0,
@@ -437,12 +464,23 @@ export class WorkloadPreloadService {
         console.log(`Processing ${newUserOpportunities.length} new user managed opportunities (without existing allocations)`);
         
         newUserOpportunities.forEach(opportunity => {
+          // Get the most accurate estimated fee from all-opportunities data, fallback to user data
+          let estimatedFee = 0;
+          const allOpportunityData = allOpportunitiesMap.get(opportunity.opportunity_number);
+          if (allOpportunityData) {
+            estimatedFee = allOpportunityData.estimated_fee_proposed || 0;
+            console.log(`Using estimated fee from all-opportunities for user opportunity ${opportunity.opportunity_number}: ${estimatedFee}`);
+          } else {
+            estimatedFee = opportunity.estimated_fee || 0;
+            console.log(`Using fallback estimated fee for user opportunity ${opportunity.opportunity_number}: ${estimatedFee}`);
+          }
+          
           opportunityRows.push({
             id: `${opportunity.opportunity_number}_${userEmail}`,
             opportunityNumber: opportunity.opportunity_number,
             opportunityName: opportunity.opportunity_name || '',
             proposalChampion: opportunity.proposal_champion || '',
-            estimatedFee: opportunity.estimated_fee || 0,
+            estimatedFee: estimatedFee,
             remarks: '',
             month: 0, // No existing allocation
             month1: 0,
@@ -461,12 +499,23 @@ export class WorkloadPreloadService {
         console.log(`Processing ${newGroupOpportunities.length} new group opportunities (without existing allocations)`);
         
         newGroupOpportunities.forEach(opportunity => {
+          // Get the most accurate estimated fee from all-opportunities data, fallback to group data
+          let estimatedFee = 0;
+          const allOpportunityData = allOpportunitiesMap.get(opportunity.opportunity_number);
+          if (allOpportunityData) {
+            estimatedFee = allOpportunityData.estimated_fee_proposed || 0;
+            console.log(`Using estimated fee from all-opportunities for group opportunity ${opportunity.opportunity_number}: ${estimatedFee}`);
+          } else {
+            estimatedFee = opportunity.estimated_fee || 0;
+            console.log(`Using fallback estimated fee for group opportunity ${opportunity.opportunity_number}: ${estimatedFee}`);
+          }
+          
           opportunityRows.push({
             id: `${opportunity.opportunity_number}_${userEmail}`,
             opportunityNumber: opportunity.opportunity_number,
             opportunityName: opportunity.opportunity_name || '',
             proposalChampion: opportunity.proposal_champion || '',
-            estimatedFee: opportunity.estimated_fee || 0,
+            estimatedFee: estimatedFee,
             remarks: '',
             month: 0, // No existing allocation
             month1: 0,
@@ -543,6 +592,123 @@ export class WorkloadPreloadService {
     } catch (error) {
       console.error("Error fetching existing opportunity allocations:", error);
       return []; // Return empty array on error, don't fail the whole preload
+    }
+  }
+
+  /**
+   * Get EAC percentage for a specific project
+   * @param {string} userEmail - User email
+   * @param {string} projectNumber - Project number to look up
+   * @returns {Promise<number>} EAC percentage or 0 if not found
+   */
+  static async getProjectEAC(userEmail, projectNumber) {
+    try {
+      console.log(`Fetching EAC for project ${projectNumber} for user ${userEmail}`);
+      
+      const userGroupData = await this.getUserGroupProjectsExtended(userEmail, true);
+      
+      // Look for the project in user managed projects first
+      let projectInfo = null;
+      if (userGroupData.user_managed_projects && Array.isArray(userGroupData.user_managed_projects)) {
+        projectInfo = userGroupData.user_managed_projects.find(project => 
+          project.project_number === projectNumber
+        );
+      }
+      
+      // If not found in user projects, look in group projects
+      if (!projectInfo && userGroupData.group_projects && Array.isArray(userGroupData.group_projects)) {
+        projectInfo = userGroupData.group_projects.find(project => 
+          project.project_number === projectNumber
+        );
+      }
+      
+      // Return EAC or 0 if not found
+      const eac = projectInfo?.eac || 0;
+      console.log(`EAC for project ${projectNumber}: ${eac}%`);
+      return eac;
+    } catch (error) {
+      console.error(`Error fetching EAC for project ${projectNumber}:`, error);
+      return 0; // Return 0 on error
+    }
+  }
+
+  /**
+   * Get all opportunities with estimated fee proposed
+   * @returns {Promise<Array>} Array of all opportunities with estimated_fee_proposed
+   */
+  static async getAllOpportunities() {
+    try {
+      console.log('Fetching all opportunities from API');
+      
+      const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.OPPORTUNITIES_ALL}`;
+      console.log(`Fetching from: ${url}`);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorText = await this.handleErrorResponse(response);
+        throw new Error(`Failed to fetch all opportunities: ${errorText}`);
+      }
+      
+      const data = await response.json();
+      console.log(`Received all opportunities data with ${data.opportunities?.length || 0} items`);
+      
+      return Array.isArray(data.opportunities) ? data.opportunities : [];
+    } catch (error) {
+      console.error("Error fetching all opportunities:", error);
+      throw error;
+    }
+  }
+
+  /**
+   * Get estimated fee for a specific opportunity using the all-opportunities endpoint
+   * @param {string} userEmail - User email (for logging purposes)
+   * @param {string} opportunityNumber - Opportunity number to look up
+   * @returns {Promise<number>} Estimated fee proposed or 0 if not found
+   */
+  static async getOpportunityEstimatedFee(userEmail, opportunityNumber) {
+    try {
+      console.log(`Fetching estimated fee for opportunity ${opportunityNumber} for user ${userEmail}`);
+      
+      // First try to get from all opportunities endpoint (most direct and comprehensive)
+      try {
+        const allOpportunities = await this.getAllOpportunities();
+        const opportunityInfo = allOpportunities.find(opp => opp.opportunity_number === opportunityNumber);
+        
+        if (opportunityInfo) {
+          const estimatedFee = opportunityInfo.estimated_fee_proposed || 0;
+          console.log(`Found estimated fee for opportunity ${opportunityNumber} from all-opportunities: ${estimatedFee}`);
+          return estimatedFee;
+        }
+      } catch (allOppsError) {
+        console.warn("Failed to fetch from all-opportunities endpoint, falling back to user/group data:", allOppsError);
+      }
+      
+      // Fallback to original method using user/group data
+      const userGroupOpportunityData = await this.getUserGroupOpportunitiesExtended(userEmail, true);
+      
+      // Look for the opportunity in user managed opportunities first
+      let opportunityInfo = null;
+      if (userGroupOpportunityData.user_managed_opportunities && Array.isArray(userGroupOpportunityData.user_managed_opportunities)) {
+        opportunityInfo = userGroupOpportunityData.user_managed_opportunities.find(opportunity => 
+          opportunity.opportunity_number === opportunityNumber
+        );
+      }
+      
+      // If not found in user opportunities, look in group opportunities
+      if (!opportunityInfo && userGroupOpportunityData.group_opportunities && Array.isArray(userGroupOpportunityData.group_opportunities)) {
+        opportunityInfo = userGroupOpportunityData.group_opportunities.find(opportunity => 
+          opportunity.opportunity_number === opportunityNumber
+        );
+      }
+      
+      // Return estimated fee or 0 if not found
+      const estimatedFee = opportunityInfo?.estimated_fee || opportunityInfo?.estimated_fee_proposed || 0;
+      console.log(`Estimated fee for opportunity ${opportunityNumber} from fallback method: ${estimatedFee}`);
+      return estimatedFee;
+    } catch (error) {
+      console.error(`Error fetching estimated fee for opportunity ${opportunityNumber}:`, error);
+      return 0; // Return 0 on error
     }
   }
 }

@@ -15,6 +15,7 @@ const API_CONFIG = {
       MILESTONE_BY_ID: milestoneId => `/milestones/${milestoneId}`,
       OPPORTUNITY_BY_NUMBER: opportunityNumber => `/opportunities/number/${opportunityNumber}`,
       OPPORTUNITIES: '/opportunities', // for GET /opportunities?search=...&min_probability=...&champion_email=...&limit=...
+      OPPORTUNITIES_ALL: '/opportunities/all-opportunities', // Get all opportunities with estimated_fee_proposed
       OPPORTUNITY_BY_ID: opportunityId => `/opportunities/${opportunityId}`,
       MILESTONE_PROJECTIONS: '/milestone-projections',
       MILESTONE_PROJECTION_BY_ID: raId => `/milestone-projections/${raId}`,

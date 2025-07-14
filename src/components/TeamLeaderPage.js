@@ -155,12 +155,17 @@ const TeamLeaderPage = ({ onNavigate }) => {
   });
 
   const formatCurrency = (value) => {
+    const numValue = parseFloat(value) || 0;
+    // If the amount is less than 0.50, display as $0 to avoid rounding to $1
+    if (numValue < 0.50) {
+      return '$0';
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(value);
+    }).format(numValue);
   };
 
   const formatLaborUsed = (value) => {

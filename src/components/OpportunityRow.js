@@ -79,6 +79,9 @@ const OpportunityRow = ({
       e.preventDefault();
       if (showDropdown && suggestions.length > 0) {
         handleOpportunitySelect(suggestions[0]);
+      } else if (searchTerm && searchTerm.length >= 2) {
+        // Try to find exact match when Enter is pressed
+        triggerOpportunitySearch();
       }
     } else if (
       e.key === "ArrowDown" &&
@@ -91,10 +94,98 @@ const OpportunityRow = ({
       }
     }
   };
-  const handleOpportunitySelect = (opp) => {
+
+  const triggerOpportunitySearch = async () => {
+    if (!searchTerm || searchTerm.length < 2) return;
+
+    try {
+      setIsSearching(true);
+      setHasError(false);
+
+      try {
+        // Search for opportunities that match the search term
+        const results = await ProjectSearchService.searchOpportunities(searchTerm);
+
+        if (results.length > 0) {
+          // If we found results, select the first one
+          handleOpportunitySelect(results[0]);
+        } else {
+          // Try to get exact match by opportunity number from CSV first
+          try {
+            const opportunity = await ProjectSearchService.getOpportunityDetails(searchTerm);
+            
+            // Get basic opportunity data
+            let estimatedFee = 0;
+            if (opportunity.P2SEstimatedFeeProposed && opportunity.P2SEstimatedFeeProposed !== 'NULL') {
+              estimatedFee = parseFloat(opportunity.P2SEstimatedFeeProposed) || 0;
+            }
+            
+            // Try to get the latest estimated fee data from WorkloadPreloadService all-opportunities endpoint
+            try {
+              const { WorkloadPreloadService } = await import('../services/WorkloadPreloadService');
+              const currentUserDetails = JSON.parse(localStorage.getItem('userDetails'));
+              const latestEstimatedFee = await WorkloadPreloadService.getOpportunityEstimatedFee(currentUserDetails?.email || '', opportunity.OpportunityNumber);
+              
+              // Use estimated fee from API if available
+              if (latestEstimatedFee > 0) {
+                estimatedFee = latestEstimatedFee;
+                console.log(`Retrieved estimated fee from all-opportunities API for opportunity ${opportunity.OpportunityNumber}: ${estimatedFee}`);
+              }
+            } catch (feeError) {
+              console.warn("Failed to retrieve latest estimated fee data for direct search:", feeError);
+            }
+
+            updateOpportunityRow(index, "opportunityNumber", opportunity.OpportunityNumber || "");
+            updateOpportunityRow(index, "opportunityName", opportunity.Opportunity_Name_from_Lead__c || "");
+            updateOpportunityRow(index, "proposalChampion", opportunity.ProposalChampion || "");
+            updateOpportunityRow(index, "estimatedFee", estimatedFee);
+          } catch (directSearchError) {
+            console.error("Failed to find opportunity in search or direct lookup:", directSearchError);
+            setHasError(true);
+          }
+        }
+      } catch (searchError) {
+        console.error("Error searching for opportunities:", searchError);
+        setHasError(true);
+      }
+
+      setIsSearching(false);
+    } catch (error) {
+      console.error("Failed to search for opportunities:", error);
+      setIsSearching(false);
+      setHasError(true);
+    }
+  };
+  const handleOpportunitySelect = async (opp) => {
+    // Get basic opportunity data from CSV
+    let estimatedFee = 0;
+    
+    // Try to parse estimated fee from CSV data
+    if (opp.P2SEstimatedFeeProposed && opp.P2SEstimatedFeeProposed !== 'NULL') {
+      estimatedFee = parseFloat(opp.P2SEstimatedFeeProposed) || 0;
+    }
+    
+    // Try to get the latest estimated fee data from WorkloadPreloadService
+    try {
+      const { WorkloadPreloadService } = await import('../services/WorkloadPreloadService');
+      const currentUserDetails = JSON.parse(localStorage.getItem('userDetails'));
+      if (currentUserDetails?.email) {
+        const latestEstimatedFee = await WorkloadPreloadService.getOpportunityEstimatedFee(currentUserDetails.email, opp.OpportunityNumber);
+        
+        // Use estimated fee from API if available, otherwise fall back to CSV data
+        if (latestEstimatedFee > 0) {
+          estimatedFee = latestEstimatedFee;
+          console.log(`Updated estimated fee from API for opportunity ${opp.OpportunityNumber}: ${estimatedFee}`);
+        }
+      }
+    } catch (feeError) {
+      console.warn("Failed to retrieve latest estimated fee data, using CSV value:", feeError);
+    }
+    
     updateOpportunityRow(index, "opportunityNumber", opp.OpportunityNumber || "");
     updateOpportunityRow(index, "opportunityName", opp.Opportunity_Name_from_Lead__c || "");
     updateOpportunityRow(index, "proposalChampion", opp.ProposalChampion || "");
+    updateOpportunityRow(index, "estimatedFee", estimatedFee);
     setSearchTerm(opp.OpportunityNumber || "");
     setShowDropdown(false);
     setUserInteracted(false); // Prevent dropdown from reopening immediately

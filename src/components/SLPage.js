@@ -94,12 +94,17 @@ const SLPage = ({ onNavigate }) => {
   });
 
   const formatCurrency = (value) => {
+    const numValue = parseFloat(value) || 0;
+    // If the amount is less than 0.50, display as $0 to avoid rounding to $1
+    if (numValue < 0.50) {
+      return '$0';
+    }
     return new Intl.NumberFormat('en-US', {
       style: 'currency',
       currency: 'USD',
       minimumFractionDigits: 0,
       maximumFractionDigits: 0,
-    }).format(value);
+    }).format(numValue);
   };
 
   const formatPercent = (value) => {
@@ -261,7 +266,26 @@ const SLPage = ({ onNavigate }) => {
     }
   };
 
-  const handleProjectSelect = (resourceName, rowIndex, project) => {
+  const handleProjectSelect = async (resourceName, rowIndex, project) => {
+    let pctLaborUsed = project['Pct Labor Used'];
+    
+    // Try to get the latest EAC data from WorkloadPreloadService
+    try {
+      const { WorkloadPreloadService } = await import('../services/WorkloadPreloadService');
+      const currentUserDetails = JSON.parse(localStorage.getItem('userDetails'));
+      if (currentUserDetails?.email) {
+        const latestEAC = await WorkloadPreloadService.getProjectEAC(currentUserDetails.email, project['Project Number']);
+        
+        // Use EAC from API if available, otherwise fall back to CSV data
+        if (latestEAC > 0) {
+          pctLaborUsed = latestEAC;
+          console.log(`Updated EAC from API for project ${project['Project Number']}: ${pctLaborUsed}%`);
+        }
+      }
+    } catch (eacError) {
+      console.warn("Failed to retrieve latest EAC data for SLPage, using CSV value:", eacError);
+    }
+    
     setGroupData(prevData => ({
       ...prevData,
       [resourceName]: {
@@ -272,7 +296,7 @@ const SLPage = ({ onNavigate }) => {
             projectNumber: project['Project Number'],
             projectName: project['Project Name'],
             labor: project['Labor'],
-            pctLaborUsed: project['Pct Labor Used']
+            pctLaborUsed: pctLaborUsed
           } : row
         )
       }
