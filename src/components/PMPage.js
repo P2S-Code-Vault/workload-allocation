@@ -38,13 +38,22 @@ const CollapsibleProject = ({
       >
         {isExpanded ? <FaChevronDown /> : <FaChevronRight />}
         <h3>
-          {/* Clean project name and only display if it has content after cleaning */}
+          {/* Display project number and name in format: "ProjectNumber - ProjectName" */}
           {(() => {
             // Clean the project name by removing any existing - MS #### suffix
             const cleanedName = project.name ? project.name.replace(/\s*-\s*MS\s+\w{4}\s*$/i, '').trim() : '';
+            const projectNumber = project.projectNumber || '';
             
-            // Only display the project if it has a name after cleaning
-            return cleanedName || 'Unnamed Project';
+            // Format: "ProjectNumber - ProjectName" or fallback to just name or "Unnamed Project"
+            if (projectNumber && cleanedName) {
+              return `${projectNumber} - ${cleanedName}`;
+            } else if (cleanedName) {
+              return cleanedName;
+            } else if (projectNumber) {
+              return projectNumber;
+            } else {
+              return 'Unnamed Project';
+            }
           })()}
         </h3>
         <div className="project-info">
