@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from "react";
+import ContactsService from "../services/ContactsService";
 import "./TeamMemberSelector.css";
 
 const TeamMemberSelector = ({
@@ -9,8 +10,39 @@ const TeamMemberSelector = ({
   onSelectTeamMember,
   onReset,
   selectedMember,
+  showAllContacts=true 
 }) => {
   const [showDropdown, setShowDropdown] = useState(false);
+  const [allContacts, setAllContacts] = useState([]);
+  const [loadingContacts, setLoadingContacts] = useState(false);
+  const [contactsError, setContactsError] = useState(null);
+
+  // Fetch all active contacts when component mounts
+  useEffect(() => {
+    const fetchAllContacts = async () => {
+      if (!showAllContacts) return;
+      
+      try {
+        setLoadingContacts(true);
+        setContactsError(null);
+        console.log('TeamMemberSelector: Fetching all active contacts...');
+        
+        const contacts = await ContactsService.getAllActiveContacts();
+        console.log('TeamMemberSelector: All active contacts loaded:', contacts);
+        setAllContacts(contacts);
+        
+      } catch (error) {
+        console.error('TeamMemberSelector: Error loading all contacts:', error);
+        setContactsError(error.message);
+        setAllContacts([]);
+      } finally {
+        setLoadingContacts(false);
+      }
+    };
+
+    fetchAllContacts();
+  }, [showAllContacts]);
+
 
   useEffect(() => {
     // Close dropdown when clicking outside
@@ -29,12 +61,44 @@ const TeamMemberSelector = ({
     onSelectTeamMember(member);
   };
 
+  // Determine which data source to use
+  const getDisplayMembers = () => {
+    if (showAllContacts && allContacts && allContacts.length > 0) {
+      return allContacts;
+    }
+    return teamMembers || [];
+  };
+
+  const getLoadingState = () => {
+    if (showAllContacts) {
+      return loadingContacts || isLoading;
+    }
+    return isLoading;
+  };
+
+  const getErrorState = () => {
+    if (showAllContacts && contactsError) {
+      return contactsError;
+    }
+    return error;
+  };
+
+  const displayMembers = getDisplayMembers();
+  const isCurrentlyLoading = getLoadingState();
+  const currentError = getErrorState();
+
   // Add debug logging
   console.log("TeamMemberSelector render:", {
-    teamMembers,
+    showAllContacts,
+    allContactsLength: allContacts?.length,
     teamMembersLength: teamMembers?.length,
+    displayMembersLength: displayMembers?.length,
+    loadingContacts,
     isLoading,
-    error,
+    isCurrentlyLoading,
+    contactsError,
+    error: error,
+    currentError,
     selectedMember,
     showDropdown
   });
@@ -46,31 +110,44 @@ const TeamMemberSelector = ({
           <button
             className="team-dropdown-btn"
             onClick={() => setShowDropdown(!showDropdown)}
-            disabled={isLoading}
+            disabled={isCurrentlyLoading}
           >
-            {isLoading ? "Loading..." : "Select Team member"}
+            {isCurrentlyLoading 
+              ? "Loading..." 
+              : showAllContacts 
+                ? "Select Staff Member" 
+                : "Select Team member"
+            }
           </button>
 
-          {showDropdown && teamMembers.length > 0 && (
+          {showDropdown && displayMembers.length > 0 && (
             <div className="team-dropdown-list">
-              {teamMembers.map((member) => (
+              {displayMembers.map((member) => (
                 <div
                   key={member.id}
                   className="team-member-option"
                   onClick={() => handleTeamMemberSelect(member)}
                 >
                   <div className="member-name">{member.name}</div>
-                  <div className="member-details">{member.title}</div>
+                  <div className="member-details">
+                    {member.title}
+                    {member.GroupName && member.GroupName !== 'Unassigned' && (
+                      <span> • {member.GroupName}</span>
+                    )}
+                  </div>
                 </div>
               ))}
             </div>
           )}
 
-          {error && <div className="error-message">{error}</div>}
+          {currentError && <div className="error-message">{currentError}</div>}
         </div>
       ) : (
         <div className="managing-indicator">
           <strong>{selectedMember.name}</strong>
+          {selectedMember.title && (
+            <span> • {selectedMember.title}</span>
+          )}
           <button className="reset-view-btn" onClick={onReset}>
             Reset
           </button>

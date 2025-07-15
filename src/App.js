@@ -1173,6 +1173,7 @@ const deleteOpportunityRow = useCallback(async (index) => {
               selectedMember={selectedTeamMember}
               onSelectTeamMember={handleTeamMemberSelect}
               onReset={resetToCurrentUser}
+              showAllContacts={true}
             />
             {/* <div className="scheduled-hours-container">
               <label htmlFor="scheduledHours">Scheduled Hours:</label>
