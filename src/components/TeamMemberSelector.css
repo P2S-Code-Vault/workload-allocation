@@ -81,8 +81,31 @@
     background-color: #d32f2f;
   }
   
-  .error-message {
-    color: #f44336;
-    margin-top: 5px;
-    font-size: 12px;
-  }
+.error-message {
+  color: #f44336;
+  margin-top: 5px;
+  font-size: 12px;
+}
+
+.team-member-search {
+  width: 100%;
+  padding: 8px 12px;
+  border: none;
+  border-bottom: 1px solid #eee;
+  font-size: 14px;
+  outline: none;
+  background-color: #f9f9f9;
+}
+
+.team-member-search:focus {
+  background-color: white;
+  border-bottom-color: #2c6c9c;
+}
+
+.no-results {
+  padding: 15px;
+  text-align: center;
+  color: #666;
+  font-style: italic;
+  font-size: 14px;
+}

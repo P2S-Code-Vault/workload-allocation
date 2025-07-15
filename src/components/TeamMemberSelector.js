@@ -16,6 +16,7 @@ const TeamMemberSelector = ({
   const [allContacts, setAllContacts] = useState([]);
   const [loadingContacts, setLoadingContacts] = useState(false);
   const [contactsError, setContactsError] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
 
   // Fetch all active contacts when component mounts
   useEffect(() => {
@@ -49,6 +50,7 @@ const TeamMemberSelector = ({
     const handleClickOutside = (event) => {
       if (!event.target.closest(".team-dropdown")) {
         setShowDropdown(false);
+        setSearchTerm(""); // Clear search when closing dropdown
       }
     };
 
@@ -58,15 +60,29 @@ const TeamMemberSelector = ({
   const handleTeamMemberSelect = (member) => {
     console.log(`TeamMemberSelector: Selected team member:`, member);
     setShowDropdown(false);
+    setSearchTerm(""); // Clear search when selecting
     onSelectTeamMember(member);
   };
 
   // Determine which data source to use
   const getDisplayMembers = () => {
+    let members = [];
     if (showAllContacts && allContacts && allContacts.length > 0) {
-      return allContacts;
+      members = allContacts;
+    } else {
+      members = teamMembers || [];
     }
-    return teamMembers || [];
+
+    // Filter members based on search term
+    if (searchTerm) {
+      return members.filter(member =>
+        member.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (member.title && member.title.toLowerCase().includes(searchTerm.toLowerCase())) ||
+        (member.GroupName && member.GroupName.toLowerCase().includes(searchTerm.toLowerCase()))
+      );
+    }
+
+    return members;
   };
 
   const getLoadingState = () => {
@@ -120,23 +136,44 @@ const TeamMemberSelector = ({
             }
           </button>
 
-          {showDropdown && displayMembers.length > 0 && (
+          {showDropdown && (
             <div className="team-dropdown-list">
-              {displayMembers.map((member) => (
-                <div
-                  key={member.id}
-                  className="team-member-option"
-                  onClick={() => handleTeamMemberSelect(member)}
-                >
-                  <div className="member-name">{member.name}</div>
-                  <div className="member-details">
-                    {member.title}
-                    {member.GroupName && member.GroupName !== 'Unassigned' && (
-                      <span> • {member.GroupName}</span>
-                    )}
+              <input
+                type="text"
+                placeholder="Search team members..."
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Escape') {
+                    setSearchTerm("");
+                    setShowDropdown(false);
+                  }
+                }}
+                className="team-member-search"
+                autoFocus
+                onClick={(e) => e.stopPropagation()}
+              />
+              {displayMembers.length > 0 ? (
+                displayMembers.map((member) => (
+                  <div
+                    key={member.id}
+                    className="team-member-option"
+                    onClick={() => handleTeamMemberSelect(member)}
+                  >
+                    <div className="member-name">{member.name}</div>
+                    <div className="member-details">
+                      {member.title}
+                      {member.GroupName && member.GroupName !== 'Unassigned' && (
+                        <span> • {member.GroupName}</span>
+                      )}
+                    </div>
                   </div>
+                ))
+              ) : (
+                <div className="no-results">
+                  {searchTerm ? "No team members found matching your search" : "No team members available"}
                 </div>
-              ))}
+              )}
             </div>
           )}
 
