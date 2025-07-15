@@ -678,6 +678,47 @@ const calculateStudioScheduledHours = useCallback((studioData) => {
         );
       });
 
+      Object.entries(allGroupsData[groupManager].studios).forEach(([studioName, studioData]) => {
+        const studioLeaderName = studioData.studioLeader;
+        
+        // Find the studio leader member in the members array
+        const studioLeaderMember = studioData.members.find(member => {
+          // Handle different name formats: "Last, First" vs "First Last"
+          const memberName = member.name;
+          const leaderName = studioLeaderName;
+          
+          // Direct match
+          if (memberName === leaderName) return true;
+          
+          // Extract first and last names for partial matching
+          const memberParts = memberName.includes(',') 
+            ? [memberName.split(',')[0].trim(), memberName.split(',')[1]?.trim()] 
+            : memberName.split(' ');
+          const leaderParts = leaderName.includes(',') 
+            ? [leaderName.split(',')[0].trim(), leaderName.split(',')[1]?.trim()] 
+            : leaderName.split(' ');
+          
+          // Check if both first and last names match (in any order)
+          const memberFirst = memberParts[1] || memberParts[0];
+          const memberLast = memberParts[0];
+          const leaderFirst = leaderParts[1] || leaderParts[0];
+          const leaderLast = leaderParts[0];
+          
+          return (memberFirst && leaderFirst && memberFirst === leaderFirst) &&
+                 (memberLast && leaderLast && memberLast === leaderLast);
+        });
+        
+        // Set studio discipline to the studio leader's discipline
+        if (studioLeaderMember && studioLeaderMember.discipline) {
+          studioData.discipline = studioLeaderMember.discipline;
+          console.log(`[Fix] Studio ${studioName}: Set discipline to "${studioData.discipline}" (from studio leader ${studioLeaderName})`);
+        } else {
+          console.warn(`[Fix] Studio ${studioName}: Studio leader "${studioLeaderName}" not found in members list or has no discipline`);
+          // Keep existing discipline or set to fallback
+          studioData.discipline = studioData.discipline || "Unknown";
+        }
+      });
+
       allGroupsData[groupManager].ratioB = calculateRatioB(
         allGroupsData[groupManager].directHours,
         allGroupsData[groupManager].scheduledHours,
@@ -1063,6 +1104,48 @@ const calculateStudioScheduledHours = useCallback((studioData) => {
                           // Calculate studio ratios
                           Object.values(studios).forEach(studio => {
                             studio.ratioB = calculateRatioB(studio.directHours, studio.scheduledHours, studio.ptoHours);
+                          });
+
+                          // ===== FIX: Set studio discipline to match studio leader's discipline (ALL GROUPS) =====
+                          Object.entries(studios).forEach(([studioName, studioData]) => {
+                            const studioLeaderName = studioData.studioLeader;
+                            
+                            // Find the studio leader member in the members array
+                            const studioLeaderMember = studioData.members.find(member => {
+                              // Handle different name formats: "Last, First" vs "First Last"
+                              const memberName = member.name;
+                              const leaderName = studioLeaderName;
+                              
+                              // Direct match
+                              if (memberName === leaderName) return true;
+                              
+                              // Extract first and last names for partial matching
+                              const memberParts = memberName.includes(',') 
+                                ? [memberName.split(',')[0].trim(), memberName.split(',')[1]?.trim()] 
+                                : memberName.split(' ');
+                              const leaderParts = leaderName.includes(',') 
+                                ? [leaderName.split(',')[0].trim(), leaderName.split(',')[1]?.trim()] 
+                                : leaderName.split(' ');
+                              
+                              // Check if both first and last names match (in any order)
+                              const memberFirst = memberParts[1] || memberParts[0];
+                              const memberLast = memberParts[0];
+                              const leaderFirst = leaderParts[1] || leaderParts[0];
+                              const leaderLast = leaderParts[0];
+                              
+                              return (memberFirst && leaderFirst && memberFirst === leaderFirst) &&
+                                    (memberLast && leaderLast && memberLast === leaderLast);
+                            });
+                            
+                            // Set studio discipline to the studio leader's discipline
+                            if (studioLeaderMember && studioLeaderMember.discipline) {
+                              studioData.discipline = studioLeaderMember.discipline;
+                              console.log(`[AllGroups Fix] Studio ${studioName}: Set discipline to "${studioData.discipline}" (from studio leader ${studioLeaderName})`);
+                            } else {
+                              console.warn(`[AllGroups Fix] Studio ${studioName}: Studio leader "${studioLeaderName}" not found in members list or has no discipline`);
+                              // Keep existing discipline or set to fallback
+                              studioData.discipline = studioData.discipline || "Unknown";
+                            }
                           });
                           
                           teamDataForGroups[managerName] = {
