@@ -5,6 +5,7 @@ const API_CONFIG = {
     // API endpoints
     ENDPOINTS: {
       LOGIN: '/login',
+      CONTACTS_ALL_ACTIVE: '/contacts/all-active',
       CONTACT_BY_ID: contactId => `/contacts/${contactId}`,
       CONTACTS: '/contacts', // for GET /contacts?search=...&group_manager=...
       CONTACT_BY_EMAIL: email => `/contacts/email/${encodeURIComponent(email)}`,
