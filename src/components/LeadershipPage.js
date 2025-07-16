@@ -1486,13 +1486,16 @@ const CollapsibleMember = ({ member, formatter, formatPercent, navigate, isEdita
           >
             Details
           </button>
-        </td>      </tr>
+        </td>
+      </tr>
       {isExpanded && (
         <tr className="member-details">
           <td colSpan="10">
-            <div className="time-entries">              {/* Projects Section */}
+            <div className="time-entries">
+              {/* Projects Section */}
               <div className="time-entries-section">
-                <h5>Projects</h5>                {sortedProjectRows.length === 0 ? (
+                <h5>Projects</h5>
+                {sortedProjectRows.length === 0 ? (
                   <div className="no-entries">No project entries found</div>
                 ) : (
                   sortedProjectRows.map((entry, i) => (
@@ -1510,7 +1513,8 @@ const CollapsibleMember = ({ member, formatter, formatPercent, navigate, isEdita
               <div className="time-entries-section">
                 <h5>Opportunities</h5>
                 {sortedOpportunityRows.length === 0 ? (
-                  <div className="no-entries">No opportunity entries found</div>                ) : (
+                  <div className="no-entries">No opportunity entries found</div>
+                ) : (
                   sortedOpportunityRows.map((entry, i) => (
                     <div key={`opportunity-${i}`} className="time-entry">
                       <span className="project-number">{entry.projectNumber}</span>
