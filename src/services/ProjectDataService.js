@@ -27,6 +27,26 @@ export class ProjectDataService {
       }
     }
 
+    static async getAllOpportunities() {
+      try {
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.OPPORTUNITIES_ALL}`, {
+          headers: this.getHeaders()
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch all opportunities: ${response.statusText}`);
+        }
+        
+        const data = await response.json();
+        
+        // The API returns { opportunities: [...] }, so we need to extract the opportunities array
+        return Array.isArray(data.opportunities) ? data.opportunities : [];
+      } catch (error) {
+        console.error('Error fetching all opportunities:', error);
+        throw error;
+      }
+    }
+
   static async handleErrorResponse(response) {
     try {
       const contentType = response.headers.get('content-type');
@@ -98,6 +118,58 @@ export class ProjectDataService {
     return this.searchProjects(searchTerm, limit);
   }
 
+  // Search opportunities method with proper error handling
+  static async searchOpportunities(searchTerm, limit = 10) {
+    if (!searchTerm || searchTerm.length < 2) {
+      return [];
+    }
+    
+    try {
+      console.log(`Searching opportunities with term: ${searchTerm}`);
+      
+      // Create a cache key for this search
+      const cacheKey = `opportunity_search_${searchTerm}`;
+      
+      // Try cache first for better performance
+      const cachedResults = this.getCachedData(cacheKey);
+      if (cachedResults) {
+        console.log(`Using ${cachedResults.length} cached opportunity results for search term: ${searchTerm}`);
+        return cachedResults;
+      }
+      
+      // Build the search URL with parameters
+      const params = new URLSearchParams({
+        search: searchTerm,
+        limit: limit
+      });
+      
+      // Use the opportunities endpoint from the config
+      const url = `${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.OPPORTUNITIES}?${params.toString()}`;
+      console.log(`Fetching opportunity search from: ${url}`);
+      
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        const errorText = await this.handleErrorResponse(response);
+        console.error(`Opportunity search failed with status ${response.status}: ${errorText}`);
+        
+        // Return empty array on error instead of throwing
+        return [];
+      }
+      
+      const results = await response.json();
+      console.log(`Received ${results.length} opportunity search results for term: ${searchTerm}`);
+      
+      // Cache the results for 5 minutes (300,000 ms)
+      this.cacheData(cacheKey, results, 300000);
+      
+      return results;
+    } catch (error) {
+      console.error("Error searching opportunities:", error);
+      return [];
+    }
+  }
+
   // Get project details from project number
   static async getProjectDetails(projectNumber) {
     try {
@@ -112,6 +184,24 @@ export class ProjectDataService {
       return await response.json();
     } catch (error) {
       console.error("Failed to fetch project details:", error);
+      throw error;
+    }
+  }
+
+  // Get opportunity details from opportunity number
+  static async getOpportunityDetails(opportunityNumber) {
+    try {
+      console.log('Fetching opportunity details for:', opportunityNumber);
+      const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.OPPORTUNITY_BY_NUMBER(opportunityNumber)}`);
+
+      if (!response.ok) {
+        const errorText = await this.handleErrorResponse(response);
+        throw new Error(`Opportunity not found: ${errorText}`);
+      }
+
+      return await response.json();
+    } catch (error) {
+      console.error("Failed to fetch opportunity details:", error);
       throw error;
     }
   }

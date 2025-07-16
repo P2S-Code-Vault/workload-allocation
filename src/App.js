@@ -698,7 +698,7 @@ const MainContent = React.forwardRef((props, ref) => {
                   projectName: allocation.project_name || "",
                   pm: allocation.project_manager || "",
                   labor: allocation.project_contract_labor || allocation.contract_labor || 0,
-                  pctLaborUsed: 0,
+                  pctLaborUsed: allocation.eac_pct || 0,
                   hours: allocation.ra_hours || allocation.hours || 0,
                   remarks: allocation.ra_remarks || allocation.remarks || "",
                   month: allocation.month_hours || 0,
@@ -770,7 +770,7 @@ const MainContent = React.forwardRef((props, ref) => {
               projectName: allocation.project_name || "",
               pm: allocation.project_manager || "",
               labor: allocation.project_contract_labor || allocation.contract_labor || 0,
-              pctLaborUsed: 0, // This will be calculated from project data when needed
+              pctLaborUsed: allocation.eac_pct || 0,
               hours: allocation.ra_hours || allocation.hours || 0,
               remarks: allocation.ra_remarks || allocation.remarks || "",
               month: allocation.month_hours || 0,

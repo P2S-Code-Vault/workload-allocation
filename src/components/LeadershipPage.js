@@ -1477,7 +1477,7 @@ const CollapsibleMember = ({ member, formatter, formatPercent, navigate, isEdita
         <td className="number-cell">{formatter.format(member.ptoHours)}</td>
         <td className="number-cell">{formatter.format(member.overheadHours)}</td>
         <td className={`number-cell available-hours-cell ${member.availableHours === 0 ? 'zero-hours' : ''}`}>{formatter.format(member.availableHours)}</td>
-        <td className={`number-cell ${member.totalHours < member.scheduledHours ? 'hours-warning' : ''}`}>{formatter.format(member.totalHours)}</td>
+        <td className={`number-cell ${member.totalHours < displayScheduledHours ? 'hours-warning' : ''}`}>{formatter.format(member.totalHours)}</td>
         <td className="number-cell"><strong>{formatPercent(displayRatioB)}</strong></td>
         <td>
           <button

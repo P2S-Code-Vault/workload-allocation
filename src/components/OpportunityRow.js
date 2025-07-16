@@ -110,35 +110,16 @@ const OpportunityRow = ({
           // If we found results, select the first one
           handleOpportunitySelect(results[0]);
         } else {
-          // Try to get exact match by opportunity number from CSV first
+          // Try to get exact match by opportunity number as fallback
           try {
             const opportunity = await ProjectSearchService.getOpportunityDetails(searchTerm);
             
-            // Get basic opportunity data
-            let estimatedFee = 0;
-            if (opportunity.P2SEstimatedFeeProposed && opportunity.P2SEstimatedFeeProposed !== 'NULL') {
-              estimatedFee = parseFloat(opportunity.P2SEstimatedFeeProposed) || 0;
+            if (opportunity) {
+              handleOpportunitySelect(opportunity);
+            } else {
+              console.error("Failed to find opportunity in search or direct lookup");
+              setHasError(true);
             }
-            
-            // Try to get the latest estimated fee data from WorkloadPreloadService all-opportunities endpoint
-            try {
-              const { WorkloadPreloadService } = await import('../services/WorkloadPreloadService');
-              const currentUserDetails = JSON.parse(localStorage.getItem('userDetails'));
-              const latestEstimatedFee = await WorkloadPreloadService.getOpportunityEstimatedFee(currentUserDetails?.email || '', opportunity.OpportunityNumber);
-              
-              // Use estimated fee from API if available
-              if (latestEstimatedFee > 0) {
-                estimatedFee = latestEstimatedFee;
-                console.log(`Retrieved estimated fee from all-opportunities API for opportunity ${opportunity.OpportunityNumber}: ${estimatedFee}`);
-              }
-            } catch (feeError) {
-              console.warn("Failed to retrieve latest estimated fee data for direct search:", feeError);
-            }
-
-            updateOpportunityRow(index, "opportunityNumber", opportunity.OpportunityNumber || "");
-            updateOpportunityRow(index, "opportunityName", opportunity.Opportunity_Name_from_Lead__c || "");
-            updateOpportunityRow(index, "proposalChampion", opportunity.ProposalChampion || "");
-            updateOpportunityRow(index, "estimatedFee", estimatedFee);
           } catch (directSearchError) {
             console.error("Failed to find opportunity in search or direct lookup:", directSearchError);
             setHasError(true);
@@ -157,39 +138,47 @@ const OpportunityRow = ({
     }
   };
   const handleOpportunitySelect = async (opp) => {
-    // Get basic opportunity data from CSV
-    let estimatedFee = 0;
-    
-    // Try to parse estimated fee from CSV data
-    if (opp.P2SEstimatedFeeProposed && opp.P2SEstimatedFeeProposed !== 'NULL') {
-      estimatedFee = parseFloat(opp.P2SEstimatedFeeProposed) || 0;
-    }
-    
-    // Try to get the latest estimated fee data from WorkloadPreloadService
     try {
-      const { WorkloadPreloadService } = await import('../services/WorkloadPreloadService');
-      const currentUserDetails = JSON.parse(localStorage.getItem('userDetails'));
-      if (currentUserDetails?.email) {
-        const latestEstimatedFee = await WorkloadPreloadService.getOpportunityEstimatedFee(currentUserDetails.email, opp.OpportunityNumber);
-        
-        // Use estimated fee from API if available, otherwise fall back to CSV data
-        if (latestEstimatedFee > 0) {
-          estimatedFee = latestEstimatedFee;
-          console.log(`Updated estimated fee from API for opportunity ${opp.OpportunityNumber}: ${estimatedFee}`);
+      console.log("API opportunity data:", opp);
+      
+      // Get estimated fee from API data (the new format uses 'Estimated Fee')
+      let estimatedFee = parseFloat(opp['Estimated Fee']) || 0;
+      console.log("Parsed estimatedFee from API:", estimatedFee);
+
+      // Try to get the latest estimated fee data from WorkloadPreloadService for accuracy
+      try {
+        const { WorkloadPreloadService } = await import('../services/WorkloadPreloadService');
+        const currentUserDetails = JSON.parse(localStorage.getItem('userDetails'));
+        if (currentUserDetails?.email) {
+          const latestEstimatedFee = await WorkloadPreloadService.getOpportunityEstimatedFee(currentUserDetails.email, opp['Opportunity Number']);
+          
+          // Use estimated fee from API if available and different
+          if (latestEstimatedFee > 0) {
+            estimatedFee = latestEstimatedFee;
+            console.log(`Updated estimated fee from WorkloadPreloadService for opportunity ${opp['Opportunity Number']}: ${estimatedFee}`);
+          }
         }
+      } catch (feeError) {
+        console.warn("Failed to retrieve latest estimated fee data, using cached value:", feeError);
       }
-    } catch (feeError) {
-      console.warn("Failed to retrieve latest estimated fee data, using CSV value:", feeError);
+
+      // Update with the selected opportunity data (using new API format)
+      updateOpportunityRow(index, "opportunityNumber", opp['Opportunity Number'] || "");
+      updateOpportunityRow(index, "opportunityName", opp['Opportunity Name'] || "");
+      updateOpportunityRow(index, "proposalChampion", opp['Proposal Champion'] || "");
+      updateOpportunityRow(index, "estimatedFee", estimatedFee);
+
+      // Store the complete opportunity data in the row for use during save
+      updateOpportunityRow(index, "_opportunityData", opp);
+
+      setSearchTerm(opp['Opportunity Number'] || "");
+      setShowDropdown(false);
+      setUserInteracted(false); // Prevent dropdown from reopening immediately
+      setHasError(false);
+    } catch (error) {
+      console.error('Failed to select opportunity:', error);
+      setHasError(true);
     }
-    
-    updateOpportunityRow(index, "opportunityNumber", opp.OpportunityNumber || "");
-    updateOpportunityRow(index, "opportunityName", opp.Opportunity_Name_from_Lead__c || "");
-    updateOpportunityRow(index, "proposalChampion", opp.ProposalChampion || "");
-    updateOpportunityRow(index, "estimatedFee", estimatedFee);
-    setSearchTerm(opp.OpportunityNumber || "");
-    setShowDropdown(false);
-    setUserInteracted(false); // Prevent dropdown from reopening immediately
-    setHasError(false);
   };
 
   const highlightMatch = (text, query) => {
@@ -228,7 +217,8 @@ const OpportunityRow = ({
             />
           </div>
           {isSearching && <div className="search-indicator">Searching...</div>}
-          {hasError && <div className="search-error">Opportunity not found</div>}          {showDropdown && suggestions.length > 0 && (
+          {hasError && <div className="search-error">Opportunity not found</div>}
+          {showDropdown && suggestions.length > 0 && (
             <div className="suggestions-dropdown">
               {suggestions.map((opp, i) => (
                 <div
@@ -237,13 +227,13 @@ const OpportunityRow = ({
                   onClick={() => handleOpportunitySelect(opp)}
                   tabIndex="0"
                   onKeyDown={(e) => e.key === "Enter" && handleOpportunitySelect(opp)}
-                  aria-label={`Select Opportunity ${opp.OpportunityNumber} - ${opp.Opportunity_Name_from_Lead__c}`}
+                  aria-label={`Select Opportunity ${opp['Opportunity Number']} - ${opp['Opportunity Name']}`}
                 >
-                  <div className="suggestion-project-number">
-                    {highlightMatch(opp.OpportunityNumber, searchTerm)} - {highlightMatch(opp.Opportunity_Name_from_Lead__c, searchTerm)}
+                  <div className="suggestion-project-name">
+                    {highlightMatch(opp['Opportunity Name'], searchTerm)}
                   </div>
-                  <div className="suggestion-milestone">
-                    Champion: {highlightMatch(opp.ProposalChampion, searchTerm)}
+                  <div className="suggestion-project-number">
+                    {highlightMatch(opp['Opportunity Number'], searchTerm)} - Champion: {highlightMatch(opp['Proposal Champion'], searchTerm)}
                   </div>
                 </div>
               ))}
@@ -253,7 +243,8 @@ const OpportunityRow = ({
       </td>
       <td>
         <input type="text" value={row.opportunityName || ""} readOnly className="centered-input" />
-      </td>      <td>
+      </td>
+      <td>
         <input type="text" value={row.proposalChampion || ""} readOnly className="centered-input" />
       </td>
       <td>

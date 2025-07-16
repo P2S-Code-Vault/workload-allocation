@@ -287,11 +287,11 @@ const TableRow = ({
   // };
   const percentFormatter = (value) => {
     // Add debugging
-    console.log("Formatting percentage value:", value, "Type:", typeof value);
+    // console.log("Formatting percentage value:", value, "Type:", typeof value);
 
     // Convert to number and handle invalid values
     const numValue = parseFloat(value) || 0;
-    console.log("Parsed percentage value:", numValue);
+    // console.log("Parsed percentage value:", numValue);
 
     // Case 1: Values like 9639 (should be 96.39%)
     if (numValue > 100 && numValue % 1 === 0) {

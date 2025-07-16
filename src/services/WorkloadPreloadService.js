@@ -1,4 +1,5 @@
 import API_CONFIG from './apiConfig';
+import { ProjectDataService } from './ProjectDataService';
 
 export class WorkloadPreloadService {
   static apiBaseUrl = API_CONFIG.BASE_URL;
@@ -83,9 +84,9 @@ export class WorkloadPreloadService {
       if (data.group_projects && Array.isArray(data.group_projects)) {
         console.log(`Found ${data.group_projects.length} group projects`);
         data.group_projects.forEach(project => {
-          if (project.eac) {
-            console.log(`Project ${project.project_number} has EAC: ${project.eac}, Contract Labor: ${project.project_contract_labor}`);
-          }
+          // if (project.eac) {
+          //   console.log(`Project ${project.project_number} has EAC: ${project.eac}, Contract Labor: ${project.project_contract_labor}`);
+          // }
         });
       }
       
@@ -93,7 +94,7 @@ export class WorkloadPreloadService {
         console.log(`Found ${data.user_managed_projects.length} user managed projects`);
         data.user_managed_projects.forEach(project => {
           if (project.eac) {
-            console.log(`User project ${project.project_number} has EAC: ${project.eac}, Contract Labor: ${project.project_contract_labor}`);
+            // console.log(`User project ${project.project_number} has EAC: ${project.eac}, Contract Labor: ${project.project_contract_labor}`);
           }
         });
       }
@@ -191,11 +192,14 @@ export class WorkloadPreloadService {
           
           const projectNumber = allocation.proj_id || allocation.project_number;
           
-          // Use EAC directly as percentage, or 0 if null
+          // Use EAC percentage from allocation data first (eac_pct), then fallback to project info
           let pctLaborUsed = 0;
-          if (projectInfo) {
-            pctLaborUsed = projectInfo.eac || 0;
-            console.log(`Project ${projectNumber} - EAC Percentage: ${pctLaborUsed}%`);
+          if (allocation.eac_pct !== null && allocation.eac_pct !== undefined) {
+            pctLaborUsed = allocation.eac_pct;
+            console.log(`Project ${projectNumber} - EAC Percentage from allocation: ${pctLaborUsed}%`);
+          } else if (projectInfo && projectInfo.eac) {
+            pctLaborUsed = projectInfo.eac;
+            console.log(`Project ${projectNumber} - EAC Percentage from project info: ${pctLaborUsed}%`);
           }
           
           projectRows.push({
@@ -247,11 +251,14 @@ export class WorkloadPreloadService {
           }
           
           // Calculate % EAC Labor Used
-          // Use EAC directly as percentage, or 0 if null
+          // Use EAC percentage from allocation data first (eac_pct), then fallback to project info
           let pctLaborUsed = 0;
-          if (projectInfo) {
-            pctLaborUsed = projectInfo.eac || 0;
-            console.log(`Quarterly workload project ${allocation.project_number} - EAC Percentage: ${pctLaborUsed}%`);
+          if (allocation.eac_pct !== null && allocation.eac_pct !== undefined) {
+            pctLaborUsed = allocation.eac_pct;
+            console.log(`Quarterly workload project ${allocation.project_number} - EAC Percentage from allocation: ${pctLaborUsed}%`);
+          } else if (projectInfo && projectInfo.eac) {
+            pctLaborUsed = projectInfo.eac;
+            console.log(`Quarterly workload project ${allocation.project_number} - EAC Percentage from project info: ${pctLaborUsed}%`);
           }
           
           projectRows.push({
@@ -284,8 +291,7 @@ export class WorkloadPreloadService {
         newUserProjects.forEach(project => {
           // Use EAC directly as percentage, or 0 if null
           const pctLaborUsed = project.eac || 0;
-          console.log(`New user project ${project.project_number} - EAC Percentage: ${pctLaborUsed}%`);
-          
+           
           projectRows.push({
             id: `${project.project_number}_${userEmail}`,
             resource: userEmail,
@@ -315,7 +321,7 @@ export class WorkloadPreloadService {
         newGroupProjects.forEach(project => {
           // Use EAC directly as percentage, or 0 if null
           const pctLaborUsed = project.eac || 0;
-          console.log(`New group project ${project.project_number} - EAC Percentage: ${pctLaborUsed}%`);
+          // console.log(`New group project ${project.project_number} - EAC Percentage: ${pctLaborUsed}%`);
           
           projectRows.push({
             id: `${project.project_number}_${userEmail}`,
@@ -469,7 +475,7 @@ export class WorkloadPreloadService {
           const allOpportunityData = allOpportunitiesMap.get(opportunity.opportunity_number);
           if (allOpportunityData) {
             estimatedFee = allOpportunityData.estimated_fee_proposed || 0;
-            console.log(`Using estimated fee from all-opportunities for user opportunity ${opportunity.opportunity_number}: ${estimatedFee}`);
+            // console.log(`Using estimated fee from all-opportunities for user opportunity ${opportunity.opportunity_number}: ${estimatedFee}`);
           } else {
             estimatedFee = opportunity.estimated_fee || 0;
             console.log(`Using fallback estimated fee for user opportunity ${opportunity.opportunity_number}: ${estimatedFee}`);
@@ -504,7 +510,7 @@ export class WorkloadPreloadService {
           const allOpportunityData = allOpportunitiesMap.get(opportunity.opportunity_number);
           if (allOpportunityData) {
             estimatedFee = allOpportunityData.estimated_fee_proposed || 0;
-            console.log(`Using estimated fee from all-opportunities for group opportunity ${opportunity.opportunity_number}: ${estimatedFee}`);
+            // console.log(`Using estimated fee from all-opportunities for group opportunity ${opportunity.opportunity_number}: ${estimatedFee}`);
           } else {
             estimatedFee = opportunity.estimated_fee || 0;
             console.log(`Using fallback estimated fee for group opportunity ${opportunity.opportunity_number}: ${estimatedFee}`);
@@ -557,9 +563,6 @@ export class WorkloadPreloadService {
    */
   static async getExistingProjectAllocations(userEmail, year, quarter) {
     try {
-      // Import ProjectDataService dynamically to avoid circular dependency
-      const { ProjectDataService } = await import('./ProjectDataService');
-      
       console.log(`Fetching existing project allocations for ${userEmail} in ${quarter} ${year}`);
       const existingAllocations = await ProjectDataService.getAllocationsByQuarterWithDetails(userEmail, year, quarter);
       
@@ -581,9 +584,6 @@ export class WorkloadPreloadService {
    */
   static async getExistingOpportunityAllocations(userEmail, year, quarter) {
     try {
-      // Import ProjectDataService dynamically to avoid circular dependency
-      const { ProjectDataService } = await import('./ProjectDataService');
-      
       console.log(`Fetching existing opportunity allocations for ${userEmail} in ${quarter} ${year}`);
       const existingAllocations = await ProjectDataService.getOpportunitiesByQuarter(userEmail, year, quarter);
       

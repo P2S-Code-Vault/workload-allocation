@@ -29,7 +29,7 @@ const TeamMemberSelector = ({
         console.log('TeamMemberSelector: Fetching all active contacts...');
         
         const contacts = await ContactsService.getAllActiveContacts();
-        console.log('TeamMemberSelector: All active contacts loaded:', contacts);
+        //console.log('TeamMemberSelector: All active contacts loaded:', contacts);
         setAllContacts(contacts);
         
       } catch (error) {
@@ -58,7 +58,7 @@ const TeamMemberSelector = ({
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
   const handleTeamMemberSelect = (member) => {
-    console.log(`TeamMemberSelector: Selected team member:`, member);
+    //console.log(`TeamMemberSelector: Selected team member:`, member);
     setShowDropdown(false);
     setSearchTerm(""); // Clear search when selecting
     onSelectTeamMember(member);
@@ -104,20 +104,20 @@ const TeamMemberSelector = ({
   const currentError = getErrorState();
 
   // Add debug logging
-  console.log("TeamMemberSelector render:", {
-    showAllContacts,
-    allContactsLength: allContacts?.length,
-    teamMembersLength: teamMembers?.length,
-    displayMembersLength: displayMembers?.length,
-    loadingContacts,
-    isLoading,
-    isCurrentlyLoading,
-    contactsError,
-    error: error,
-    currentError,
-    selectedMember,
-    showDropdown
-  });
+  // console.log("TeamMemberSelector render:", {
+  //   showAllContacts,
+  //   allContactsLength: allContacts?.length,
+  //   teamMembersLength: teamMembers?.length,
+  //   displayMembersLength: displayMembers?.length,
+  //   loadingContacts,
+  //   isLoading,
+  //   isCurrentlyLoading,
+  //   contactsError,
+  //   error: error,
+  //   currentError,
+  //   selectedMember,
+  //   showDropdown
+  // });
 
   return (
     <div className="team-selector-container">
