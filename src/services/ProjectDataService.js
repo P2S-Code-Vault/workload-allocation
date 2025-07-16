@@ -3,6 +3,30 @@ import API_CONFIG from './apiConfig';
 export class ProjectDataService {
   static apiBaseUrl = API_CONFIG.BASE_URL;
 
+  static getHeaders() {
+  return {
+    'Content-Type': 'application/json',
+    'Accept': 'application/json',
+  };
+}
+
+    static async getAllActiveProjects() {
+      try {
+        const response = await fetch(`${API_CONFIG.BASE_URL}${API_CONFIG.ENDPOINTS.PROJECTS_ACTIVE_ALL}`, {
+          headers: this.getHeaders()
+        });
+        
+        if (!response.ok) {
+          throw new Error(`Failed to fetch active projects: ${response.statusText}`);
+        }
+        
+        return await response.json();
+      } catch (error) {
+        console.error('Error fetching all active projects:', error);
+        throw error;
+      }
+    }
+
   static async handleErrorResponse(response) {
     try {
       const contentType = response.headers.get('content-type');
@@ -474,32 +498,6 @@ static getQuarterMonths(quarter) {
       console.warn(`Error clearing cache with pattern ${pattern}:`, error);
     }
   }
-
-  // static async deleteAllocation(allocationId) {
-  //   try {
-  //     if (!allocationId) {
-  //       throw new Error("Allocation ID is required");
-  //     }
-      
-  //     console.log(`Deleting allocation ${allocationId}`);
-  //     const response = await fetch(`${this.apiBaseUrl}${API_CONFIG.ENDPOINTS.ALLOCATIONS}/${allocationId}`, {
-  //       method: "DELETE"
-  //     });
-      
-  //     if (!response.ok) {
-  //       const errorText = await this.handleErrorResponse(response);
-  //       throw new Error(`Failed to delete allocation: ${errorText}`);
-  //     }
-      
-  //     // Remove specific cache entries that might contain this allocation
-  //     this.removeAllocationFromCache(allocationId);
-      
-  //     return await response.json();
-  //   } catch (error) {
-  //     console.error("Error deleting allocation:", error);
-  //     throw error;
-  //   }
-  // }
   
   // Delete milestone projection
 static async deleteProjectAllocation(allocationId) {

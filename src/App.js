@@ -16,6 +16,7 @@ import TeamMemberSelector from "./components/TeamMemberSelector";
 import TeamEdit from "./components/teamedit";
 import OpportunityRow from "./components/OpportunityRow";
 import { getCurrentQuarterString, getCurrentYear } from "./utils/dateUtils";
+import ProjectSearchService from "./services/ProjectSearchService";
 
 // Header Component
 const Header = ({ currentView, onNavigate, onLogout }) => {
@@ -1626,6 +1627,51 @@ function App() {
     }
     return false;
   };
+
+  // In App.js, add this inside the App component
+useEffect(() => {
+  // Initialize project search service on app load
+  const initializeProjectSearch = async () => {
+    try {
+      await ProjectSearchService.initialize();
+      console.log('Project search service initialized successfully');
+    } catch (error) {
+      console.error('Failed to initialize project search:', error);
+      // Show user-friendly error message if needed
+    }
+  };
+
+  initializeProjectSearch();
+
+  // Set up background refresh every hour
+  const refreshInterval = setInterval(() => {
+    ProjectSearchService.backgroundRefresh();
+  }, 60 * 60 * 1000); // Check every hour
+
+  // Refresh when the tab becomes visible after being hidden
+  const handleVisibilityChange = () => {
+    if (!document.hidden) {
+      ProjectSearchService.backgroundRefresh();
+    }
+  };
+  
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+
+  // Refresh when coming back online
+  const handleOnline = () => {
+    console.log('Network connection restored, refreshing project data...');
+    ProjectSearchService.refresh();
+  };
+  
+  window.addEventListener('online', handleOnline);
+
+  // Cleanup
+  return () => {
+    clearInterval(refreshInterval);
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    window.removeEventListener('online', handleOnline);
+  };
+}, []);
 
   const handleNavigate = (view, params = {}) => {
     console.log(`Attempting to navigate to ${view} view`, params);
