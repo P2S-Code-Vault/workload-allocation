@@ -226,34 +226,6 @@ const TableRow = ({
     }
   };
 
-  // const handleProjectSelect = async (project) => {
-  //   try {
-  //     // Log the raw values
-  //     console.log("CSV project data:", project);
-  //     console.log("Raw Pct Labor Used:", project['Pct Labor Used']);
-
-  //     // Parse the percentage value properly
-  //     const pctLaborUsed = parseFloat(project['Pct Labor Used']) || 0;
-  //     console.log("Parsed pctLaborUsed:", pctLaborUsed);
-
-  //     // Update with the selected project data
-  //     updateRow(index, 'projectNumber', project['Project Number']);
-  //     updateRow(index, 'projectName', project['Project Name']);
-  //     updateRow(index, 'milestone', project['Milestone']);
-  //     updateRow(index, 'pm', project['PM']);
-  //     updateRow(index, 'labor', project['Labor']);
-  //     updateRow(index, 'pctLaborUsed', pctLaborUsed); // Use the parsed value
-
-  //     // Store the complete project data in the row for use during save
-  //     updateRow(index, '_projectData', project);
-
-  //     setShowDropdown(false);
-  //     setHasError(false);
-  //   } catch (error) {
-  //     console.error('Failed to select project:', error);
-  //     setHasError(true);
-  //   }
-  // };
 
   const formatter = new Intl.NumberFormat("en-US", {
     style: "currency",
@@ -262,70 +234,47 @@ const TableRow = ({
     maximumFractionDigits: 0,
   });
 
-  // const percentFormatter = (value) => {
-  //   // Add debugging
-  //   console.log("Formatting percentage value:", value, "Type:", typeof value);
-
-  //   // Convert to number and handle invalid values
-  //   const numValue = parseFloat(value) || 0;
-
-  //   if (numValue >= 100 && numValue % 100 === 0) {
-  //     // Assuming these are stored as 1000 for 10%
-  //     return new Intl.NumberFormat('en-US', {
-  //       style: 'percent',
-  //       minimumFractionDigits: 1,
-  //       maximumFractionDigits: 1,
-  //     }).format(numValue / 10000); // Divide by 10000 to get to decimal form (0.1)
-  //   } else {
-  //     // Normal case for smaller values
-  //     return new Intl.NumberFormat('en-US', {
-  //       style: 'percent',
-  //       minimumFractionDigits: 1,
-  //       maximumFractionDigits: 1,
-  //     }).format(numValue / 100);
-  //   }
-  // };
   const percentFormatter = (value) => {
-    // Add debugging
-    // console.log("Formatting percentage value:", value, "Type:", typeof value);
+  // Add debugging
+  // console.log("Formatting percentage value:", value, "Type:", typeof value);
 
-    // Convert to number and handle invalid values
-    const numValue = parseFloat(value) || 0;
-    // console.log("Parsed percentage value:", numValue);
+  // Convert to number and handle invalid values
+  const numValue = parseFloat(value) || 0;
+  // console.log("Parsed percentage value:", numValue);
 
-    // Case 1: Values like 9639 (should be 96.39%)
-    if (numValue > 100 && numValue % 1 === 0) {
-      return new Intl.NumberFormat("en-US", {
-        style: "percent",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(numValue / 10000);
-    }
-    // Case 2: Values like 78 (should be 78.00%)
-    else if (numValue >= 1 && numValue <= 100) {
-      return new Intl.NumberFormat("en-US", {
-        style: "percent",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(numValue / 100);
-    }
-    // Case 3: Values like 0.78 (already in decimal form, should be 78.00%)
-    else if (numValue > 0 && numValue < 1) {
-      return new Intl.NumberFormat("en-US", {
-        style: "percent",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(numValue);
-    }
-    // Default case: just format as percentage with 2 decimal places
-    else {
-      return new Intl.NumberFormat("en-US", {
-        style: "percent",
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      }).format(numValue / 100);
-    }
-  };
+  // Case 1: Values like 9639 (should be 96.39%)
+  if (numValue > 100 && numValue % 1 === 0) {
+    return new Intl.NumberFormat("en-US", {
+      style: "percent",
+      minimumFractionDigits: 1,  // Changed from 2 to 1
+      maximumFractionDigits: 1,  // Changed from 2 to 1
+    }).format(numValue / 10000);
+  }
+  // Case 2: Values like 78 (should be 78.00%)
+  else if (numValue >= 1 && numValue <= 100) {
+    return new Intl.NumberFormat("en-US", {
+      style: "percent",
+      minimumFractionDigits: 1,  // Changed from 2 to 1
+      maximumFractionDigits: 1,  // Changed from 2 to 1
+    }).format(numValue / 100);
+  }
+  // Case 3: Values like 0.78 (already in decimal form, should be 78.00%)
+  else if (numValue > 0 && numValue < 1) {
+    return new Intl.NumberFormat("en-US", {
+      style: "percent",
+      minimumFractionDigits: 1,  // Changed from 2 to 1
+      maximumFractionDigits: 1,  // Changed from 2 to 1
+    }).format(numValue);
+  }
+  // Default case: just format as percentage with 1 decimal place
+  else {
+    return new Intl.NumberFormat("en-US", {
+      style: "percent",
+      minimumFractionDigits: 1,  // Changed from 2 to 1
+      maximumFractionDigits: 1,  // Changed from 2 to 1
+    }).format(numValue / 100);
+  }
+};
 
   const highlightMatch = (text, query) => {
     if (!query || !text) return text;
